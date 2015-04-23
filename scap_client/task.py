@@ -271,6 +271,48 @@ class Task(object):
         else:
             raise RuntimeError("Unrecognized schedule_slip_mode.")
 
+    def get_task_results_dir(self, results_dir):
+        return os.path.join(results_dir, self.id_)
+
+    def list_result_ids(self, results_dir):
+        """IDs are returned in reverse order sorted by strings as if they were
+        integers.
+
+        for example: ['10', '9', '8', '1']
+        """
+
+        # The lambda is there to make sure we don't consider 2 "larger"
+        # than 10. For example to avoid sorted lists such as:
+        # ['9', '8', '10', '1'] where we wanted ['10', '9', '8', '1']
+
+        return sorted(
+            os.listdir(self.get_task_results_dir(results_dir)), reverse=True,
+            key=lambda s: (len(s), s)
+        )
+
+    def get_next_target_dir(self, results_dir):
+        # We may consider having a file that contains the last ID in the
+        # future. I considered that but right now I think a result with more
+        # than a few thousand results is unlikely. User will use results
+        # purging. Sorting a couple thousand results is still very quick.
+        # Having a file with the last ID makes this operation O(1) instead
+        # of O(n*log(n)).
+
+        # result_ids are guaranteed to be reverse sorted by int
+        result_ids = self.list_result_ids(results_dir)
+
+        last = 0
+        for last_candidate in result_ids:
+            try:
+                last = int(last_candidate)
+                break
+            except:
+                pass
+
+        ret = os.path.join(self.get_task_results_dir(results_dir), str(last + 1))
+        assert(not os.path.exists(ret))
+        return ret
+
     def tick(self, reference_datetime, results_dir, work_in_progress_results_dir):
         """Figures out if the task should be run right now, alters the schedule
         values accordingly.
@@ -283,35 +325,6 @@ class Task(object):
         in parallel on different tasks but at most once for 1 Task instance.
         """
 
-        def get_next_target_dir(task_results_dir):
-            # We may consider having a file that contains the last ID in the
-            # future. I considered that but right now I think a result with more
-            # than a few thousand results is unlikely. User will use results
-            # purging. Sorting a couple thousand results is still very quick.
-            # Having a file with the last ID makes this operation O(1) instead
-            # of O(n*log(n)).
-
-            # The lambda is there to make sure we don't consider 2 "larger"
-            # than 10. For example to avoid sorted lists such as:
-            # ['9', '8', '10', '1'] where we wanted ['10', '9', '8', '1']
-
-            contents = sorted(
-                os.listdir(task_results_dir), reverse=True,
-                key=lambda s: (len(s), s)
-            )
-
-            last = 0
-            for last_candidate in contents:
-                try:
-                    last = int(last_candidate)
-                    break
-                except:
-                    pass
-
-            ret = os.path.join(task_results_dir, str(last + 1))
-            assert(not os.path.exists(ret))
-            return ret
-
         if not self.is_valid():
             raise RuntimeError("Can't tick an invalid Task.")
 
@@ -320,12 +333,9 @@ class Task(object):
             return
 
         if self.schedule_not_before <= reference_datetime:
-            task_results_dir = \
-                os.path.join(results_dir, self.id_)
-
             wip_result = oscap_helpers.evaluate_task(
                 self, work_in_progress_results_dir)
-            target_dir = get_next_target_dir(task_results_dir)
+            target_dir = self.get_next_target_dir(results_dir)
 
             shutil.move(wip_result, target_dir)
 
