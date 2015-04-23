@@ -19,7 +19,7 @@
 
 
 from scap_client.et_helpers import get_element_attr, get_element_text
-from scap_client.evaluation import evaluate_task
+from scap_client import oscap_helpers
 
 from xml.etree import cElementTree as ElementTree
 from datetime import datetime, timedelta
@@ -284,7 +284,7 @@ class Task(object):
 
         if self.schedule_not_before <= reference_datetime:
             try:
-                evaluate_task(self, results_dir)
+                oscap_helpers.evaluate_task(self, results_dir)
             except:
                 # TODO
                 raise
