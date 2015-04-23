@@ -29,6 +29,21 @@ class System(object):
         self.data_dir = data_dir
         self.tasks_dir = os.path.join(self.data_dir, "tasks")
         self.results_dir = os.path.join(self.data_dir, "results")
+        self.work_in_progress_results_dir = \
+            os.path.join(self.results_dir, "work_in_progress")
+
+        # TODO: Warn about created dirs?
+        if not os.path.exists(self.data_dir):
+            os.mkdir(self.data_dir)
+
+        if not os.path.exists(self.tasks_dir):
+            os.mkdir(self.tasks_dir)
+
+        if not os.path.exists(self.results_dir):
+            os.mkdir(self.results_dir)
+
+        if not os.path.exists(self.work_in_progress_results_dir):
+            os.mkdir(self.work_in_progress_results_dir)
 
         self.tasks = dict()
 
@@ -37,13 +52,13 @@ class System(object):
 
         for task_file in task_files:
             if not task_file.endswith(".xml"):
-                # TODO
+                # TODO: warn
                 continue
 
             full_path = os.path.join(self.tasks_dir, task_file)
 
             if not os.path.isfile(full_path):
-                # TODO
+                # TODO: warn
                 continue
 
             task = Task()
@@ -56,4 +71,8 @@ class System(object):
 
     def tick(self, reference_datetime=datetime.utcnow()):
         for _, task in self.tasks.iteritems():
-            task.tick(reference_datetime, self.results_dir)
+            task.tick(
+                reference_datetime,
+                self.results_dir,
+                self.work_in_progress_results_dir
+            )

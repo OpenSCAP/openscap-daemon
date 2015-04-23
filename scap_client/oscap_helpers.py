@@ -21,6 +21,7 @@
 import subprocess
 import tempfile
 import os.path
+import shutil
 
 # TODO: configurable
 OSCAP_PATH = "oscap"
@@ -97,7 +98,14 @@ def evaluation_args_for_task(task):
     return ret
 
 
-def evaluate_task(task, results_dir):
+def evaluate_task(task, task_results_dir):
+    """Calls oscap to evaluate given task, creates a uniquely named directory
+    in given results_dir for it. Returns absolute path to that directory in
+    case of success.
+
+    Throws exception in case of failure.
+    """
+
     if not task.is_valid():
         raise RuntimeError("Can't evaluate an invalid Task.")
 
@@ -105,58 +113,61 @@ def evaluate_task(task, results_dir):
     stdout_file = None
     stderr_file = None
 
-    try:
-        working_directory = tempfile.mkdtemp(
-            prefix="", suffix="",
-            dir=os.path.join(results_dir, task.id_)
-        )
+    working_directory = tempfile.mkdtemp(
+        prefix="", suffix="",
+        dir=task_results_dir
+    )
 
-        stdout_file = open(os.path.join(working_directory, "stdout"), "w")
-        stderr_file = open(os.path.join(working_directory, "stderr"), "w")
+    stdout_file = open(os.path.join(working_directory, "stdout"), "w")
+    stderr_file = open(os.path.join(working_directory, "stderr"), "w")
 
-        exit_code = subprocess.call(
-            evaluation_args_for_task(task),
-            cwd=working_directory,
-            stdout=stdout_file,
-            stderr=stderr_file,
-            shell=False
-        )
+    exit_code = subprocess.call(
+        evaluation_args_for_task(task),
+        cwd=working_directory,
+        stdout=stdout_file,
+        stderr=stderr_file,
+        shell=False
+    )
 
-        # We only care about exit_code not being 1, if evaluation says
-        # the machine is not compliant we will see it in the ARF later.
+    # Exit code 0 means evaluation was successful and machine is compliant.
+    # Exit code 1 means there was an error while evaluating.
+    # Exit code 2 means there were no errors but the machine is not compliant.
+    # We will treat all exit codes except 0 and 2 as fatal errors.
 
-        if exit_code == 1:
-            # TODO: Improve the exception message
-            raise EvaluationFailedError(
-                "`oscap` evaluation failed with exit code %i" % (exit_code)
-            )
-
-    except EvaluationFailedError as e:
-        stdout_contents = ""
-        stderr_contents = ""
+    if exit_code not in [0, 2]:
+        stdout_contents = "Unknown"
+        stderr_contents = "Unknown"
 
         if working_directory is not None:
             # Can't use just open(file).read(), that doesn't guarantee
             # that Python will close the file immediately
 
             if stdout_file is not None:
-                with open(stdout_file, "r") as f:
-                    stdout_contents = f.read()
+                try:
+                    with open(stdout_file, "r") as f:
+                        stdout_contents = f.read()
+                except:
+                    pass
+
             if stderr_file is not None:
-                with open(stderr_file, "r") as f:
-                    stderr_contents = f.read()
+                try:
+                    with open(stderr_file, "r") as f:
+                        stderr_contents = f.read()
+                except:
+                    pass
+
+        if working_directory is not None:
+            shutil.rmtree(working_directory)
 
         raise RuntimeError(
-            "%s\n\n"
+            "`oscap` exit code was %i! Expected 0 or 2.\n\n"
             "stdout:\n"
             "%s\n\n"
             "stderr:\n"
-            "%s\n\n" % (e, stdout_contents, stderr_contents)
+            "%s\n\n" % (exit_code, stdout_contents, stderr_contents)
         )
 
-    # finally:
-    #    if working_directory is not None:
-    #        shutil.rmtree(working_directory)
+    return working_directory
 
 
 def generate_report_args_for_result(task, arf_path):
