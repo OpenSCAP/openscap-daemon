@@ -27,13 +27,34 @@ import os.path
 
 
 class SlipMode(object):
+    """This enum describes how to behave when scheduling repeated tasks.
+
+    Consider task 1 which is scheduled to run hourly every hour. Last run was
+    at 23:00. Schedule is to run 0:00, 1:00, 2:00, ... After last run, the
+    machine was turned off for 3 hours. Time is now 2:05.
+
+    With no_slip we will run 3 evaluations and the next schedule is 4:00.
+    With slip_missed we will run 1 evaluation and the next schedule is 4:05.
+    With slip_missed_aligned we will run 1 evaluation the next schedule is 4:00.
+
+    The de-facto standard is drop_missed_aligned. The tools will try their best
+    to be right on the timetable. In case of misses they will run one task ASAP
+    and try to adhere precisely to the timetable again.
+    """
+
     UNKNOWN = 0
     NO_SLIP = 1
+    DROP_MISSED = 2
+    DROP_MISSED_ALIGNED = 3
 
     @staticmethod
     def from_string(slip_mode):
         if slip_mode == "no_slip":
             return SlipMode.NO_SLIP
+        elif slip_mode == "drop_missed":
+            return SlipMode.DROP_MISSED
+        elif slip_mode == "drop_missed_aligned":
+            return SlipMode.DROP_MISSED_ALIGNED
 
         return SlipMode.UNKNOWN
 
@@ -41,6 +62,10 @@ class SlipMode(object):
     def to_string(slip_mode):
         if slip_mode == SlipMode.NO_SLIP:
             return "no_slip"
+        elif slip_mode == SlipMode.DROP_MISSED:
+            return "drop_missed"
+        elif slip_mode == SlipMode.DROP_MISSED_ALIGNED:
+            return "drop_missed_aligned"
 
         return "unknown"
 
@@ -63,7 +88,7 @@ class Task(object):
         self.target = None
         self.schedule_not_before = None
         self.schedule_repeat_after = None
-        self.schedule_slip_mode = SlipMode.NO_SLIP
+        self.schedule_slip_mode = SlipMode.DROP_MISSED_ALIGNED
 
     def __str__(self):
         ret = "Task from config file '%s' with:\n" % (self.config_file)
@@ -137,7 +162,7 @@ class Task(object):
                 self.schedule_repeat_after = None
 
             self.schedule_slip_mode = SlipMode.from_string(get_element_attr(
-                root, "schedule", "slip_mode"))
+                root, "schedule", "slip_mode", "drop_missed_aligned"))
 
             self.config_file = config_file
 
@@ -208,7 +233,7 @@ class Task(object):
         assert(self.config_file is not None)
         self.save_as(self.config_file)
 
-    def next_schedule_not_before(self):
+    def next_schedule_not_before(self, reference_datetime):
         """Calculates the next schedule_not_before based on
         schedule_repeat_after and schedule_slip_mode.
         """
@@ -224,6 +249,20 @@ class Task(object):
         if self.schedule_slip_mode == SlipMode.NO_SLIP:
             return self.schedule_not_before + \
                 timedelta(hours=self.schedule_repeat_after)
+
+        elif self.schedule_slip_mode == SlipMode.DROP_MISSED:
+            return reference_datetime + \
+                timedelta(hours=self.schedule_repeat_after)
+
+        elif self.schedule_slip_mode == SlipMode.DROP_MISSED_ALIGNED:
+            candidate = self.schedule_not_before + \
+                timedelta(hours=self.schedule_repeat_after)
+
+            while candidate <= reference_datetime:
+                candidate += timedelta(hours=self.schedule_repeat_after)
+
+            return candidate
+
         else:
             raise RuntimeError("Unrecognized schedule_slip_mode.")
 
@@ -251,7 +290,8 @@ class Task(object):
                 raise
                 pass
 
-            self.schedule_not_before = self.next_schedule_not_before()
+            self.schedule_not_before = \
+                self.next_schedule_not_before(reference_datetime)
 
             if self.config_file:
                 self.save()
