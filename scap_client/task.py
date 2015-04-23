@@ -308,7 +308,9 @@ class Task(object):
                 except:
                     pass
 
-            return os.path.join(task_results_dir, str(last + 1))
+            ret = os.path.join(task_results_dir, str(last + 1))
+            assert(not os.path.exists(ret))
+            return ret
 
         if not self.is_valid():
             raise RuntimeError("Can't tick an invalid Task.")
@@ -324,7 +326,6 @@ class Task(object):
             wip_result = oscap_helpers.evaluate_task(
                 self, work_in_progress_results_dir)
             target_dir = get_next_target_dir(task_results_dir)
-            assert(not os.path.exists(target_dir))
 
             shutil.move(wip_result, target_dir)
 
