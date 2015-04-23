@@ -65,21 +65,22 @@ def evaluate_task(task, results_dir):
     if not task.is_valid():
         raise RuntimeError("Can't evaluate an invalid Task.")
 
-    cwd = None
+    working_directory = None
     stdout_file = None
     stderr_file = None
+
     try:
-        cwd = tempfile.mkdtemp(
+        working_directory = tempfile.mkdtemp(
             prefix="", suffix="",
             dir=os.path.join(results_dir, task.id_)
         )
 
-        stdout_file = open(os.path.join(cwd, "stdout"), "w")
-        stderr_file = open(os.path.join(cwd, "stderr"), "w")
+        stdout_file = open(os.path.join(working_directory, "stdout"), "w")
+        stderr_file = open(os.path.join(working_directory, "stderr"), "w")
 
         exit_code = subprocess.call(
             generate_evaluation_args_for_task(task),
-            cwd=cwd,
+            cwd=working_directory,
             stdout=stdout_file,
             stderr=stderr_file,
             shell=False
@@ -98,7 +99,7 @@ def evaluate_task(task, results_dir):
         stdout_contents = ""
         stderr_contents = ""
 
-        if cwd is not None:
+        if working_directory is not None:
             # Can't use just open(file).read(), that doesn't guarantee
             # that Python will close the file immediately
 
@@ -118,7 +119,7 @@ def evaluate_task(task, results_dir):
         )
 
     # finally:
-    #    if cwd is not None:
-    #        shutil.rmtree(cwd)
+    #    if working_directory is not None:
+    #        shutil.rmtree(working_directory)
 
-__all__ = ["evaluate_task"]
+__all__ = ["EvaluationFailedError", "evaluate_task"]
