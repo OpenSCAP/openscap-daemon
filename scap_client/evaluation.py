@@ -43,11 +43,14 @@ def generate_evaluation_args_for_task(task):
     if task.input_xccdf_id is not None:
         ret.extend(["--xccdf-id", task.input_xccdf_id])
 
+    if task.tailoring_file is not None:
+        ret.extend(["--tailoring-file", task.tailoring_file])
+
     if task.profile_id is not None:
         ret.extend(["--profile", task.profile_id])
 
-    if task.tailoring_file is not None:
-        ret.extend(["--tailoring-file", task.tailoring_file])
+    if task.online_remediation:
+        ret.append("--remediate")
 
     # We are on purpose only interested in ARF, everything else can be
     # generated from that.
@@ -117,3 +120,5 @@ def evaluate_task(task, results_dir):
     # finally:
     #    if cwd is not None:
     #        shutil.rmtree(cwd)
+
+__all__ = ["evaluate_task"]

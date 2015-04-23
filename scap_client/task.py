@@ -59,6 +59,7 @@ class Task(object):
         self.input_xccdf_id = None
         self.tailoring_file = None
         self.profile_id = None
+        self.online_remediation = False
         self.target = None
         self.schedule_not_before = None
         self.schedule_repeat_after = None
@@ -74,6 +75,8 @@ class Task(object):
         ret += "  - xccdf_id: \t%s\n" % (self.input_xccdf_id)
         ret += "- tailoring file: \t%s\n" % (self.tailoring_file)
         ret += "- profile ID: \t%s\n" % (self.profile_id)
+        ret += "- online remediation: \t%s\n" % \
+            ("enabled" if self.online_remediation else "disabled")
         ret += "- target: \t%s\n" % (self.target)
         ret += "- schedule:\n"
         ret += "  - not before: \t%s\n" % (self.schedule_not_before)
@@ -109,6 +112,8 @@ class Task(object):
             # TODO: in the future we want datastream tailoring as well
             self.tailoring_file = get_element_attr(root, "tailoring", "href")
             self.profile_id = get_element_text(root, "profile")
+            self.online_remediation = \
+                get_element_text(root, "online_remediation") == "true"
             self.target = get_element_text(root, "target")
 
             schedule_not_before_attr = get_element_attr(
@@ -173,6 +178,11 @@ class Task(object):
             profile_element = ElementTree.Element("profile")
             profile_element.text = self.profile_id
             root.append(profile_element)
+
+        online_remediation_element = ElementTree.Element("online_remediation")
+        online_remediation_element.text = \
+            "true" if self.online_remediation else "false"
+        root.append(online_remediation_element)
 
         target_element = ElementTree.Element("target")
         target_element.text = self.target
