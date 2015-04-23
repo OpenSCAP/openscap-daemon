@@ -1,3 +1,5 @@
+#!/usr/bin/python2
+
 # Copyright 2015 Red Hat Inc., Durham, North Carolina.
 # All Rights Reserved.
 #
@@ -18,8 +20,9 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 
-from task import Task
-from system import System
+import scap_client
+from scap_client import oscap_helpers
 
-
-__all__ = ["System", "Task"]
+task = scap_client.Task()
+task.load("data_dir/tasks/1.xml")
+print(oscap_helpers.generate_report_for_result(task, "data_dir/results", "Bswrfx"))

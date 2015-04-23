@@ -26,6 +26,42 @@ import os.path
 OSCAP_PATH = "oscap"
 
 
+def generate_guide_args_for_task(task):
+    # TODO
+    assert(task.target == "localhost")
+
+    ret = [OSCAP_PATH, "xccdf", "generate", "guide"]
+
+    # TODO: Is this supported in OpenSCAP?
+    if task.input_datastream_id is not None:
+        ret.extend(["--datastream-id", task.input_datastream_id])
+
+    # TODO: Is this supported in OpenSCAP?
+    if task.input_xccdf_id is not None:
+        ret.extend(["--xccdf-id", task.input_xccdf_id])
+
+    # TODO: Is this supported in OpenSCAP?
+    if task.tailoring_file is not None:
+        ret.extend(["--tailoring-file", task.tailoring_file])
+
+    if task.profile_id is not None:
+        ret.extend(["--profile", task.profile_id])
+
+    ret.append(task.input_file)
+
+    return ret
+
+
+def generate_guide_for_task(task):
+    if not task.is_valid():
+        raise RuntimeError("Can't generate guide for an invalid Task.")
+
+    return subprocess.check_output(
+        generate_guide_args_for_task(task),
+        shell=False
+    )
+
+
 class EvaluationFailedError(RuntimeError):
     def __init__(self, msg):
         super(self, RuntimeError).__init__(msg)
@@ -123,42 +159,36 @@ def evaluate_task(task, results_dir):
     #        shutil.rmtree(working_directory)
 
 
-def generate_guide_args_for_task(task):
+def generate_report_args_for_result(task, arf_path):
     # TODO
     assert(task.target == "localhost")
 
-    ret = [OSCAP_PATH, "xccdf", "generate", "guide"]
+    ret = [OSCAP_PATH, "xccdf", "generate", "report"]
 
-    # TODO: Is this supported in OpenSCAP?
-    if task.input_datastream_id is not None:
-        ret.extend(["--datastream-id", task.input_datastream_id])
-
-    # TODO: Is this supported in OpenSCAP?
-    if task.input_xccdf_id is not None:
-        ret.extend(["--xccdf-id", task.input_xccdf_id])
-
-    # TODO: Is this supported in OpenSCAP?
-    if task.tailoring_file is not None:
-        ret.extend(["--tailoring-file", task.tailoring_file])
-
-    if task.profile_id is not None:
-        ret.extend(["--profile", task.profile_id])
-
-    ret.append(task.input_file)
+    ret.append(arf_path)
 
     return ret
 
 
-def generate_guide_for_task(task):
+def generate_report_for_result(task, results_dir, result_id):
     if not task.is_valid():
-        raise RuntimeError("Can't generate guide for an invalid Task.")
+        raise RuntimeError("Can't generate report for any result of an "
+                           "invalid Task.")
+
+    arf_path = os.path.join(results_dir, task.id_, result_id, "results-arf.xml")
+
+    if not os.path.exists(arf_path):
+        raise RuntimeError("Can't generate report for result '%s'. "
+                           "Expected ARF at '%s' but the file doesn't exist.")
 
     return subprocess.check_output(
-        generate_guide_args_for_task(task),
+        generate_report_args_for_result(task, arf_path),
         shell=False
     )
 
+
 __all__ = [
+    "generate_guide_for_task",
     "EvaluationFailedError", "evaluate_task",
-    "generate_guide_for_task"
+    "generate_report_for_result"
 ]
