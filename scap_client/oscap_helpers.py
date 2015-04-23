@@ -171,6 +171,12 @@ def generate_report_args_for_result(task, arf_path):
 
 
 def generate_report_for_result(task, results_dir, result_id):
+    """This function assumes that the ARF was generated using evaluate_task
+    in this same package. That's why we can avoid --datastream-id, ...
+
+    The behavior is undefined for generic ARFs!
+    """
+
     if not task.is_valid():
         raise RuntimeError("Can't generate report for any result of an "
                            "invalid Task.")
