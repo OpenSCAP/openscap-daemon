@@ -71,7 +71,11 @@ class SlipMode(object):
 
 
 class Task(object):
-    """
+    """This class defined input content, tailoring, profile, ..., and schedule
+    for an SCAP evaluation task.
+
+    Example of a task:
+        Run USGCB evaluation on RHEL6 localhost machine, every day at 1:00.
     """
 
     def __init__(self):

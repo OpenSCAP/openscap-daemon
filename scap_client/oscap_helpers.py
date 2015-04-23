@@ -31,7 +31,7 @@ class EvaluationFailedError(RuntimeError):
         super(self, RuntimeError).__init__(msg)
 
 
-def generate_evaluation_args_for_task(task):
+def evaluation_args_for_task(task):
     # TODO
     assert(task.target == "localhost")
 
@@ -79,7 +79,7 @@ def evaluate_task(task, results_dir):
         stderr_file = open(os.path.join(working_directory, "stderr"), "w")
 
         exit_code = subprocess.call(
-            generate_evaluation_args_for_task(task),
+            evaluation_args_for_task(task),
             cwd=working_directory,
             stdout=stdout_file,
             stderr=stderr_file,
@@ -122,4 +122,43 @@ def evaluate_task(task, results_dir):
     #    if working_directory is not None:
     #        shutil.rmtree(working_directory)
 
-__all__ = ["EvaluationFailedError", "evaluate_task"]
+
+def generate_guide_args_for_task(task):
+    # TODO
+    assert(task.target == "localhost")
+
+    ret = [OSCAP_PATH, "xccdf", "generate", "guide"]
+
+    # TODO: Is this supported in OpenSCAP?
+    if task.input_datastream_id is not None:
+        ret.extend(["--datastream-id", task.input_datastream_id])
+
+    # TODO: Is this supported in OpenSCAP?
+    if task.input_xccdf_id is not None:
+        ret.extend(["--xccdf-id", task.input_xccdf_id])
+
+    # TODO: Is this supported in OpenSCAP?
+    if task.tailoring_file is not None:
+        ret.extend(["--tailoring-file", task.tailoring_file])
+
+    if task.profile_id is not None:
+        ret.extend(["--profile", task.profile_id])
+
+    ret.append(task.input_file)
+
+    return ret
+
+
+def generate_guide_for_task(task):
+    if not task.is_valid():
+        raise RuntimeError("Can't generate guide for an invalid Task.")
+
+    return subprocess.check_output(
+        generate_guide_args_for_task(task),
+        shell=False
+    )
+
+__all__ = [
+    "EvaluationFailedError", "evaluate_task",
+    "generate_guide_for_task"
+]
