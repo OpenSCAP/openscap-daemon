@@ -1,0 +1,91 @@
+asset
+ - host
+ - VM $ID
+ - container $ID
+
+task specification
+ - asset
+ - input content
+ - tailoring
+ - profile id
+ - HTML guide can be always generated
+
+task result
+ - ARF always
+ - HTML report can be always generated
+
+
+CLI use cases
+
+=====
+
+$ scap-client task list
+
+Active tasks:
+
+ID  | Title                   | Next run                      | Repeats |
+-------------------------------------------------------------------------
+2   | Weekly USGCB evaluation | 2015-04-10 01:00 (in 8 hours) | @weekly |
+3   | Daily STIG evaluation   | 2015-03-09 23:00 (in 6 hours) | @daily  |
+4   | One-off evaluation      | 2015-03-09 23:30 (in 6 hours) | -       |
+
+Inactive tasks:
+
+ID  | Title
+------------------------------------------------------------------------
+1   | Testing evaluation
+
+
+
+$ scap-client task 2
+
+ID:          2
+Title:       Weekly USGCB evaluation
+
+Target:      localhost
+Input file:  /usr/share/xml/scap/ssg/content/ssg-rhel6-ds.xml
+Tailoring:   N/A
+Profile ID:  xccdf_org.ssgproject.content_profile_usgcb-rhel6-server
+
+Next run:    2015-04-10 01:00 (in 8 hours)
+Repeats:     @weekly = 168 hours
+Time slip:   no_slip
+
+ARF upload:  disabled
+One-off:     false
+
+Results:
+
+ID  | Timestamp       
+----------------------
+23  | 2015-04-03 01:13
+14  | 2015-03-27 01:11
+11  | 2015-03-20 01:15
+
+
+
+$ scap-client result 23
+
+ID:         23
+Task ID:    2
+Timestamp:  2015-04-03
+ARF path:   /var/lib/scap-client/results/23/results-arf.xml
+
+
+
+$ scap-client result 23 report > report.html
+
+$ scap-client result 23 arf > arf.xml
+
+# generate report of last result from task 2
+$ scap-client result 2/last report
+
+$ scap-client task 2 disable
+$ scap-client task 2 enable
+
+
+# manually update scap-client, for debugging purposes
+$ scap-client update
+
+Found 4 tasks in total, 3 enabled tasks.
+
