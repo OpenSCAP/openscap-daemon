@@ -18,16 +18,12 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 
+from scap_client.et_helpers import get_element_attr, get_element_text
+from scap_client.evaluation import evaluate_task
+
 from xml.etree import cElementTree as ElementTree
 from datetime import datetime, timedelta
-from scap_client.et_helpers import get_element_attr, get_element_text
-import subprocess
-import tempfile
 import os.path
-# import shutil
-
-# TODO: configurable
-OSCAP_PATH = "oscap"
 
 
 class SlipMode(object):
@@ -47,11 +43,6 @@ class SlipMode(object):
             return "no_slip"
 
         return "unknown"
-
-
-class EvaluationFailedError(RuntimeError):
-    def __init__(self, msg):
-        super(self, RuntimeError).__init__(msg)
 
 
 class Task(object):
@@ -207,92 +198,6 @@ class Task(object):
         assert(self.config_file is not None)
         self.save_as(self.config_file)
 
-    def generate_evaluation_args(self):
-        # TODO
-        assert(self.target == "localhost")
-
-        ret = [OSCAP_PATH, "xccdf", "eval"]
-
-        if self.input_datastream_id is not None:
-            ret.extend(["--datastream-id", self.input_datastream_id])
-
-        if self.input_xccdf_id is not None:
-            ret.extend(["--xccdf-id", self.input_xccdf_id])
-
-        if self.profile_id is not None:
-            ret.extend(["--profile", self.profile_id])
-
-        if self.tailoring_file is not None:
-            ret.extend(["--tailoring-file", self.tailoring_file])
-
-        # We are on purpose only interested in ARF, everything else can be
-        # generated from that.
-        ret.extend(["--results-arf", "results-arf.xml"])
-
-        ret.append(self.input_file)
-
-        return ret
-
-    def evaluate(self, results_dir):
-        if not self.is_valid():
-            raise RuntimeError("Can't evaluate an invalid Task.")
-
-        cwd = None
-        stdout_file = None
-        stderr_file = None
-        try:
-            cwd = tempfile.mkdtemp(
-                prefix="", suffix="",
-                dir=os.path.join(results_dir, self.id_)
-            )
-
-            stdout_file = open(os.path.join(cwd, "stdout"), "w")
-            stderr_file = open(os.path.join(cwd, "stderr"), "w")
-
-            exit_code = subprocess.call(
-                self.generate_evaluation_args(),
-                cwd=cwd,
-                stdout=stdout_file,
-                stderr=stderr_file,
-                shell=False
-            )
-
-            # We only care about exit_code not being 1, if evaluation says
-            # the machine is not compliant we will see it in the ARF later.
-
-            if exit_code == 1:
-                # TODO: Improve the exception message
-                raise EvaluationFailedError(
-                    "`oscap` evaluation failed with exit code %i" % (exit_code)
-                )
-
-        except EvaluationFailedError as e:
-            stdout_contents = ""
-            stderr_contents = ""
-
-            if cwd is not None:
-                # Can't use just open(file).read(), that doesn't guarantee
-                # that Python will close the file immediately
-
-                if stdout_file is not None:
-                    with open(stdout_file, "r") as f:
-                        stdout_contents = f.read()
-                if stderr_file is not None:
-                    with open(stderr_file, "r") as f:
-                        stderr_contents = f.read()
-
-            raise RuntimeError(
-                "%s\n\n"
-                "stdout:\n"
-                "%s\n\n"
-                "stderr:\n"
-                "%s\n\n" % (e, stdout_contents, stderr_contents)
-            )
-
-        # finally:
-        #    if cwd is not None:
-        #        shutil.rmtree(cwd)
-
     def next_schedule_not_before(self):
         """Calculates the next schedule_not_before based on
         schedule_repeat_after and schedule_slip_mode.
@@ -330,7 +235,7 @@ class Task(object):
 
         if self.schedule_not_before <= reference_datetime:
             try:
-                self.evaluate(results_dir)
+                evaluate_task(self, results_dir)
             except:
                 # TODO
                 raise
