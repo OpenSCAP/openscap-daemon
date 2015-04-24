@@ -70,9 +70,12 @@ class System(object):
                 # TODO: warn
                 continue
 
-            task = Task()
-            task.load(full_path)
-            self.tasks[task.id_] = task
+            id_ = Task.get_task_id_from_filepath(full_path)
+
+            if id_ not in self.tasks:
+                self.tasks[id_] = Task()
+
+            self.tasks[id_].load(full_path)
 
     def save_tasks(self):
         for _, task in self.tasks.iteritems():

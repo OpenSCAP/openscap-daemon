@@ -124,6 +124,32 @@ class Task(object):
 
         return True
 
+    def is_equivalent_to(self, other):
+        """Checks that both "Task self" and "Task other" are the same except for
+        id_ and config_file.
+        """
+
+        return \
+            self.title == other.title and \
+            self.input_file == other.input_file and \
+            self.input_datastream_id == other.input_datastream_id and \
+            self.input_xccdf_id == other.input_xccdf_id and \
+            self.tailoring_file == other.tailoring_file and \
+            self.profile_id == other.profile_id and \
+            self.online_remediation == other.online_remediation and \
+            self.target == other.target and \
+            self.schedule_not_before == other.schedule_not_before and \
+            self.schedule_repeat_after == other.schedule_repeat_after and \
+            self.schedule_slip_mode == other.schedule_slip_mode
+
+    @staticmethod
+    def get_task_id_from_filepath(filepath):
+        filename, extension = os.path.splitext(
+            os.path.basename(filepath)
+        )
+
+        return filename
+
     def load(self, config_file):
         try:
             tree = ElementTree.parse(config_file)
@@ -132,7 +158,7 @@ class Task(object):
             filename, extension = os.path.splitext(
                 os.path.basename(config_file)
             )
-            self.id_ = filename
+            self.id_ = Task.get_task_id_from_filepath(config_file)
             self.title = get_element_text(root, "title")
             self.input_file = get_element_attr(root, "input", "href")
             self.input_datastream_id = \

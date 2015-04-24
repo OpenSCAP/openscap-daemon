@@ -87,7 +87,7 @@ class IntegrationTest(object):
         except:
             if temp_dir is not None:
                 print(
-                    "Examine '%s' to debug failure of this test." % (temp_dir)
+                    "Examine '%s' to debug failure of this test.\n" % (temp_dir)
                 )
 
             raise

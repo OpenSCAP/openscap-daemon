@@ -19,17 +19,30 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
+import tests.harness
+import os.path
 
-# Basic load/save unit tests
 
-import scap_client
+class SerializationTest(tests.harness.IntegrationTest):
+    def setup_data(self):
+        super(SerializationTest, self).setup_data()
+        self.copy_to_data("tasks/1.xml")
 
-task = scap_client.Task()
-task.load("data_dir_template/tasks/1.xml")
-task.save_as("temp1.xml")
+    def test(self):
+        super(SerializationTest, self).test()
 
-task2 = scap_client.Task()
-task2.load("temp1.xml")
+        self.system.load_tasks()
+        assert(len(self.system.tasks) == 1)
+        self.system.tasks["1"].save_as(
+            os.path.join(self.data_dir_path, "tasks", "2.xml")
+        )
+        self.system.load_tasks()
+        assert(len(self.system.tasks) == 2)
 
-print(task)
-print(task2)
+        assert(self.system.tasks["1"].is_equivalent_to(self.system.tasks["2"]))
+        self.system.tasks["2"].title = "Broken!"
+        assert(self.system.tasks["1"].is_equivalent_to(self.system.tasks["2"]))
+
+
+if __name__ == "__main__":
+    SerializationTest.run()
