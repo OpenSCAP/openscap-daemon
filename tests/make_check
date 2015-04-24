@@ -19,6 +19,10 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
+# parent dir of this script
+PARENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+pushd $PARENT_DIR
+
 RUNWRAPPER_NO_FORK=1 source ../runwrapper.sh
 
 for file in test_*.py
@@ -34,3 +38,5 @@ do
         echo
     fi
 done
+
+popd
