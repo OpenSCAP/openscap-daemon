@@ -19,11 +19,33 @@
 
 
 import dbus
+import dbus.service
+import gobject
 
 
 class SCAPClientDbus(dbus.service.Object):
-    def __init__(self, object_path):
-        dbus.service.Object.__init__(self, dbus.SessionBus(), object_path)
+    def __init__(self, bus, object_path):
+        super(SCAPClientDbus, self).__init__(bus, object_path)
 
-    def scheduleTask(self, spec_id):
-        pass
+    @dbus.service.method(dbus_interface="org.OpenSCAP.SCAPClientInterface",
+                         in_signature="", out_signature="s")
+    def GreetMe(self):
+        return "Hello!"
+
+
+def main():
+    import dbus.mainloop.glib
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+    # bus = dbus.SystemBus()
+    # for easier testing
+    bus = dbus.SessionBus()
+    name = dbus.service.BusName("org.OpenSCAP.SCAPClient", bus)
+    obj = SCAPClientDbus(bus, "/SCAPClient")
+
+    loop = gobject.MainLoop()
+    loop.run()
+
+
+if __name__ == "__main__":
+    main()
