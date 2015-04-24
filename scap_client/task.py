@@ -347,3 +347,13 @@ class Task(object):
                 self.next_schedule_not_before(reference_datetime)
 
             self.save()
+
+    def generate_guide(self):
+        return oscap_helpers.generate_guide_for_task(self)
+
+    def generate_report_for_result(self, results_dir, result_id):
+        return oscap_helpers.generate_report_for_result(
+            self,
+            os.path.join(results_dir, self.id_),
+            result_id
+        )

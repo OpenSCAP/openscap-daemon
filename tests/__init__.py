@@ -1,5 +1,3 @@
-#!/usr/bin/python2
-
 # Copyright 2015 Red Hat Inc., Durham, North Carolina.
 # All Rights Reserved.
 #
@@ -19,24 +17,4 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-from tests import test_utils
-
-
-class GenerateReportTest(test_utils.IntegrationTest):
-    def setup_data(self):
-        super(GenerateReportTest, self).setup_data()
-        self.copy_to_data("tasks/1.xml")
-        #self.ensure_dir("results/1/1")
-        #self.copy_to_data("results/1/1")
-
-    def test(self):
-        super(GenerateReportTest, self).test()
-
-        self.system.load_tasks()
-        assert(len(self.system.tasks) == 1)
-
-        #print(self.system.generate_report_for_task_result("1", "1"))
-
-
-if __name__ == "__main__":
-    GenerateReportTest.run()
+all = ["test_utils"]

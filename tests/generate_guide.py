@@ -19,10 +19,22 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
+from tests import test_utils
 
-import scap_client
-from scap_client import oscap_helpers
 
-task = scap_client.Task()
-task.load("data_dir/tasks/1.xml")
-print(oscap_helpers.generate_guide_for_task(task))
+class GenerateGuideTest(test_utils.IntegrationTest):
+    def setup_data(self):
+        super(GenerateGuideTest, self).setup_data()
+        self.copy_to_data("tasks/1.xml")
+
+    def test(self):
+        super(GenerateGuideTest, self).test()
+
+        self.system.load_tasks()
+        assert(len(self.system.tasks) == 1)
+
+        print(self.system.generate_guide_for_task("1"))
+
+
+if __name__ == "__main__":
+    GenerateGuideTest.run()

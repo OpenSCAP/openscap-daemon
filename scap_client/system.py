@@ -72,7 +72,7 @@ class System(object):
 
             task = Task()
             task.load(full_path)
-            self.tasks[full_path] = task
+            self.tasks[task.id_] = task
 
     def save_tasks(self):
         for _, task in self.tasks.iteritems():
@@ -90,3 +90,12 @@ class System(object):
                 self.results_dir,
                 self.work_in_progress_results_dir
             )
+
+    def generate_guide_for_task(self, task_id):
+        return self.tasks[task_id].generate_guide()
+
+    def generate_report_for_task_result(self, task_id, result_id):
+        return self.tasks[task_id].generate_report_for_result(
+            self.results_dir,
+            result_id
+        )

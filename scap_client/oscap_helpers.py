@@ -192,11 +192,12 @@ def generate_report_for_result(task, results_dir, result_id):
         raise RuntimeError("Can't generate report for any result of an "
                            "invalid Task.")
 
-    arf_path = os.path.join(results_dir, task.id_, result_id, "results-arf.xml")
+    arf_path = os.path.join(results_dir, result_id, "results-arf.xml")
 
     if not os.path.exists(arf_path):
         raise RuntimeError("Can't generate report for result '%s'. "
-                           "Expected ARF at '%s' but the file doesn't exist.")
+                           "Expected ARF at '%s' but the file doesn't exist."
+                           % (result_id, arf_path))
 
     return subprocess.check_output(
         generate_report_args_for_result(task, arf_path),
