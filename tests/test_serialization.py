@@ -33,18 +33,18 @@ class SerializationTest(tests.harness.APITest):
 
         self.system.load_tasks()
         assert(len(self.system.tasks) == 1)
-        self.system.tasks["1"].save_as(
+        self.system.tasks[1].save_as(
             os.path.join(self.data_dir_path, "tasks", "2.xml")
         )
         self.system.load_tasks()
         assert(len(self.system.tasks) == 2)
 
         assert(
-            self.system.tasks["1"].is_equivalent_to(self.system.tasks["2"])
+            self.system.tasks[1].is_equivalent_to(self.system.tasks[2])
         )
-        self.system.tasks["2"].title = "Broken!"
+        self.system.tasks[2].title = "Broken!"
         assert(
-            not self.system.tasks["1"].is_equivalent_to(self.system.tasks["2"])
+            not self.system.tasks[1].is_equivalent_to(self.system.tasks[2])
         )
 
 

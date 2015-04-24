@@ -35,7 +35,7 @@ class GenerateReportTest(tests.harness.APITest):
         self.system.load_tasks()
         assert(len(self.system.tasks) == 1)
 
-        #print(self.system.generate_report_for_task_result("1", "1"))
+        #print(self.system.generate_report_for_task_result(1, 1))
 
 
 if __name__ == "__main__":

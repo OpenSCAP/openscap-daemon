@@ -97,7 +97,7 @@ class Task(object):
 
     def __str__(self):
         ret = "Task from config file '%s' with:\n" % (self.config_file)
-        ret += "- ID: \t%s\n" % (self.id_)
+        ret += "- ID: \t%i\n" % (self.id_)
         ret += "- title: \t%s\n" % (self.title)
         ret += "- input:\n"
         ret += "  - file: \t%s\n" % (self.input_file)
@@ -148,16 +148,15 @@ class Task(object):
             os.path.basename(filepath)
         )
 
-        return filename
+        ret = int(filename)
+        assert(ret > 0)
+        return ret
 
     def load(self, config_file):
         try:
             tree = ElementTree.parse(config_file)
             root = tree.getroot()
 
-            filename, extension = os.path.splitext(
-                os.path.basename(config_file)
-            )
             self.id_ = Task.get_task_id_from_filepath(config_file)
             self.title = get_element_text(root, "title")
             self.input_file = get_element_attr(root, "input", "href")
@@ -209,8 +208,6 @@ class Task(object):
 
     def save_as(self, config_file):
         root = ElementTree.Element("task")
-
-        # TODO: Check self.id_ sanity?
 
         if self.title is not None:
             title_element = ElementTree.Element("title")
@@ -298,7 +295,7 @@ class Task(object):
             raise RuntimeError("Unrecognized schedule_slip_mode.")
 
     def _get_task_results_dir(self, results_dir):
-        ret = os.path.join(results_dir, self.id_)
+        ret = os.path.join(results_dir, str(self.id_))
         if not os.path.exists(ret):
             os.mkdir(ret)
 
@@ -380,6 +377,6 @@ class Task(object):
     def generate_report_for_result(self, results_dir, result_id):
         return oscap_helpers.generate_report_for_result(
             self,
-            os.path.join(results_dir, self.id_),
+            os.path.join(results_dir, str(self.id_)),
             result_id
         )

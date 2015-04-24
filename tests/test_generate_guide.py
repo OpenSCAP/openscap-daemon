@@ -33,7 +33,7 @@ class GenerateGuideTest(tests.harness.APITest):
         self.system.load_tasks()
         assert(len(self.system.tasks) == 1)
 
-        print(self.system.generate_guide_for_task("1"))
+        print(self.system.generate_guide_for_task(1))
 
 
 if __name__ == "__main__":

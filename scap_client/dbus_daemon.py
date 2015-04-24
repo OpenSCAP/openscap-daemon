@@ -27,6 +27,10 @@ OBJECT_PATH = "/SCAPClient"
 DBUS_INTERFACE = "org.OpenSCAP.SCAPClientInterface"
 BUS_NAME = "org.OpenSCAP.SCAPClient"
 
+# Internal note: Python does not support unsigned long integer while dbus does,
+# to avoid weird issues I just use 64bit integer in the interface signatures.
+# "2^63-1 IDs should be enough for everyone."
+
 
 class SCAPClientDbus(dbus.service.Object):
     def __init__(self, bus, data_dir_path):
@@ -43,7 +47,7 @@ class SCAPClientDbus(dbus.service.Object):
         return "Hello!"
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
-                         in_signature="", out_signature="as")
+                         in_signature="", out_signature="ax")
     def ListTasksIDs(self):
         """Returns a list of IDs of tasks that System has loaded from config
         files.
@@ -51,14 +55,14 @@ class SCAPClientDbus(dbus.service.Object):
         return self.system.list_task_ids()
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
-                         in_signature="s", out_signature="s")
+                         in_signature="x", out_signature="s")
     def GenerateGuideForTask(self, task_id):
         """Generates and returns HTML guide for a task with given ID.
         """
         return self.system.generate_guide_for_task(task_id)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
-                         in_signature="ss", out_signature="s")
+                         in_signature="xx", out_signature="s")
     def GenerateReportForTaskResult(self, task_id, result_id):
         """Generates and returns HTML report for report of given task.
         """
