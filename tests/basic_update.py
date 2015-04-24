@@ -19,12 +19,22 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
+from tests import test_utils
 
-# Basic system tick tests
 
-import scap_client
+class BasicUpdateTest(test_utils.IntegrationTest):
+    def setup_data(self):
+        super(BasicUpdateTest, self).setup_data()
+        self.copy_to_data("tasks/1.xml")
 
-system = scap_client.System("data_dir")
-system.load_tasks()
-print(system.tasks)
-system.tick()
+    def test(self):
+        super(BasicUpdateTest, self).test()
+
+        self.system.load_tasks()
+        assert(len(self.system.tasks) == 1)
+
+        print(self.system.tasks)
+        self.system.update()
+
+if __name__ == "__main__":
+    BasicUpdateTest.run()

@@ -1,1 +1,0 @@
-<task><title>Weekly SCAP Security Guide Evaluation</title><input href="/usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml" /><profile>xccdf_org.ssgproject.content_profile_common</profile><online_remediation>false</online_remediation><target>localhost</target><schedule not_before="2015-04-05T05:30" repeat_after="1" slip_mode="no_slip" /></task>

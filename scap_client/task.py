@@ -271,8 +271,12 @@ class Task(object):
         else:
             raise RuntimeError("Unrecognized schedule_slip_mode.")
 
-    def get_task_results_dir(self, results_dir):
-        return os.path.join(results_dir, self.id_)
+    def _get_task_results_dir(self, results_dir):
+        ret = os.path.join(results_dir, self.id_)
+        if not os.path.exists(ret):
+            os.mkdir(ret)
+
+        return ret
 
     def list_result_ids(self, results_dir):
         """IDs are returned in reverse order sorted by strings as if they were
@@ -286,11 +290,11 @@ class Task(object):
         # ['9', '8', '10', '1'] where we wanted ['10', '9', '8', '1']
 
         return sorted(
-            os.listdir(self.get_task_results_dir(results_dir)), reverse=True,
+            os.listdir(self._get_task_results_dir(results_dir)), reverse=True,
             key=lambda s: (len(s), s)
         )
 
-    def get_next_target_dir(self, results_dir):
+    def _get_next_target_dir(self, results_dir):
         # We may consider having a file that contains the last ID in the
         # future. I considered that but right now I think a result with more
         # than a few thousand results is unlikely. User will use results
@@ -309,11 +313,11 @@ class Task(object):
             except:
                 pass
 
-        ret = os.path.join(self.get_task_results_dir(results_dir), str(last + 1))
+        ret = os.path.join(self._get_task_results_dir(results_dir), str(last + 1))
         assert(not os.path.exists(ret))
         return ret
 
-    def tick(self, reference_datetime, results_dir, work_in_progress_results_dir):
+    def update(self, reference_datetime, results_dir, work_in_progress_results_dir):
         """Figures out if the task should be run right now, alters the schedule
         values accordingly.
 
@@ -335,12 +339,11 @@ class Task(object):
         if self.schedule_not_before <= reference_datetime:
             wip_result = oscap_helpers.evaluate_task(
                 self, work_in_progress_results_dir)
-            target_dir = self.get_next_target_dir(results_dir)
+            target_dir = self._get_next_target_dir(results_dir)
 
             shutil.move(wip_result, target_dir)
 
             self.schedule_not_before = \
                 self.next_schedule_not_before(reference_datetime)
 
-            if self.config_file:
-                self.save()
+            self.save()

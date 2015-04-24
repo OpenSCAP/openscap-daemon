@@ -25,25 +25,34 @@ from scap_client.task import Task
 
 
 class System(object):
+    @staticmethod
+    def prepare_data_dir(data_dir):
+        tasks_dir = os.path.join(data_dir, "tasks")
+        results_dir = os.path.join(data_dir, "results")
+        work_in_progress_results_dir = \
+            os.path.join(results_dir, "work_in_progress")
+
+        # TODO: Warn about created dirs?
+        if not os.path.exists(data_dir):
+            os.mkdir(data_dir)
+
+        if not os.path.exists(tasks_dir):
+            os.mkdir(tasks_dir)
+
+        if not os.path.exists(results_dir):
+            os.mkdir(results_dir)
+
+        if not os.path.exists(work_in_progress_results_dir):
+            os.mkdir(work_in_progress_results_dir)
+
     def __init__(self, data_dir):
+        System.prepare_data_dir(data_dir)
+
         self.data_dir = data_dir
         self.tasks_dir = os.path.join(self.data_dir, "tasks")
         self.results_dir = os.path.join(self.data_dir, "results")
         self.work_in_progress_results_dir = \
             os.path.join(self.results_dir, "work_in_progress")
-
-        # TODO: Warn about created dirs?
-        if not os.path.exists(self.data_dir):
-            os.mkdir(self.data_dir)
-
-        if not os.path.exists(self.tasks_dir):
-            os.mkdir(self.tasks_dir)
-
-        if not os.path.exists(self.results_dir):
-            os.mkdir(self.results_dir)
-
-        if not os.path.exists(self.work_in_progress_results_dir):
-            os.mkdir(self.work_in_progress_results_dir)
 
         self.tasks = dict()
 
@@ -69,9 +78,14 @@ class System(object):
         for _, task in self.tasks.iteritems():
             task.save()
 
-    def tick(self, reference_datetime=datetime.utcnow()):
+    def update(self, reference_datetime=datetime.utcnow()):
+        # TODO: This can be changed to support multiple workers in the future
+        #       if need arises. Right now it's fully serial but since Tasks are
+        #       independent we can do them in parallel, we can never update the
+        #       same Task two times in parallel though.
+
         for _, task in self.tasks.iteritems():
-            task.tick(
+            task.update(
                 reference_datetime,
                 self.results_dir,
                 self.work_in_progress_results_dir
