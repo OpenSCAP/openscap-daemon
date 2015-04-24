@@ -22,7 +22,7 @@
 import tests.harness
 
 
-class BasicUpdateTest(tests.harness.IntegrationTest):
+class BasicUpdateTest(tests.harness.APITest):
     def setup_data(self):
         super(BasicUpdateTest, self).setup_data()
         self.copy_to_data("tasks/1.xml")

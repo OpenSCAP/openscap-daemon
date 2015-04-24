@@ -22,7 +22,7 @@
 import tests.harness
 
 
-class GenerateReportTest(tests.harness.IntegrationTest):
+class GenerateReportTest(tests.harness.APITest):
     def setup_data(self):
         super(GenerateReportTest, self).setup_data()
         self.copy_to_data("tasks/1.xml")

@@ -22,7 +22,7 @@
 import tests.harness
 
 
-class GenerateGuideTest(tests.harness.IntegrationTest):
+class GenerateGuideTest(tests.harness.APITest):
     def setup_data(self):
         super(GenerateGuideTest, self).setup_data()
         self.copy_to_data("tasks/1.xml")

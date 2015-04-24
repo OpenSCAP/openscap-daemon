@@ -23,7 +23,7 @@ import tests.harness
 import os.path
 
 
-class SerializationTest(tests.harness.IntegrationTest):
+class SerializationTest(tests.harness.APITest):
     def setup_data(self):
         super(SerializationTest, self).setup_data()
         self.copy_to_data("tasks/1.xml")

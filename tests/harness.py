@@ -34,7 +34,7 @@ def get_template_data_dir():
     )
 
 
-class IntegrationTest(object):
+class APITest(object):
     """Needs a data_dir to work
     """
 
