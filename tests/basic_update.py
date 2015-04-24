@@ -19,10 +19,10 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-from tests import test_utils
+import tests.harness
 
 
-class BasicUpdateTest(test_utils.IntegrationTest):
+class BasicUpdateTest(tests.harness.IntegrationTest):
     def setup_data(self):
         super(BasicUpdateTest, self).setup_data()
         self.copy_to_data("tasks/1.xml")
