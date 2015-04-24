@@ -19,7 +19,7 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-RUNWRAPPER_NO_FORK=1 ../runwrapper.sh
+RUNWRAPPER_NO_FORK=1 source ../runwrapper.sh
 
 for file in test_*.py
 do
