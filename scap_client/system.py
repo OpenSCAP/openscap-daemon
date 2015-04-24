@@ -81,6 +81,9 @@ class System(object):
         for _, task in self.tasks.iteritems():
             task.save()
 
+    def list_task_ids(self):
+        return self.tasks.keys()
+
     def update(self, reference_datetime=datetime.utcnow()):
         # TODO: This can be changed to support multiple workers in the future
         #       if need arises. Right now it's fully serial but since Tasks are

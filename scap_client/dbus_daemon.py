@@ -17,20 +17,52 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
+from scap_client import System
 
 import dbus
 import dbus.service
 import gobject
 
+OBJECT_PATH = "/SCAPClient"
+DBUS_INTERFACE = "org.OpenSCAP.SCAPClientInterface"
+BUS_NAME = "org.OpenSCAP.SCAPClient"
+
 
 class SCAPClientDbus(dbus.service.Object):
-    def __init__(self, bus, object_path):
-        super(SCAPClientDbus, self).__init__(bus, object_path)
+    def __init__(self, bus, data_dir_path):
+        super(SCAPClientDbus, self).__init__(bus, OBJECT_PATH)
 
-    @dbus.service.method(dbus_interface="org.OpenSCAP.SCAPClientInterface",
+        self.system = System(data_dir_path)
+        self.system.load_tasks()
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="", out_signature="s")
     def GreetMe(self):
+        """Testing method. Don't expect it to be useful
+        """
         return "Hello!"
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="", out_signature="as")
+    def ListTasksIDs(self):
+        """Returns a list of IDs of tasks that System has loaded from config
+        files.
+        """
+        return self.system.list_task_ids()
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="s", out_signature="s")
+    def GenerateGuideForTask(self, task_id):
+        """Generates and returns HTML guide for a task with given ID.
+        """
+        return self.system.generate_guide_for_task(task_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="ss", out_signature="s")
+    def GenerateReportForTaskResult(self, task_id, result_id):
+        """Generates and returns HTML report for report of given task.
+        """
+        return self.system.generate_report_for_task_result(task_id, result_id)
 
 
 def main():
@@ -40,10 +72,12 @@ def main():
     # bus = dbus.SystemBus()
     # for easier testing
     bus = dbus.SessionBus()
-    name = dbus.service.BusName("org.OpenSCAP.SCAPClient", bus)
-    obj = SCAPClientDbus(bus, "/SCAPClient")
+    name = dbus.service.BusName(BUS_NAME, bus)
+    # TODO: hardcoded path
+    obj = SCAPClientDbus(bus, "../tests/data_dir_template")
 
     loop = gobject.MainLoop()
+    gobject.threads_init()
     loop.run()
 
 
