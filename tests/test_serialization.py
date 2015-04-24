@@ -39,9 +39,13 @@ class SerializationTest(tests.harness.IntegrationTest):
         self.system.load_tasks()
         assert(len(self.system.tasks) == 2)
 
-        assert(self.system.tasks["1"].is_equivalent_to(self.system.tasks["2"]))
+        assert(
+            self.system.tasks["1"].is_equivalent_to(self.system.tasks["2"])
+        )
         self.system.tasks["2"].title = "Broken!"
-        assert(self.system.tasks["1"].is_equivalent_to(self.system.tasks["2"]))
+        assert(
+            not self.system.tasks["1"].is_equivalent_to(self.system.tasks["2"])
+        )
 
 
 if __name__ == "__main__":
