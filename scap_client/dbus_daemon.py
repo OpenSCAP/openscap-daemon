@@ -42,7 +42,7 @@ class SCAPClientDbus(dbus.service.Object):
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="", out_signature="s")
     def GreetMe(self):
-        """Testing method. Don't expect it to be useful
+        """Testing method. Don't expect it to be useful.
         """
         return "Hello!"
 
@@ -53,6 +53,13 @@ class SCAPClientDbus(dbus.service.Object):
         files.
         """
         return self.system.list_task_ids()
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="x", out_signature="s")
+    def GetTaskTitle(self, task_id):
+        """Retrieves title of task with given ID.
+        """
+        return self.system.get_task_title(task_id)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="x", out_signature="s")

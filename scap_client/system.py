@@ -84,6 +84,10 @@ class System(object):
     def list_task_ids(self):
         return self.tasks.keys()
 
+    def get_task_title(self, task_id):
+        task = self.tasks[task_id]
+        return task.title
+
     def update(self, reference_datetime=datetime.utcnow()):
         # TODO: This can be changed to support multiple workers in the future
         #       if need arises. Right now it's fully serial but since Tasks are
