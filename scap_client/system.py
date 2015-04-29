@@ -140,7 +140,7 @@ class System(object):
 
         return task.title
 
-    def update(self, reference_datetime=datetime.utcnow(), max_jobs=4):
+    def update(self, reference_datetime=None, max_jobs=4):
         """Evaluates all currently outstanding tasks and returns.
         Outstanding task means it's not_before is lower than reference_datetime,
         and it is not disabled. Tasks can be processed in parallel if their
@@ -150,6 +150,9 @@ class System(object):
         reference_datetime - Which date/time should be used to plan tasks.
         max_jobs - Use at most this amount of threads to evaluate.
         """
+
+        if reference_datetime is None:
+            reference_datetime = datetime.utcnow()
 
         logging.debug(
             "Updating system, reference_datetime='%s'." %
