@@ -49,3 +49,25 @@ def get_element_attr(parent, element_name, attr_name, default=None):
         return default
 
     return ret
+
+
+# taken from ElementLib and slightly tweaked for readability
+def indent(elem, level=0, indent_char="    "):
+    i = "\n" + level * indent_char
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + indent_char
+
+        last = None
+        for e in elem:
+            indent(e, level + 1)
+            if not e.tail or not e.tail.strip():
+                e.tail = i + indent_char
+
+            last = e
+
+        if not last.tail or not last.tail.strip():
+            last.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
