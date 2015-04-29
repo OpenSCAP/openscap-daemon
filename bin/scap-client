@@ -49,6 +49,8 @@ def get_dbus_interface():
 
 def cli_task(dbus_iface, args):
     if args.task_id is None:
+        # args.action is ignored in this scope
+
         task_ids = dbus_iface.ListTaskIDs()
 
         for task_id in task_ids:
@@ -56,12 +58,20 @@ def cli_task(dbus_iface, args):
             print("%i\t\t%s\t\t..." % (task_id, title))
 
     else:
-        title = dbus_iface.GetTaskTitle(args.task_id)
+        if args.task_action == "info":
+            title = dbus_iface.GetTaskTitle(args.task_id)
 
-        print("ID:\t%i" % (args.task_id))
-        print("Title:\t%s" % (title))
+            print("ID:\t%i" % (args.task_id))
+            print("Title:\t%s" % (title))
 
-        # TODO
+            # TODO
+
+        elif args.task_action == "guide":
+            guide = dbus_iface.GenerateGuideForTask(args.task_id)
+            print(guide)
+
+        else:
+            raise RuntimeError("Unknown action '%s'." % (args.task_action))
 
 
 def cli_status(dbus_iface, args):
@@ -111,6 +121,10 @@ def main():
         "task_id", metavar="TASK_ID", type=int, nargs="?",
         help="ID of the task to display, if none is provided a summary of all "
         "tasks is displayed"
+    )
+    task_parser.add_argument(
+        "task_action", metavar="ACTION", type=str,
+        choices=["info", "guide"], default="info", nargs="?"
     )
 
     status_parser = subparsers.add_parser(
