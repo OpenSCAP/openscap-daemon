@@ -213,8 +213,15 @@ def generate_report_for_result(task, results_dir, result_id):
                            "Expected ARF at '%s' but the file doesn't exist."
                            % (result_id, arf_path))
 
+    args = generate_report_args_for_result(task, arf_path)
+
+    logging.debug(
+        "Generating report for result %i of task %i with command '%s'." %
+        (result_id, task.id_, " ".join(args))
+    )
+
     return subprocess.check_output(
-        generate_report_args_for_result(task, arf_path),
+        args,
         shell=False
     )
 
