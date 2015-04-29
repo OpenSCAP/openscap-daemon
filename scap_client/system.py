@@ -150,7 +150,7 @@ class System(object):
                                     self.work_in_progress_results_dir
                                 )
 
-                        except Exception as e:
+                        except:
                             error_encountered.set()
                             # TODO: report
 

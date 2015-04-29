@@ -340,11 +340,15 @@ class Task(object):
             except:
                 pass
 
-        ret = os.path.join(self._get_task_results_dir(results_dir), str(last + 1))
+        ret = os.path.join(
+            self._get_task_results_dir(results_dir),
+            str(last + 1)
+        )
         assert(not os.path.exists(ret))
         return ret
 
-    def update(self, reference_datetime, results_dir, work_in_progress_results_dir):
+    def update(self, reference_datetime, results_dir,
+               work_in_progress_results_dir):
         """Figures out if the task should be run right now, alters the schedule
         values accordingly.
 
