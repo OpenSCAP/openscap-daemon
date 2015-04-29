@@ -106,17 +106,20 @@ class System(object):
         #       independent we can do them in parallel, we can never update the
         #       same Task two times in parallel though.
 
-        # Locking because self.tasks list cannot change while we are iterating,
-        # changing it would cause undefined behavior.
+        # We need to copy because self.tasks cannot change while we are
+        # iterating, that would cause undefined behavior.
         # The tasks themselves *can* change but they cannot be added or removed
-        # from the self.tasks list.
+        # from the list.
+        tasks_copy = []
         with self.tasks_lock:
-            for _, task in self.tasks.iteritems():
-                task.update(
-                    reference_datetime,
-                    self.results_dir,
-                    self.work_in_progress_results_dir
-                )
+            tasks_copy = list(self.tasks.itervalues())
+
+        for task in tasks_copy:
+            task.update(
+                reference_datetime,
+                self.results_dir,
+                self.work_in_progress_results_dir
+            )
 
     def update_worker(self):
         # TODO: Sleep until necessary to save CPU cycles
