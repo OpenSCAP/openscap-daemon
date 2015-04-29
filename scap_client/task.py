@@ -414,6 +414,18 @@ class Task(object):
     def generate_guide(self):
         return oscap_helpers.generate_guide_for_task(self)
 
+    def get_arf_of_result(self, results_dir, result_id):
+        # TODO: This needs refactoring in the future, the secret that the file
+        #       is called "arf.xml" is all over the place.
+        path = os.path.join(
+            results_dir, str(self.id_), str(result_id), "arf.xml"
+        )
+        ret = ""
+        with open(path, "r") as f:
+            ret = f.read()
+
+        return ret
+
     def generate_report_for_result(self, results_dir, result_id):
         return oscap_helpers.generate_report_for_result(
             self,

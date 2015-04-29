@@ -267,6 +267,24 @@ class System(object):
 
         return task.generate_guide()
 
+    def get_task_result_ids(self, task_id):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        # TODO: Is this a race condition? look into task.update
+        return task.list_result_ids(self.results_dir)
+
+    def get_arf_of_task_result(self, task_id, result_id):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.get_arf_of_result(
+            self.results_dir,
+            result_id
+        )
+
     def generate_report_for_task_result(self, task_id, result_id):
         task = None
         with self.tasks_lock:

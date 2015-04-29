@@ -77,6 +77,20 @@ class SCAPClientDbus(dbus.service.Object):
         return self.system.generate_guide_for_task(task_id)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="x", out_signature="ax")
+    def GetTaskResultIDs(self, task_id):
+        """Retrieves list of available task result IDs.
+        """
+        return self.system.get_task_result_ids(task_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xx", out_signature="s")
+    def GetARFOfTaskResult(self, task_id, result_id):
+        """Retrieves full ARF of report of given task.
+        """
+        return self.system.get_arf_of_task_result(task_id, result_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")
     def GenerateReportForTaskResult(self, task_id, result_id):
         """Generates and returns HTML report for report of given task.

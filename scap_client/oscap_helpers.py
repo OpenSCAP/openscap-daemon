@@ -100,7 +100,7 @@ def evaluation_args_for_task(task):
 
     # We are on purpose only interested in ARF, everything else can be
     # generated from that.
-    ret.extend(["--results-arf", "results-arf.xml"])
+    ret.extend(["--results-arf", "arf.xml"])
 
     ret.append(task.input_file)
 
@@ -213,7 +213,7 @@ def generate_report_for_result(task, results_dir, result_id):
         raise RuntimeError("Can't generate report for any result of an "
                            "invalid Task.")
 
-    arf_path = os.path.join(results_dir, str(result_id), "results-arf.xml")
+    arf_path = os.path.join(results_dir, str(result_id), "arf.xml")
 
     if not os.path.exists(arf_path):
         raise RuntimeError("Can't generate report for result '%s'. "

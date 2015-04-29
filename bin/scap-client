@@ -68,8 +68,26 @@ def cli_status(dbus_iface, args):
     pass
 
 
-def cli_results(dbus_iface, args):
-    pass
+def cli_result(dbus_iface, args):
+    if args.result_id is None:
+        result_ids = dbus_iface.GetTaskResultIDs(args.task_id)
+        for result_id in result_ids:
+            # TODO
+            print("%i\t\t\tabcd" % (result_id))
+
+    else:
+        if args.format == "arf":
+            arf = dbus_iface.GetARFOfTaskResult(args.task_id, args.result_id)
+            print(arf)
+
+        elif args.format == "html":
+            html = dbus_iface.GenerateReportForTaskResult(
+                args.task_id, args.result_id
+            )
+            print(html)
+
+        else:
+            raise RuntimeError("Unknown format '%s'." % (args.format))
 
 
 def main():
@@ -127,7 +145,7 @@ def main():
     elif args.action == "status":
         cli_status(dbus_iface, args)
     elif args.action == "result":
-        cli_results(dbus_iface, args)
+        cli_result(dbus_iface, args)
     else:
         raise RuntimeError("Unknown action '%s'." % (args.action))
 
