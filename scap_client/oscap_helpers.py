@@ -59,8 +59,15 @@ def generate_guide_for_task(task):
     if not task.is_valid():
         raise RuntimeError("Can't generate guide for an invalid Task.")
 
+    args = generate_guide_args_for_task(task)
+
+    logging.debug(
+        "Generating guide for task %i with command '%s'." %
+        (task.id_, " ".join(args))
+    )
+
     return subprocess.check_output(
-        generate_guide_args_for_task(task),
+        args,
         shell=False
     )
 
