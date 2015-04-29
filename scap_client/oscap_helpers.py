@@ -22,6 +22,8 @@ import subprocess
 import tempfile
 import os.path
 import shutil
+import logging
+
 
 # TODO: configurable
 OSCAP_PATH = "oscap"
@@ -121,12 +123,24 @@ def evaluate_task(task, task_results_dir):
     stdout_file = open(os.path.join(working_directory, "stdout"), "w")
     stderr_file = open(os.path.join(working_directory, "stderr"), "w")
 
+    args = evaluation_args_for_task(task)
+
+    logging.debug(
+        "Starting evaluation of task '%s' with command '%s'." %
+        (task.id_, " ".join(args))
+    )
+
     exit_code = subprocess.call(
-        evaluation_args_for_task(task),
+        args,
         cwd=working_directory,
         stdout=stdout_file,
         stderr=stderr_file,
         shell=False
+    )
+
+    logging.debug(
+        "Finished evaluation of task '%s', exit code %i." %
+        (task.id_, exit_code)
     )
 
     # Exit code 0 means evaluation was successful and machine is compliant.
