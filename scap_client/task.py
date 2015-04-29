@@ -26,6 +26,7 @@ from datetime import datetime, timedelta
 import os.path
 import shutil
 import threading
+import logging
 
 
 class SlipMode(object):
@@ -366,14 +367,37 @@ class Task(object):
 
             if self.schedule_not_before is None:
                 # this Task is not scheduled to run right now, it is disabled
+                logging.debug(
+                    "Task '%s' is disabled. schedule_not_before is None." %
+                    (self.id_)
+                )
                 return
 
             if self.schedule_not_before <= reference_datetime:
+                logging.debug(
+                    "Evaluating task '%s'. It was scheduled to be evaluated "
+                    "later than %s, reference_datetime %s is higher than or "
+                    "equal." %
+                    (self.id_, self.schedule_not_before, reference_datetime)
+                )
+
                 wip_result = oscap_helpers.evaluate_task(
                     self, work_in_progress_results_dir)
+
+                # We already have update_lock, there is no risk of a race
+                # condition between acquiring target dir and moving the results
+                # there.
                 target_dir = self._get_next_target_dir(results_dir)
+                logging.debug(
+                    "Moving results of task '%s' from '%s' to '%s'." %
+                    (self.id_, wip_result, target_dir)
+                )
 
                 shutil.move(wip_result, target_dir)
+                logging.info(
+                    "Evaluated task '%s' successfully, new results in '%s'." %
+                    (self.id_, target_dir)
+                )
 
                 self.schedule_not_before = \
                     self.next_schedule_not_before(reference_datetime)
