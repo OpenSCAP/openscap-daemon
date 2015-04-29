@@ -175,7 +175,7 @@ class System(object):
 
             logging.debug(
                 "Organized %i task definitions into %i buckets by target." %
-                (len(self.tasks), len(tasks_by_target.keys()))
+                (len(self.tasks), len(tasks_by_target))
             )
 
         # Each different target will be a queue item
@@ -186,7 +186,9 @@ class System(object):
         # If any error occurs we want to cancel all jobs
         error_encountered = threading.Event()
 
-        def update_tasks_of_target():
+        def update_tasks_of_target(job_id):
+            logging.debug("Task update job %i started." % (job_id))
+
             while True:
                 try:
                     (target, target_tasks) = queue.get(False)
@@ -230,20 +232,20 @@ class System(object):
                 except Queue.Empty:
                     break
 
+            logging.debug("Task update job %i finished." % (job_id))
+
         jobs = []
         assert(max_jobs > 0)
         # It makes no sense to spawn more jobs than we have targets
-        number_of_jobs = min(max_jobs, queue.qsize)
+        number_of_jobs = min(max_jobs, len(tasks_by_target))
         for job_id in xrange(number_of_jobs):
             job = threading.Thread(
                 name="Task update job %i" % (job_id),
-                target=update_tasks_of_target
+                target=update_tasks_of_target,
+                args=(job_id,)
             )
             jobs.append(job)
             job.start()
-            logging.debug(
-                "Started task update job %i." % (job_id)
-            )
 
         queue.join()
 
