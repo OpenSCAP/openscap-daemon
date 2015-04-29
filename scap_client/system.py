@@ -22,6 +22,7 @@ import os.path
 from datetime import datetime
 import time
 import threading
+import logging
 import Queue
 
 from scap_client.task import Task
@@ -35,17 +36,33 @@ class System(object):
         work_in_progress_results_dir = \
             os.path.join(results_dir, "work_in_progress")
 
-        # TODO: Warn about created dirs?
         if not os.path.exists(data_dir):
+            logging.info(
+                "Creating data directory at '%s' because it doesn't exist." %
+                (data_dir)
+            )
             os.mkdir(data_dir)
 
         if not os.path.exists(tasks_dir):
+            logging.info(
+                "Creating tasks directory at '%s' because it doesn't exist." %
+                (tasks_dir)
+            )
             os.mkdir(tasks_dir)
 
         if not os.path.exists(results_dir):
+            logging.info(
+                "Creating results directory at '%s' because it doesn't exist." %
+                (results_dir)
+            )
             os.mkdir(results_dir)
 
         if not os.path.exists(work_in_progress_results_dir):
+            logging.info(
+                "Creating results work in progresss directory at '%s' because "
+                "it doesn't exist." %
+                (work_in_progress_results_dir)
+            )
             os.mkdir(work_in_progress_results_dir)
 
     def __init__(self, data_dir):
@@ -61,17 +78,27 @@ class System(object):
         self.tasks_lock = threading.Lock()
 
     def load_tasks(self):
+        logging.info("Loading task definitions from '%s'..." % (self.tasks_dir))
         task_files = os.listdir(self.tasks_dir)
 
+        task_count = 0
         for task_file in task_files:
             if not task_file.endswith(".xml"):
-                # TODO: warn
+                logging.warning(
+                    "Found '%s' in task definitions directory '%s'. Paths "
+                    "not ending with '.xml' are unexpected in the task "
+                    "definitions directory " % (task_file, self.tasks_dir)
+                )
                 continue
 
             full_path = os.path.join(self.tasks_dir, task_file)
 
             if not os.path.isfile(full_path):
-                # TODO: warn
+                logging.warning(
+                    "Found '%s' in task definitions directory '%s'. This path "
+                    "is not a file. Only files are expected in the task "
+                    "definitions directory " % (full_path, self.tasks_dir)
+                )
                 continue
 
             id_ = Task.get_task_id_from_filepath(full_path)
@@ -81,11 +108,23 @@ class System(object):
                     self.tasks[id_] = Task()
 
                 self.tasks[id_].load(full_path)
+                task_count += 1
+
+        logging.info(
+            "Successfully loaded %i task definitions." % (task_count)
+        )
 
     def save_tasks(self):
+        logging.info("Saving task definitions to '%s'..." % (self.tasks_dir))
+        task_count = 0
         with self.tasks_lock:
             for _, task in self.tasks.iteritems():
                 task.save()
+                task_count += 1
+
+        logging.info(
+            "Successfully saved %i task definitions." % (task_count)
+        )
 
     def list_task_ids(self):
         ret = []
@@ -112,6 +151,11 @@ class System(object):
         max_jobs - Use at most this amount of threads to evaluate.
         """
 
+        logging.debug(
+            "Updating system, reference_datetime='%s'." %
+            (str(reference_datetime))
+        )
+
         # We need to organize tasks by targets to avoid running 2 tasks on the
         # same target at the same time.
         # self.tasks needs to be locked, so that the list doesn't change while
@@ -126,6 +170,11 @@ class System(object):
 
                 tasks_by_target[task.target].append(task)
 
+            logging.debug(
+                "Organized %i task definitions into %i buckets by target." %
+                (len(self.tasks), len(tasks_by_target.keys()))
+            )
+
         # Each different target will be a queue item
         queue = Queue.Queue()
         for target, target_tasks in tasks_by_target.iteritems():
@@ -139,11 +188,21 @@ class System(object):
                 try:
                     (target, target_tasks) = queue.get(False)
 
+                    logging.debug(
+                        "Started updating %i tasks of target '%s'." %
+                        (len(target_tasks), target)
+                    )
+
                     # In case an error occurs in any of the jobs, we short
                     # circuit everything.
                     if not error_encountered.is_set():
                         try:
                             for task in target_tasks:
+                                logging.debug(
+                                    "Updating task '%s' of target of target "
+                                    "'%s'." % (task.id_, target)
+                                )
+
                                 task.update(
                                     reference_datetime,
                                     self.results_dir,
@@ -151,12 +210,19 @@ class System(object):
                                 )
 
                         except:
+                            logging.exception(
+                                "Error while processing tasks of target '%s':\n"
+                                "%s" % (target)
+                            )
                             error_encountered.set()
-                            # TODO: report
 
                     # If an exception was caught above, fake the task as done
                     # to allow the jobs to end
                     queue.task_done()
+                    logging.debug(
+                        "Finished updating %i tasks of target '%s'." %
+                        (len(target_tasks), target)
+                    )
 
                 except Queue.Empty:
                     break
@@ -172,17 +238,20 @@ class System(object):
             )
             jobs.append(job)
             job.start()
+            logging.debug(
+                "Started task update job %i." % (job_id)
+            )
 
         queue.join()
 
         if error_encountered.is_set():
-            raise RuntimeError("Errors encountered when processing jobs!")
+            # TODO: Do we need to report this again?
+            pass
 
     def update_worker(self):
         # TODO: Sleep until necessary to save CPU cycles
 
         while True:
-            print("Worker active")
             self.update()
             time.sleep(1)
 
