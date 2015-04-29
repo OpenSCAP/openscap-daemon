@@ -25,6 +25,7 @@ from xml.etree import cElementTree as ElementTree
 from datetime import datetime, timedelta
 import os.path
 import shutil
+import threading
 
 
 class SlipMode(object):
@@ -94,6 +95,9 @@ class Task(object):
         self.schedule_not_before = None
         self.schedule_repeat_after = None
         self.schedule_slip_mode = SlipMode.DROP_MISSED_ALIGNED
+
+        # Prevents multiple updates of the same task running
+        self.update_lock = threading.Lock()
 
     def __str__(self):
         ret = "Task from config file '%s' with:\n" % (self.config_file)
@@ -352,24 +356,25 @@ class Task(object):
         in parallel on different tasks but at most once for 1 Task instance.
         """
 
-        if not self.is_valid():
-            raise RuntimeError("Can't tick an invalid Task.")
+        with self.update_lock:
+            if not self.is_valid():
+                raise RuntimeError("Can't tick an invalid Task.")
 
-        if self.schedule_not_before is None:
-            # this Task is not scheduled to run right now, it is disabled
-            return
+            if self.schedule_not_before is None:
+                # this Task is not scheduled to run right now, it is disabled
+                return
 
-        if self.schedule_not_before <= reference_datetime:
-            wip_result = oscap_helpers.evaluate_task(
-                self, work_in_progress_results_dir)
-            target_dir = self._get_next_target_dir(results_dir)
+            if self.schedule_not_before <= reference_datetime:
+                wip_result = oscap_helpers.evaluate_task(
+                    self, work_in_progress_results_dir)
+                target_dir = self._get_next_target_dir(results_dir)
 
-            shutil.move(wip_result, target_dir)
+                shutil.move(wip_result, target_dir)
 
-            self.schedule_not_before = \
-                self.next_schedule_not_before(reference_datetime)
+                self.schedule_not_before = \
+                    self.next_schedule_not_before(reference_datetime)
 
-            self.save()
+                self.save()
 
     def generate_guide(self):
         return oscap_helpers.generate_guide_for_task(self)
