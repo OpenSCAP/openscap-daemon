@@ -23,6 +23,7 @@ import dbus
 import dbus.service
 import gobject
 import threading
+import logging
 
 OBJECT_PATH = "/SCAPClient"
 DBUS_INTERFACE = "org.OpenSCAP.SCAPClientInterface"
@@ -84,6 +85,9 @@ class SCAPClientDbus(dbus.service.Object):
 
 
 def main():
+    # TODO: Temporary, this will be configurable in the future
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+
     gobject.threads_init()
 
     import dbus.mainloop.glib
