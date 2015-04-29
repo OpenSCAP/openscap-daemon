@@ -22,6 +22,7 @@ import os.path
 from datetime import datetime
 import time
 import threading
+import Queue
 
 from scap_client.task import Task
 
@@ -100,26 +101,82 @@ class System(object):
 
         return task.title
 
-    def update(self, reference_datetime=datetime.utcnow()):
-        # TODO: This can be changed to support multiple workers in the future
-        #       if need arises. Right now it's fully serial but since Tasks are
-        #       independent we can do them in parallel, we can never update the
-        #       same Task two times in parallel though.
+    def update(self, reference_datetime=datetime.utcnow(), max_jobs=4):
+        """Evaluates all currently outstanding tasks and returns.
+        Outstanding task means it's not_before is lower than reference_datetime,
+        and it is not disabled. Tasks can be processed in parallel if their
+        targets differ. No two tasks with the same target will be run in
+        parallel regardless of max_jobs setting.
 
-        # We need to copy because self.tasks cannot change while we are
-        # iterating, that would cause undefined behavior.
-        # The tasks themselves *can* change but they cannot be added or removed
-        # from the list.
-        tasks_copy = []
+        reference_datetime - Which date/time should be used to plan tasks.
+        max_jobs - Use at most this amount of threads to evaluate.
+        """
+
+        # We need to organize tasks by targets to avoid running 2 tasks on the
+        # same target at the same time.
+        # self.tasks needs to be locked, so that the list doesn't change while
+        # we construct the buckets. The tasks themselves can be changed while we
+        # are organizing them but if their targets change we may end up with a
+        # schedule that is not perfect. That is the trade-off we are making.
+        tasks_by_target = dict()
         with self.tasks_lock:
-            tasks_copy = list(self.tasks.itervalues())
+            for task in self.tasks.itervalues():
+                if task.target not in tasks_by_target:
+                    tasks_by_target[task.target] = []
 
-        for task in tasks_copy:
-            task.update(
-                reference_datetime,
-                self.results_dir,
-                self.work_in_progress_results_dir
+                tasks_by_target[task.target].append(task)
+
+        # Each different target will be a queue item
+        queue = Queue.Queue()
+        for target, target_tasks in tasks_by_target.iteritems():
+            queue.put_nowait((target, target_tasks))
+
+        # If any error occurs we want to cancel all jobs
+        error_encountered = threading.Event()
+
+        def update_tasks_of_target():
+            while True:
+                try:
+                    (target, target_tasks) = queue.get(False)
+
+                    # In case an error occurs in any of the jobs, we short
+                    # circuit everything.
+                    if not error_encountered.is_set():
+                        try:
+                            for task in target_tasks:
+                                task.update(
+                                    reference_datetime,
+                                    self.results_dir,
+                                    self.work_in_progress_results_dir
+                                )
+
+                        except Exception as e:
+                            error_encountered.set()
+                            # TODO: report
+
+                    # If an exception was caught above, fake the task as done
+                    # to allow the jobs to end
+                    queue.task_done()
+
+                except Queue.Empty:
+                    break
+
+        jobs = []
+        assert(max_jobs > 0)
+        # It makes no sense to spawn more jobs than we have targets
+        number_of_jobs = min(max_jobs, queue.qsize)
+        for job_id in xrange(number_of_jobs):
+            job = threading.Thread(
+                name="Task update job %i" % (job_id),
+                target=update_tasks_of_target
             )
+            jobs.append(job)
+            job.start()
+
+        queue.join()
+
+        if error_encountered.is_set():
+            raise RuntimeError("Errors encountered when processing jobs!")
 
     def update_worker(self):
         # TODO: Sleep until necessary to save CPU cycles
