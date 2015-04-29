@@ -48,7 +48,7 @@ class SCAPClientDbus(dbus.service.Object):
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="", out_signature="ax")
-    def ListTasksIDs(self):
+    def ListTaskIDs(self):
         """Returns a list of IDs of tasks that System has loaded from config
         files.
         """
@@ -77,6 +77,8 @@ class SCAPClientDbus(dbus.service.Object):
 
 
 def main():
+    gobject.threads_init()
+
     import dbus.mainloop.glib
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
@@ -88,7 +90,6 @@ def main():
     obj = SCAPClientDbus(bus, "../tests/data_dir_template")
 
     loop = gobject.MainLoop()
-    gobject.threads_init()
     loop.run()
 
 
