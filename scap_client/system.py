@@ -20,6 +20,8 @@
 import os
 import os.path
 from datetime import datetime
+import time
+import threading
 
 from scap_client.task import Task
 
@@ -55,6 +57,7 @@ class System(object):
             os.path.join(self.results_dir, "work_in_progress")
 
         self.tasks = dict()
+        self.tasks_lock = threading.Lock()
 
     def load_tasks(self):
         task_files = os.listdir(self.tasks_dir)
@@ -72,20 +75,29 @@ class System(object):
 
             id_ = Task.get_task_id_from_filepath(full_path)
 
-            if id_ not in self.tasks:
-                self.tasks[id_] = Task()
+            with self.tasks_lock:
+                if id_ not in self.tasks:
+                    self.tasks[id_] = Task()
 
-            self.tasks[id_].load(full_path)
+                self.tasks[id_].load(full_path)
 
     def save_tasks(self):
-        for _, task in self.tasks.iteritems():
-            task.save()
+        with self.tasks_lock:
+            for _, task in self.tasks.iteritems():
+                task.save()
 
     def list_task_ids(self):
-        return self.tasks.keys()
+        ret = []
+        with self.tasks_lock:
+            ret = self.tasks.keys()
+
+        return ret
 
     def get_task_title(self, task_id):
-        task = self.tasks[task_id]
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
         return task.title
 
     def update(self, reference_datetime=datetime.utcnow()):
@@ -94,18 +106,39 @@ class System(object):
         #       independent we can do them in parallel, we can never update the
         #       same Task two times in parallel though.
 
-        for _, task in self.tasks.iteritems():
-            task.update(
-                reference_datetime,
-                self.results_dir,
-                self.work_in_progress_results_dir
-            )
+        # Locking because self.tasks list cannot change while we are iterating,
+        # changing it would cause undefined behavior.
+        # The tasks themselves *can* change but they cannot be added or removed
+        # from the self.tasks list.
+        with self.tasks_lock:
+            for _, task in self.tasks.iteritems():
+                task.update(
+                    reference_datetime,
+                    self.results_dir,
+                    self.work_in_progress_results_dir
+                )
+
+    def update_worker(self):
+        # TODO: Sleep until necessary to save CPU cycles
+
+        while True:
+            print("Worker active")
+            self.update()
+            time.sleep(1)
 
     def generate_guide_for_task(self, task_id):
-        return self.tasks[task_id].generate_guide()
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.generate_guide()
 
     def generate_report_for_task_result(self, task_id, result_id):
-        return self.tasks[task_id].generate_report_for_result(
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.generate_report_for_result(
             self.results_dir,
             result_id
         )

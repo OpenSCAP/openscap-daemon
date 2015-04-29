@@ -22,6 +22,7 @@ from scap_client import System
 import dbus
 import dbus.service
 import gobject
+import threading
 
 OBJECT_PATH = "/SCAPClient"
 DBUS_INTERFACE = "org.OpenSCAP.SCAPClientInterface"
@@ -38,6 +39,11 @@ class SCAPClientDbus(dbus.service.Object):
 
         self.system = System(data_dir_path)
         self.system.load_tasks()
+
+        self.system_worker_thread = threading.Thread(
+            target=lambda: self.system.update_worker()
+        )
+        self.system_worker_thread.start()
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="", out_signature="s")
