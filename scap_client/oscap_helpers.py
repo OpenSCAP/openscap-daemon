@@ -145,6 +145,9 @@ def evaluate_task(task, task_results_dir):
         shell=False
     )
 
+    stdout_file.close()
+    stderr_file.close()
+
     logging.debug(
         "Finished evaluation of task '%s', exit code %i." %
         (task.id_, exit_code)
