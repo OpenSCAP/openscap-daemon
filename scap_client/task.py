@@ -157,56 +157,53 @@ class Task(object):
         assert(ret > 0)
         return ret
 
-    def load(self, config_file):
-        try:
-            tree = ElementTree.parse(config_file)
-            root = tree.getroot()
+    def load_from_xml_element(self, root, config_file):
+        self.id_ = Task.get_task_id_from_filepath(config_file)
+        self.title = et_helpers.get_element_text(root, "title")
+        self.input_file = et_helpers.get_element_attr(root, "input", "href")
+        self.input_datastream_id = \
+            et_helpers.get_element_attr(root, "input", "datastream_id")
+        self.input_xccdf_id = \
+            et_helpers.get_element_attr(root, "input", "xccdf_id")
+        # TODO: in the future we want datastream tailoring as well
+        self.tailoring_file = \
+            et_helpers.get_element_attr(root, "tailoring", "href")
+        self.profile_id = et_helpers.get_element_text(root, "profile")
+        self.online_remediation = \
+            et_helpers.get_element_text(root, "online_remediation") == "true"
+        self.target = et_helpers.get_element_text(root, "target")
 
-            self.id_ = Task.get_task_id_from_filepath(config_file)
-            self.title = et_helpers.get_element_text(root, "title")
-            self.input_file = et_helpers.get_element_attr(root, "input", "href")
-            self.input_datastream_id = \
-                et_helpers.get_element_attr(root, "input", "datastream_id")
-            self.input_xccdf_id = \
-                et_helpers.get_element_attr(root, "input", "xccdf_id")
-            # TODO: in the future we want datastream tailoring as well
-            self.tailoring_file = \
-                et_helpers.get_element_attr(root, "tailoring", "href")
-            self.profile_id = et_helpers.get_element_text(root, "profile")
-            self.online_remediation = \
-                et_helpers.get_element_text(root, "online_remediation") == "true"
-            self.target = et_helpers.get_element_text(root, "target")
+        schedule_not_before_attr = et_helpers.get_element_attr(
+            root, "schedule", "not_before")
 
-            schedule_not_before_attr = et_helpers.get_element_attr(
-                root, "schedule", "not_before")
-
-            # we expect UTC, no timezone shifts
-            if schedule_not_before_attr is not None:
-                self.schedule_not_before = datetime.strptime(
-                    schedule_not_before_attr,
-                    "%Y-%m-%dT%H:%M"
-                )
-            else:
-                self.schedule_not_before = None
-
-            schedule_repeat_after_attr = et_helpers.get_element_attr(
-                root, "schedule", "repeat_after")
-
-            if schedule_repeat_after_attr is not None:
-                self.schedule_repeat_after = int(schedule_repeat_after_attr)
-            else:
-                self.schedule_repeat_after = None
-
-            self.schedule_slip_mode = SlipMode.from_string(
-                et_helpers.get_element_attr(
-                    root, "schedule", "slip_mode", "drop_missed_aligned")
+        # we expect UTC, no timezone shifts
+        if schedule_not_before_attr is not None:
+            self.schedule_not_before = datetime.strptime(
+                schedule_not_before_attr,
+                "%Y-%m-%dT%H:%M"
             )
+        else:
+            self.schedule_not_before = None
 
-            self.config_file = config_file
+        schedule_repeat_after_attr = et_helpers.get_element_attr(
+            root, "schedule", "repeat_after")
 
-        except:
-            # TODO
-            raise
+        if schedule_repeat_after_attr is not None:
+            self.schedule_repeat_after = int(schedule_repeat_after_attr)
+        else:
+            self.schedule_repeat_after = None
+
+        self.schedule_slip_mode = SlipMode.from_string(
+            et_helpers.get_element_attr(
+                root, "schedule", "slip_mode", "drop_missed_aligned")
+        )
+
+        self.config_file = config_file
+
+    def load(self, config_file):
+        tree = ElementTree.parse(config_file)
+        root = tree.getroot()
+        self.load_from_xml_element(root, config_file)
 
     def reload(self):
         if self.config_file is not None:
@@ -214,7 +211,7 @@ class Task(object):
 
         self.load(self.config_file)
 
-    def save_as(self, config_file):
+    def to_xml_element(self):
         root = ElementTree.Element("task")
 
         if self.title is not None:
@@ -262,8 +259,14 @@ class Task(object):
                              SlipMode.to_string(self.schedule_slip_mode))
         root.append(schedule_element)
 
+        # TODO: Maybe move this to save_as? Is there value in returning an
+        # indented element from this method?
         et_helpers.indent(root)
 
+        return root
+
+    def save_as(self, config_file):
+        root = self.to_xml_element()
         xml_source = ElementTree.tostring(root, encoding="utf-8")
         with open(config_file, "w") as f:
             f.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
