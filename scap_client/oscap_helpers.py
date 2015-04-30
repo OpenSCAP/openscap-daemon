@@ -145,8 +145,8 @@ def evaluate_task(task, task_results_dir):
         shell=False
     )
 
-    stdout_file.close()
-    stderr_file.close()
+    stdout_file.flush()
+    stderr_file.flush()
 
     logging.debug(
         "Finished evaluation of task '%s', exit code %i." %
@@ -168,15 +168,15 @@ def evaluate_task(task, task_results_dir):
 
             if stdout_file is not None:
                 try:
-                    with open(stdout_file, "r") as f:
-                        stdout_contents = f.read()
+                    stdout_file.seek(0)
+                    stdout_contents = stdout_file.read()
                 except:
                     pass
 
             if stderr_file is not None:
                 try:
-                    with open(stderr_file, "r") as f:
-                        stderr_contents = f.read()
+                    stderr_file.seek(0)
+                    stderr_contents = stderr_file.read()
                 except:
                     pass
 
