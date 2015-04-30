@@ -148,6 +148,9 @@ def evaluate_task(task, task_results_dir):
     stdout_file.flush()
     stderr_file.flush()
 
+    with open(os.path.join(working_directory, "exit_code"), "w") as f:
+        f.write("%i" % (exit_code))
+
     logging.debug(
         "Finished evaluation of task '%s', exit code %i." %
         (task.id_, exit_code)

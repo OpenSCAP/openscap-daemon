@@ -105,6 +105,13 @@ class SCAPClientDbus(dbus.service.Object):
         return self.system.get_stderr_of_task_result(task_id, result_id)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xx", out_signature="i")
+    def GetExitCodeOfTaskResult(self, task_id, result_id):
+        """Retrieves exit code of result of given task.
+        """
+        return self.system.get_exit_code_of_task_result(task_id, result_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")
     def GenerateReportForTaskResult(self, task_id, result_id):
         """Generates and returns HTML report for report of given task.

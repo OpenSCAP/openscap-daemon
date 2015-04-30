@@ -449,6 +449,16 @@ class Task(object):
 
         return ret
 
+    def get_exit_code_of_result(self, results_dir, result_id):
+        path = os.path.join(
+            results_dir, str(self.id_), str(result_id), "exit_code"
+        )
+        ret = ""
+        with open(path, "r") as f:
+            ret = f.read()
+
+        return int(ret.strip())
+
     def generate_report_for_result(self, results_dir, result_id):
         return oscap_helpers.generate_report_for_result(
             self,
