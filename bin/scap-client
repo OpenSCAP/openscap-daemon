@@ -86,18 +86,32 @@ def cli_result(dbus_iface, args):
             print("%i\t\t\tabcd" % (result_id))
 
     else:
-        if args.format == "arf":
+        if args.result_action == "arf":
             arf = dbus_iface.GetARFOfTaskResult(args.task_id, args.result_id)
             print(arf)
 
-        elif args.format == "html":
+        elif args.result_action == "stdout":
+            stdout = dbus_iface.GetStdOutOfTaskResult(
+                args.task_id, args.result_id
+            )
+            print(stdout)
+
+        elif args.result_action == "stderr":
+            stderr = dbus_iface.GetStdErrOfTaskResult(
+                args.task_id, args.result_id
+            )
+            print(stderr)
+
+        elif args.result_action == "html":
             html = dbus_iface.GenerateReportForTaskResult(
                 args.task_id, args.result_id
             )
             print(html)
 
         else:
-            raise RuntimeError("Unknown format '%s'." % (args.format))
+            raise RuntimeError(
+                "Unknown result action '%s'." % (args.result_action)
+            )
 
 
 def main():
@@ -147,8 +161,8 @@ def main():
         "a summary of all results of given task is displayed."
     )
     result_parser.add_argument(
-        "format", metavar="FORMAT", type=str,
-        choices=["html", "arf"], default="arf", nargs="?"
+        "result_action", metavar="ACTION", type=str,
+        choices=["arf", "stdout", "stderr", "html"], default="arf", nargs="?"
     )
     result_parser.set_defaults(action="result")
 

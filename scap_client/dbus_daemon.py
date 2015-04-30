@@ -86,9 +86,23 @@ class SCAPClientDbus(dbus.service.Object):
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")
     def GetARFOfTaskResult(self, task_id, result_id):
-        """Retrieves full ARF of report of given task.
+        """Retrieves full ARF of result of given task.
         """
         return self.system.get_arf_of_task_result(task_id, result_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xx", out_signature="s")
+    def GetStdOutOfTaskResult(self, task_id, result_id):
+        """Retrieves full stdout of result of given task.
+        """
+        return self.system.get_stdout_of_task_result(task_id, result_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xx", out_signature="s")
+    def GetStdErrOfTaskResult(self, task_id, result_id):
+        """Retrieves full stderr of result of given task.
+        """
+        return self.system.get_stderr_of_task_result(task_id, result_id)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")

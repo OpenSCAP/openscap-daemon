@@ -426,6 +426,26 @@ class Task(object):
 
         return ret
 
+    def get_stdout_of_result(self, results_dir, result_id):
+        path = os.path.join(
+            results_dir, str(self.id_), str(result_id), "stdout"
+        )
+        ret = ""
+        with open(path, "r") as f:
+            ret = f.read()
+
+        return ret
+
+    def get_stderr_of_result(self, results_dir, result_id):
+        path = os.path.join(
+            results_dir, str(self.id_), str(result_id), "stderr"
+        )
+        ret = ""
+        with open(path, "r") as f:
+            ret = f.read()
+
+        return ret
+
     def generate_report_for_result(self, results_dir, result_id):
         return oscap_helpers.generate_report_for_result(
             self,

@@ -285,6 +285,26 @@ class System(object):
             result_id
         )
 
+    def get_stdout_of_task_result(self, task_id, result_id):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.get_stdout_of_result(
+            self.results_dir,
+            result_id
+        )
+
+    def get_stderr_of_task_result(self, task_id, result_id):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.get_stderr_of_result(
+            self.results_dir,
+            result_id
+        )
+
     def generate_report_for_task_result(self, task_id, result_id):
         task = None
         with self.tasks_lock:
