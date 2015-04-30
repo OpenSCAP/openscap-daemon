@@ -121,17 +121,6 @@ def cli_result(dbus_iface, args):
 
 
 def main():
-    dbus_iface = None
-    try:
-        dbus_iface = get_dbus_interface()
-
-    except:
-        sys.stderr.write(
-            "Error: Failed to connect to the SCAP Client DBus interface. "
-            "Is the daemon running?\n\n"
-        )
-        raise
-
     parser = argparse.ArgumentParser(
         description="SCAP Client command line interface."
     )
@@ -179,6 +168,17 @@ def main():
     result_parser.set_defaults(action="result")
 
     args = parser.parse_args()
+
+    dbus_iface = None
+    try:
+        dbus_iface = get_dbus_interface()
+
+    except:
+        sys.stderr.write(
+            "Error: Failed to connect to the SCAP Client DBus interface. "
+            "Is the daemon running?\n\n"
+        )
+        raise
 
     if args.action == "task":
         cli_task(dbus_iface, args)
