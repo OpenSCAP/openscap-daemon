@@ -69,7 +69,7 @@ def generate_guide_for_task(task):
     return subprocess.check_output(
         args,
         shell=False
-    )
+    ).decode("utf-8")
 
 
 class EvaluationFailedError(RuntimeError):
@@ -233,7 +233,7 @@ def generate_report_for_result(task, results_dir, result_id):
     return subprocess.check_output(
         args,
         shell=False
-    )
+    ).decode("utf-8")
 
 
 __all__ = [

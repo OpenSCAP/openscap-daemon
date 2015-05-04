@@ -54,12 +54,12 @@ def cli_task(dbus_iface, args):
         task_ids = dbus_iface.ListTaskIDs()
 
         for task_id in task_ids:
-            title = dbus_iface.GetTaskTitle(task_id)
+            title = dbus_iface.GetTaskTitle(task_id, utf8_strings=True)
             print("%i\t\t%s\t\t..." % (task_id, title))
 
     else:
         if args.task_action == "info":
-            title = dbus_iface.GetTaskTitle(args.task_id)
+            title = dbus_iface.GetTaskTitle(args.task_id, utf8_strings=True)
 
             print("ID:\t%i" % (args.task_id))
             print("Title:\t%s" % (title))
@@ -67,7 +67,9 @@ def cli_task(dbus_iface, args):
             # TODO
 
         elif args.task_action == "guide":
-            guide = dbus_iface.GenerateGuideForTask(args.task_id)
+            guide = dbus_iface.GenerateGuideForTask(
+                args.task_id, utf8_strings=True
+            )
             print(guide)
 
         else:
@@ -87,18 +89,20 @@ def cli_result(dbus_iface, args):
 
     else:
         if args.result_action == "arf":
-            arf = dbus_iface.GetARFOfTaskResult(args.task_id, args.result_id)
+            arf = dbus_iface.GetARFOfTaskResult(
+                args.task_id, args.result_id, utf8_strings=True
+            )
             print(arf)
 
         elif args.result_action == "stdout":
             stdout = dbus_iface.GetStdOutOfTaskResult(
-                args.task_id, args.result_id
+                args.task_id, args.result_id, utf8_strings=True
             )
             print(stdout)
 
         elif args.result_action == "stderr":
             stderr = dbus_iface.GetStdErrOfTaskResult(
-                args.task_id, args.result_id
+                args.task_id, args.result_id, utf8_strings=True
             )
             print(stderr)
 
@@ -110,7 +114,7 @@ def cli_result(dbus_iface, args):
 
         elif args.result_action == "html":
             html = dbus_iface.GenerateReportForTaskResult(
-                args.task_id, args.result_id
+                args.task_id, args.result_id, utf8_strings=True
             )
             print(html)
 

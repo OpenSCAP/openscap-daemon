@@ -470,7 +470,7 @@ class Task(object):
         )
         ret = ""
         with open(path, "r") as f:
-            ret = f.read()
+            ret = f.read().decode("utf-8")
 
         return ret
 
