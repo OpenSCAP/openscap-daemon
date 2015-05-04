@@ -216,8 +216,8 @@ class System(object):
 
                         except:
                             logging.exception(
-                                "Error while processing tasks of target '%s':\n"
-                                "%s" % (target)
+                                "Error while processing tasks of target '%s'" %
+                                (target)
                             )
                             error_encountered.set()
 
