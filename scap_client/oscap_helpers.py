@@ -24,14 +24,61 @@ import os.path
 import shutil
 import logging
 
+from xml.etree import cElementTree as ElementTree
+from scap_client import et_helpers
 
 # TODO: configurable
 OSCAP_PATH = "oscap"
 
 def get_profile_choices_for_input(input_file, tailoring_file):
-    # TODO: This is not supported yet!
+    # Ideally oscap would have a command line to do this, but as of now it
+    # doesn't so we have to implement it ourselves. Importing openscap Python
+    # bindings is nasty and overkill for this.
 
-    return []
+    logging.debug(
+        "Looking for profile choices in '%s' with tailoring file '%s'." %
+        (input_file, tailoring_file)
+    )
+
+    ret = {}
+
+    def scrape_profiles(tree, namespace, dest):
+        for elem in tree.iter("{%s}Profile" % (namespace)):
+            id_ = elem.get("id")
+            if id_ is None:
+                continue
+
+            title = et_helpers.get_element_text(
+                elem, "{%s}title" % (namespace), ""
+            )
+
+            dest[id_] = title
+
+    input_tree = ElementTree.parse(input_file)
+
+    scrape_profiles(
+        input_tree, "http://checklists.nist.gov/xccdf/1.1", ret
+    )
+    scrape_profiles(
+        input_tree, "http://checklists.nist.gov/xccdf/1.2", ret
+    )
+
+    if tailoring_file:
+        tailoring_tree = ElementTree.parse(tailoring_file)
+
+        scrape_profiles(
+            tailoring_tree, "http://checklists.nist.gov/xccdf/1.1", ret
+        )
+        scrape_profiles(
+            tailoring_tree, "http://checklists.nist.gov/xccdf/1.2", ret
+        )
+
+    logging.info(
+        "Found %i profile choices in '%s' with tailoring file '%s'." %
+        (len(ret), input_file, tailoring_file)
+    )
+
+    return ret
 
 
 def generate_guide_args_for_task(task):

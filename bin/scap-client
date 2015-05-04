@@ -85,6 +85,7 @@ def cli_task_create(dbus_iface, args):
         if not target:
             target = "localhost"
 
+        print("Found the following SCAP Security Guide content: ")
         ssg_choices = dbus_iface.GetSSGChoices(utf8_strings=True)
         i = 0
         for ssg_choice in ssg_choices:
@@ -102,10 +103,21 @@ def cli_task_create(dbus_iface, args):
         if tailoring_file is None:
             tailoring_file = ""
 
+        print("Found the following possible profiles: ")
+        profile_choices = dbus_iface.GetProfileChoicesForInput(input_file, tailoring_file)
+        i = 0
+        for key, value in profile_choices.iteritems():
+            print("\t%i:  %s (id='%s')" % (i + 1, key, value))
+            i += 1
+
+        profile_choice = raw_input("Choose profile by number (empty for (default) profile): ")
+        profile = profile_choices.keys()[int(profile_choice) - 1]
+
         print(title)
         print(target)
         print(input_file)
         print(tailoring_file)
+        print(profile)
 
     else:
         raise NotImplementedError("Not yet!")

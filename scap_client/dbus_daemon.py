@@ -63,8 +63,8 @@ class SCAPClientDbus(dbus.service.Object):
         return self.system.get_ssg_choices()
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
-                         in_signature="ss", out_signature="a(ss)")
-    def GetProfileChoiceForInput(self, input_file, tailoring_file):
+                         in_signature="ss", out_signature="a{ss}")
+    def GetProfileChoicesForInput(self, input_file, tailoring_file):
         """Retrieves absolute paths of SSG source datastreams that are
         available.
         """

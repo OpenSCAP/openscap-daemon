@@ -26,6 +26,7 @@ import logging
 import Queue
 
 from scap_client.task import Task
+from scap_client import oscap_helpers
 
 
 class System(object):
