@@ -69,7 +69,7 @@ class System(object):
     def __init__(self, data_dir):
         System.prepare_data_dir(data_dir)
 
-        self.data_dir = data_dir
+        self.data_dir = os.path.abspath(data_dir)
         self.tasks_dir = os.path.join(self.data_dir, "tasks")
         self.results_dir = os.path.join(self.data_dir, "results")
         self.work_in_progress_results_dir = \
