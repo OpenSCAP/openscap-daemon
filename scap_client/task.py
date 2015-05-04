@@ -468,9 +468,20 @@ class Task(object):
         path = os.path.join(
             results_dir, str(self.id_), str(result_id), "arf.xml"
         )
+
+        logging.debug(
+            "Retrieving ARF of result '%i' of task '%i', expected path '%s'." %
+            (result_id, self.id_, path)
+        )
+
         ret = ""
         with open(path, "r") as f:
             ret = f.read().decode("utf-8")
+
+        logging.info(
+            "Retrieved ARF of result '%i' of task '%i'." %
+            (result_id, self.id_)
+        )
 
         return ret
 

@@ -66,10 +66,17 @@ def generate_guide_for_task(task):
         (task.id_, " ".join(args))
     )
 
-    return subprocess.check_output(
+    ret = subprocess.check_output(
         args,
         shell=False
     ).decode("utf-8")
+
+    logging.info(
+        "Generated guide for task %i." %
+        (task.id_)
+    )
+
+    return ret
 
 
 class EvaluationFailedError(RuntimeError):
@@ -151,8 +158,8 @@ def evaluate_task(task, task_results_dir):
     with open(os.path.join(working_directory, "exit_code"), "w") as f:
         f.write("%i" % (exit_code))
 
-    logging.debug(
-        "Finished evaluation of task '%s', exit code %i." %
+    logging.info(
+        "Evaluated task '%s', exit code %i." %
         (task.id_, exit_code)
     )
 
@@ -230,10 +237,17 @@ def generate_report_for_result(task, results_dir, result_id):
         (result_id, task.id_, " ".join(args))
     )
 
-    return subprocess.check_output(
+    ret = subprocess.check_output(
         args,
         shell=False
     ).decode("utf-8")
+
+    logging.info(
+        "Generated report for result %i of task %i." %
+        (result_id, task.id_)
+    )
+
+    return ret
 
 
 __all__ = [
