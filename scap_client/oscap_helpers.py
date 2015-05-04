@@ -166,20 +166,17 @@ def evaluate_task(task, task_results_dir):
         stderr_contents = "Unknown"
 
         if working_directory is not None:
-            # Can't use just open(file).read(), that doesn't guarantee
-            # that Python will close the file immediately
-
             if stdout_file is not None:
                 try:
-                    stdout_file.seek(0)
-                    stdout_contents = stdout_file.read()
+                    with open(stdout_file.name, "r") as f:
+                        stdout_contents = f.read().decode("utf-8")
                 except:
                     pass
 
             if stderr_file is not None:
                 try:
-                    stderr_file.seek(0)
-                    stderr_contents = stderr_file.read()
+                    with open(stderr_file.name, "r") as f:
+                        stderr_contents = f.read().decode("utf-8")
                 except:
                     pass
 
