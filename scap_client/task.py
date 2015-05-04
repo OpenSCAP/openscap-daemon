@@ -27,6 +27,7 @@ import os.path
 import shutil
 import threading
 import logging
+import tempfile
 
 
 class SlipMode(object):
@@ -87,9 +88,11 @@ class Task(object):
 
         self.title = None
         self.input_file = None
+        self.input_temp_file = None
         self.input_datastream_id = None
         self.input_xccdf_id = None
         self.tailoring_file = None
+        self.tailoring_temp_file = None
         self.profile_id = None
         self.online_remediation = False
         self.target = None
@@ -106,9 +109,13 @@ class Task(object):
         ret += "- title: \t%s\n" % (self.title)
         ret += "- input:\n"
         ret += "  - file: \t%s\n" % (self.input_file)
+        if self.input_temp_file is not None:
+            ret += "    - bundled"
         ret += "  - datastream_id: \t%s\n" % (self.input_datastream_id)
         ret += "  - xccdf_id: \t%s\n" % (self.input_xccdf_id)
-        ret += "- tailoring file: \t%s\n" % (self.tailoring_file)
+        ret += "  - tailoring file: \t%s\n" % (self.tailoring_file)
+        if self.tailoring_temp_file is not None:
+            ret += "    - bundled"
         ret += "- profile ID: \t%s\n" % (self.profile_id)
         ret += "- online remediation: \t%s\n" % \
             ("enabled" if self.online_remediation else "disabled")
@@ -133,6 +140,9 @@ class Task(object):
         """Checks that both "Task self" and "Task other" are the same except for
         id_ and config_file.
         """
+
+        # TODO input_file and tailoring_file may have the same contents and
+        # different paths and the tasks wouldn't end up being equivalent.
 
         return \
             self.title == other.title and \
@@ -160,14 +170,38 @@ class Task(object):
     def load_from_xml_element(self, root, config_file):
         self.id_ = Task.get_task_id_from_filepath(config_file)
         self.title = et_helpers.get_element_text(root, "title")
+
         self.input_file = et_helpers.get_element_attr(root, "input", "href")
+        if self.input_file is None:
+            input_file_contents = et_helpers.get_element_text(root, "input")
+            self.input_temp_file = tempfile.NamedTemporaryFile()
+            self.input_temp_file.write(input_file_contents.encode("utf-8"))
+            self.input_temp_file.flush()
+
+            self.input_file = os.path.abspath(self.input_temp_file.name)
+
         self.input_datastream_id = \
             et_helpers.get_element_attr(root, "input", "datastream_id")
         self.input_xccdf_id = \
             et_helpers.get_element_attr(root, "input", "xccdf_id")
+
         # TODO: in the future we want datastream tailoring as well
         self.tailoring_file = \
             et_helpers.get_element_attr(root, "tailoring", "href")
+        if self.tailoring_file is None:
+            tailoring_file_contents = \
+                et_helpers.get_element_text(root, "tailoring")
+
+            if tailoring_file_contents is not None:
+                self.tailoring_temp_file = tempfile.NamedTemporaryFile()
+                self.tailoring_temp_file.write(
+                    tailoring_file_contents.encode("utf-8")
+                )
+                self.tailoring_temp_file.flush()
+
+                self.tailoring_file = \
+                    os.path.abspath(self.tailoring_temp_file.name)
+
         self.profile_id = et_helpers.get_element_text(root, "profile")
         self.online_remediation = \
             et_helpers.get_element_text(root, "online_remediation") == "true"
@@ -220,7 +254,12 @@ class Task(object):
             root.append(title_element)
 
         input_element = ElementTree.Element("input")
-        input_element.set("href", self.input_file)
+        if self.input_temp_file is None:
+            input_element.set("href", self.input_file)
+        else:
+            with open(self.input_temp_file.name, "r") as f:
+                input_element.text = f.read().decode("utf-8")
+
         if self.input_datastream_id is not None:
             input_element.set("datastream_id", self.input_datastream_id)
         if self.input_xccdf_id is not None:
@@ -229,7 +268,13 @@ class Task(object):
 
         if self.tailoring_file is not None:
             tailoring_element = ElementTree.Element("tailoring")
-            tailoring_element.set("href", self.tailoring_file)
+
+            if self.tailoring_temp_file is None:
+                tailoring_element.set("href", self.tailoring_file)
+            else:
+                with open(self.tailoring_temp_file.name, "r") as f:
+                    tailoring_element.text = f.read().decode("utf-8")
+
             root.append(tailoring_element)
 
         if self.profile_id is not None:
