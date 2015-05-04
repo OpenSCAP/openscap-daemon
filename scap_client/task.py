@@ -87,6 +87,7 @@ class Task(object):
         self.config_file = None
 
         self.title = None
+        self.target = None
         self.input_file = None
         self.input_temp_file = None
         self.input_datastream_id = None
@@ -95,7 +96,6 @@ class Task(object):
         self.tailoring_temp_file = None
         self.profile_id = None
         self.online_remediation = False
-        self.target = None
         self.schedule_not_before = None
         self.schedule_repeat_after = None
         self.schedule_slip_mode = SlipMode.DROP_MISSED_ALIGNED
@@ -107,6 +107,7 @@ class Task(object):
         ret = "Task from config file '%s' with:\n" % (self.config_file)
         ret += "- ID: \t%i\n" % (self.id_)
         ret += "- title: \t%s\n" % (self.title)
+        ret += "- target: \t%s\n" % (self.target)
         ret += "- input:\n"
         ret += "  - file: \t%s\n" % (self.input_file)
         if self.input_temp_file is not None:
@@ -119,7 +120,6 @@ class Task(object):
         ret += "- profile ID: \t%s\n" % (self.profile_id)
         ret += "- online remediation: \t%s\n" % \
             ("enabled" if self.online_remediation else "disabled")
-        ret += "- target: \t%s\n" % (self.target)
         ret += "- schedule:\n"
         ret += "  - not before: \t%s\n" % (self.schedule_not_before)
         ret += "  - repeat after: \t%s\n" % (self.schedule_repeat_after)
@@ -146,13 +146,13 @@ class Task(object):
 
         return \
             self.title == other.title and \
+            self.target == other.target and \
             self.input_file == other.input_file and \
             self.input_datastream_id == other.input_datastream_id and \
             self.input_xccdf_id == other.input_xccdf_id and \
             self.tailoring_file == other.tailoring_file and \
             self.profile_id == other.profile_id and \
             self.online_remediation == other.online_remediation and \
-            self.target == other.target and \
             self.schedule_not_before == other.schedule_not_before and \
             self.schedule_repeat_after == other.schedule_repeat_after and \
             self.schedule_slip_mode == other.schedule_slip_mode
@@ -170,6 +170,8 @@ class Task(object):
     def load_from_xml_element(self, root, config_file):
         self.id_ = Task.get_task_id_from_filepath(config_file)
         self.title = et_helpers.get_element_text(root, "title")
+
+        self.target = et_helpers.get_element_text(root, "target")
 
         self.input_file = et_helpers.get_element_attr(root, "input", "href")
         if self.input_file is None:
@@ -205,7 +207,6 @@ class Task(object):
         self.profile_id = et_helpers.get_element_text(root, "profile")
         self.online_remediation = \
             et_helpers.get_element_text(root, "online_remediation") == "true"
-        self.target = et_helpers.get_element_text(root, "target")
 
         schedule_not_before_attr = et_helpers.get_element_attr(
             root, "schedule", "not_before")
@@ -253,6 +254,10 @@ class Task(object):
             title_element.text = self.title
             root.append(title_element)
 
+        target_element = ElementTree.Element("target")
+        target_element.text = self.target
+        root.append(target_element)
+
         input_element = ElementTree.Element("input")
         if self.input_temp_file is None:
             input_element.set("href", self.input_file)
@@ -286,10 +291,6 @@ class Task(object):
         online_remediation_element.text = \
             "true" if self.online_remediation else "false"
         root.append(online_remediation_element)
-
-        target_element = ElementTree.Element("target")
-        target_element.text = self.target
-        root.append(target_element)
 
         schedule_element = ElementTree.Element("schedule")
         if self.schedule_not_before is not None:
