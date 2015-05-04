@@ -28,6 +28,11 @@ import logging
 # TODO: configurable
 OSCAP_PATH = "oscap"
 
+def get_profile_choices_for_input(input_file, tailoring_file):
+    # TODO: This is not supported yet!
+
+    return []
+
 
 def generate_guide_args_for_task(task):
     # TODO

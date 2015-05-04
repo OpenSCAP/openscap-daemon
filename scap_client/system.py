@@ -77,6 +77,31 @@ class System(object):
         self.tasks = dict()
         self.tasks_lock = threading.Lock()
 
+    def get_ssg_choices(self):
+        # TODO: This has to be configurable in the future
+        ssg_path = os.path.join(
+            "/", "usr", "share", "xml", "scap", "ssg", "content"
+        )
+
+        ret = []
+        for ssg_file in os.listdir(ssg_path):
+            full_path = os.path.join(ssg_path, ssg_file)
+
+            if not os.path.isfile(full_path):
+                continue
+
+            if not full_path.endswith("-ds.xml"):
+                continue
+
+            ret.append(full_path)
+
+        return sorted(ret)
+
+    def get_profile_choices_for_input(self, input_file, tailoring_file):
+        return oscap_helpers.get_profile_choices_for_input(
+            input_file, tailoring_file
+        )
+
     def load_tasks(self):
         logging.info("Loading task definitions from '%s'..." % (self.tasks_dir))
         task_files = os.listdir(self.tasks_dir)

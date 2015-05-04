@@ -55,6 +55,24 @@ class SCAPClientDbus(dbus.service.Object):
         return "Hello!"
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="", out_signature="as")
+    def GetSSGChoices(self):
+        """Retrieves absolute paths of SSG source datastreams that are
+        available.
+        """
+        return self.system.get_ssg_choices()
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="ss", out_signature="a(ss)")
+    def GetProfileChoiceForInput(self, input_file, tailoring_file):
+        """Retrieves absolute paths of SSG source datastreams that are
+        available.
+        """
+        return self.system.get_profile_choices_for_input(
+            input_file, tailoring_file
+        )
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="", out_signature="ax")
     def ListTaskIDs(self):
         """Returns a list of IDs of tasks that System has loaded from config
