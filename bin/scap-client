@@ -104,10 +104,12 @@ def cli_task_create(dbus_iface, args):
             tailoring_file = ""
 
         print("Found the following possible profiles: ")
-        profile_choices = dbus_iface.GetProfileChoicesForInput(input_file, tailoring_file)
+        profile_choices = dbus_iface.GetProfileChoicesForInput(
+            input_file, tailoring_file, utf8_strings=True
+        )
         i = 0
         for key, value in profile_choices.iteritems():
-            print("\t%i:  %s (id='%s')" % (i + 1, key, value))
+            print("\t%i:  %s (id='%s')" % (i + 1, value, key))
             i += 1
 
         profile_choice = raw_input("Choose profile by number (empty for (default) profile): ")
