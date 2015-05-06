@@ -475,14 +475,14 @@ class Task(object):
                     (self.id_, target_dir)
                 )
 
-            if not self.run_outside_schedule_once:
-                self.schedule_not_before = \
-                    self.next_schedule_not_before(reference_datetime)
+                if not self.run_outside_schedule_once:
+                    self.schedule_not_before = \
+                        self.next_schedule_not_before(reference_datetime)
 
-                self.save()
+                    self.save()
 
-            else:
-                self.run_outside_schedule_once = False
+                else:
+                    self.run_outside_schedule_once = False
 
     def generate_guide(self):
         return oscap_helpers.generate_guide_for_task(self)
