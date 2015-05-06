@@ -24,6 +24,7 @@ import time
 import threading
 import logging
 import Queue
+import shutil
 
 from scap_client.task import Task
 from scap_client import oscap_helpers
@@ -65,6 +66,18 @@ class System(object):
                 (work_in_progress_results_dir)
             )
             os.mkdir(work_in_progress_results_dir)
+
+        for dir_ in os.listdir(work_in_progress_results_dir):
+            full_path = os.path.join(work_in_progress_results_dir, dir_)
+
+            logging.info(
+                "Found '%s' in work_in_progress results directory, full path "
+                "is '%s'. This is most likely a left-over from an earlier "
+                "crash. Deleting..." %
+                (dir_, full_path)
+            )
+
+            shutil.rmtree(full_path)
 
     def __init__(self, data_dir):
         System.prepare_data_dir(data_dir)
