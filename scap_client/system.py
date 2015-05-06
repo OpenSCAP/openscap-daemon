@@ -293,6 +293,13 @@ class System(object):
 
         return task.generate_guide()
 
+    def run_task_outside_schedule(self, task_id):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.run_outside_schedule()
+
     def get_task_result_ids(self, task_id):
         task = None
         with self.tasks_lock:

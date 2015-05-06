@@ -10402,5 +10402,5 @@ To verify insecure file locking has been disabled, run the following command:
     </input>
     <profile>xccdf_org.ssgproject.content_profile_common</profile>
     <online_remediation>false</online_remediation>
-    <schedule not_before="2015-04-08T10:30" repeat_after="1" slip_mode="no_slip" />
+    <schedule not_before="2015-05-19T11:30" repeat_after="1" slip_mode="drop_missed_aligned" />
 </task>

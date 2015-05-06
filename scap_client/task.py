@@ -100,6 +100,11 @@ class Task(object):
         self.schedule_repeat_after = None
         self.schedule_slip_mode = SlipMode.DROP_MISSED_ALIGNED
 
+        # If True, this task will be evaluated once without affecting the
+        # schedule. This feature is important for test runs. This variable does
+        # not persist because it is not saved to the config file!
+        self.run_outside_schedule_once = False
+
         # Prevents multiple updates of the same task running
         self.update_lock = threading.Lock()
 
@@ -421,22 +426,37 @@ class Task(object):
             if not self.is_valid():
                 raise RuntimeError("Can't tick an invalid Task.")
 
-            if self.schedule_not_before is None:
-                # this Task is not scheduled to run right now, it is disabled
+            update_now = False
+
+            if not self.run_outside_schedule_once:
+                if self.schedule_not_before is None:
+                    # this Task is not scheduled to run right now,
+                    # it is disabled
+                    logging.debug(
+                        "Task '%s' is disabled. schedule_not_before is None." %
+                        (self.id_)
+                    )
+
+                elif self.schedule_not_before <= reference_datetime:
+                    logging.debug(
+                        "Evaluating task '%s'. It was scheduled to be "
+                        "evaluated later than %s, reference_datetime %s is "
+                        "higher than or equal." %
+                        (self.id_, self.schedule_not_before, reference_datetime)
+                    )
+                    update_now = True
+
+            else:
                 logging.debug(
-                    "Task '%s' is disabled. schedule_not_before is None." %
+                    "Evaluating task '%s'. It was set to be run once outside"
+                    "its schedule." %
                     (self.id_)
                 )
-                return
 
-            if self.schedule_not_before <= reference_datetime:
-                logging.debug(
-                    "Evaluating task '%s'. It was scheduled to be evaluated "
-                    "later than %s, reference_datetime %s is higher than or "
-                    "equal." %
-                    (self.id_, self.schedule_not_before, reference_datetime)
-                )
+                # This task is scheduled to run once ignoring the schedule
+                update_now = True
 
+            if update_now:
                 wip_result = oscap_helpers.evaluate_task(
                     self, work_in_progress_results_dir)
 
@@ -455,13 +475,31 @@ class Task(object):
                     (self.id_, target_dir)
                 )
 
+            if not self.run_outside_schedule_once:
                 self.schedule_not_before = \
                     self.next_schedule_not_before(reference_datetime)
 
                 self.save()
 
+            else:
+                self.run_outside_schedule_once = False
+
     def generate_guide(self):
         return oscap_helpers.generate_guide_for_task(self)
+
+    def run_outside_schedule(self):
+        if self.run_outside_schedule_once:
+            raise RuntimeError(
+                "This task was already scheduled to be run once "
+                "outside the schedule!"
+            )
+
+        self.run_outside_schedule_once = True
+
+        logging.info(
+            "Set task '%i' to be run once outside the schedule." %
+            (self.id_)
+        )
 
     def get_arf_of_result(self, results_dir, result_id):
         # TODO: This needs refactoring in the future, the secret that the file

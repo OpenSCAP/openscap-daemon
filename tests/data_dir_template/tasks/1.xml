@@ -5,5 +5,5 @@
     <input href="/usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml" />
     <profile>xccdf_org.ssgproject.content_profile_common</profile>
     <online_remediation>false</online_remediation>
-    <schedule not_before="2015-04-08T00:30" repeat_after="1" slip_mode="no_slip" />
+    <schedule not_before="2015-05-19T09:30" repeat_after="1" slip_mode="drop_missed_aligned" />
 </task>

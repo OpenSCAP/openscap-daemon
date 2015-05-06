@@ -95,6 +95,14 @@ class SCAPClientDbus(dbus.service.Object):
         return self.system.generate_guide_for_task(task_id)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="x", out_signature="")
+    def RunTaskOutsideSchedule(self, task_id):
+        """Given task will be run as soon as possible without affecting its
+        schedule. This feature is useful mainly for testing purposes.
+        """
+        return self.system.run_task_outside_schedule(task_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="x", out_signature="ax")
     def GetTaskResultIDs(self, task_id):
         """Retrieves list of available task result IDs.

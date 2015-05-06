@@ -72,6 +72,11 @@ def cli_task(dbus_iface, args):
             )
             print(guide)
 
+        elif args.task_action == "run":
+            dbus_iface.RunTaskOutsideSchedule(
+                args.task_id, utf8_strings=True
+            )
+
         else:
             raise RuntimeError("Unknown action '%s'." % (args.task_action))
 
@@ -191,7 +196,7 @@ def main():
     )
     task_parser.add_argument(
         "task_action", metavar="ACTION", type=str,
-        choices=["info", "guide"], default="info", nargs="?"
+        choices=["info", "guide", "run"], default="info", nargs="?"
     )
 
     task_create_parser = subparsers.add_parser(
