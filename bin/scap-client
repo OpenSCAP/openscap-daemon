@@ -20,11 +20,13 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 from scap_client import dbus_daemon
+from scap_client import task
 
 import dbus
 import gobject
 import argparse
 import sys
+from datetime import datetime
 
 
 def get_dbus_interface():
@@ -98,13 +100,15 @@ def cli_task_create(dbus_iface, args):
             i += 1
 
         input_file = None
-        input_ssg_choice = raw_input("Choose SSG content by number (empty for custom content): ")
+        input_ssg_choice = raw_input(
+            "Choose SSG content by number (empty for custom content): ")
         if not input_ssg_choice:
             input_file = raw_input("Input file (absolute path): ")
         else:
             input_file = ssg_choices[int(input_ssg_choice) - 1]
 
-        tailoring_file = raw_input("Tailoring file (absolute path, empty for no tailoring): ")
+        tailoring_file = raw_input(
+            "Tailoring file (absolute path, empty for no tailoring): ")
         if tailoring_file is None:
             tailoring_file = ""
 
@@ -117,14 +121,51 @@ def cli_task_create(dbus_iface, args):
             print("\t%i:  %s (id='%s')" % (i + 1, value, key))
             i += 1
 
-        profile_choice = raw_input("Choose profile by number (empty for (default) profile): ")
+        profile_choice = raw_input(
+            "Choose profile by number (empty for (default) profile): ")
         profile = profile_choices.keys()[int(profile_choice) - 1]
+
+        online_remediation = False
+        if raw_input("Online remediation (1, y or Y for yes, else no): ") in \
+                ["1", "y", "Y"]:
+            online_remediation = True
+
+        print("Schedule: ")
+        schedule_not_before = None
+        schedule_not_before_str = \
+            raw_input(" - not before (YYYY-MM-DD HH:MM, empty for NOW): ")
+        if schedule_not_before_str == "":
+            schedule_not_before = datetime.now()
+        else:
+            schedule_not_before = datetime.strptime(
+                schedule_not_before_str, "%Y-%m-%d %H:%M"
+            )
+
+        schedule_repeat_after = None
+        schedule_repeat_after_str = \
+            raw_input(" - repeat after (hours or @daily, @weekly, @monthly): ")
+
+        schedule_repeat_after = 0
+        if schedule_repeat_after_str == "@daily":
+            schedule_repeat_after = 1 * 24
+        elif schedule_repeat_after_str == "@weekly":
+            schedule_repeat_after = 7 * 24
+        elif schedule_repeat_after_str == "@monthly":
+            schedule_repeat_after = 30 * 24
+        else:
+            schedule_repeat_after = int(schedule_repeat_after_str)
+
+        schedule_slip_mode = task.SlipMode.DROP_MISSED_ALIGNED
 
         print(title)
         print(target)
         print(input_file)
         print(tailoring_file)
         print(profile)
+        print(online_remediation)
+        print(schedule_not_before)
+        print(schedule_repeat_after)
+        print(schedule_slip_mode)
 
     else:
         raise NotImplementedError("Not yet!")
