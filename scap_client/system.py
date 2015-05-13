@@ -20,7 +20,6 @@
 import os
 import os.path
 from datetime import datetime
-import time
 import threading
 import logging
 import Queue
@@ -240,22 +239,6 @@ class System(object):
             (str(reference_datetime))
         )
 
-        closest_datetime = self.get_closest_datetime(reference_datetime)
-        time_to_wait = closest_datetime - reference_datetime
-        seconds_to_wait = time_to_wait.total_seconds()
-
-        if seconds_to_wait > 0:
-            with self.update_wait_cond:
-                logging.debug(
-                    "Closest task action in %s. Sleeping until then. "
-                    "Interruptible if task specs change." % (time_to_wait)
-                )
-                self.update_wait_cond.wait(seconds_to_wait)
-
-                # This function will be entered again and reference_datetime
-                # will be renewed.
-                return
-
         # We need to organize tasks by targets to avoid running 2 tasks on the
         # same target at the same time.
         # self.tasks needs to be locked, so that the list doesn't change while
@@ -354,8 +337,23 @@ class System(object):
         # TODO: Sleep until necessary to save CPU cycles
 
         while True:
-            self.update()
-            time.sleep(1)
+            reference_datetime = datetime.now()
+
+            closest_datetime = self.get_closest_datetime(reference_datetime)
+            time_to_wait = closest_datetime - reference_datetime
+            # because of ntp, daylight savings, etc, lets be safe and reschedule
+            # every hour at least
+            seconds_to_wait = min(60 * 60, time_to_wait.total_seconds())
+
+            if seconds_to_wait > 0:
+                with self.update_wait_cond:
+                    logging.debug(
+                        "Closest task action in %s. Sleeping until then. "
+                        "Interruptible if task specs change." % (time_to_wait)
+                    )
+                    self.update_wait_cond.wait(seconds_to_wait)
+
+            self.update(reference_datetime)
 
     def generate_guide_for_task(self, task_id):
         task = None
