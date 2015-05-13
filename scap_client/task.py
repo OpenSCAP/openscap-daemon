@@ -409,6 +409,12 @@ class Task(object):
         assert(not os.path.exists(ret))
         return ret
 
+    def get_next_update_time(self, reference_datetime):
+        if self.run_outside_schedule_once:
+            return reference_datetime
+
+        return self.schedule_not_before
+
     def update(self, reference_datetime, results_dir,
                work_in_progress_results_dir):
         """Figures out if the task should be run right now, alters the schedule
@@ -429,6 +435,10 @@ class Task(object):
             update_now = False
 
             if not self.run_outside_schedule_once:
+                # This functionality is replicated in get_next_update_time,
+                # it would be great to refactor this and only do it once but
+                # then we would lose the logging...
+
                 if self.schedule_not_before is None:
                     # this Task is not scheduled to run right now,
                     # it is disabled

@@ -91,6 +91,8 @@ class System(object):
         self.tasks = dict()
         self.tasks_lock = threading.Lock()
 
+        self.update_wait_cond = threading.Condition()
+
     def get_ssg_choices(self):
         # TODO: This has to be configurable in the future
         ssg_path = os.path.join(
@@ -149,6 +151,9 @@ class System(object):
                 self.tasks[id_].load(full_path)
                 task_count += 1
 
+        with self.update_wait_cond:
+            self.update_wait_cond.notify_all()
+
         logging.info(
             "Successfully loaded %i task definitions." % (task_count)
         )
@@ -179,6 +184,18 @@ class System(object):
 
         return task.title
 
+    def get_closest_datetime(self, reference_datetime):
+        ret = None
+
+        with self.tasks_lock:
+            for task in self.tasks.itervalues():
+                next_update_time = task.get_next_update_time(reference_datetime)
+
+                if ret is None or next_update_time < ret:
+                    ret = next_update_time
+
+        return ret
+
     def update(self, reference_datetime=None, max_jobs=4):
         """Evaluates all currently outstanding tasks and returns.
         Outstanding task means it's not_before is lower than reference_datetime,
@@ -197,6 +214,17 @@ class System(object):
             "Updating system, reference_datetime='%s'." %
             (str(reference_datetime))
         )
+
+        closest_datetime = self.get_closest_datetime(reference_datetime)
+        time_to_wait = closest_datetime - reference_datetime
+
+        self.update_wait_cond.acquire()
+        logging.debug(
+            "Closest task action in %s, sleeping, interruptible if task specs "
+            "change" % (time_to_wait)
+        )
+        self.update_wait_cond.wait(time_to_wait.total_seconds())
+        self.update_wait_cond.release()
 
         # We need to organize tasks by targets to avoid running 2 tasks on the
         # same target at the same time.
@@ -311,7 +339,10 @@ class System(object):
         with self.tasks_lock:
             task = self.tasks[task_id]
 
-        return task.run_outside_schedule()
+        task.run_outside_schedule()
+
+        with self.update_wait_cond:
+            self.update_wait_cond.notify_all()
 
     def get_task_result_ids(self, task_id):
         task = None
