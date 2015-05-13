@@ -217,14 +217,19 @@ class System(object):
 
         closest_datetime = self.get_closest_datetime(reference_datetime)
         time_to_wait = closest_datetime - reference_datetime
+        seconds_to_wait = time_to_wait.total_seconds()
 
-        self.update_wait_cond.acquire()
-        logging.debug(
-            "Closest task action in %s, sleeping, interruptible if task specs "
-            "change" % (time_to_wait)
-        )
-        self.update_wait_cond.wait(time_to_wait.total_seconds())
-        self.update_wait_cond.release()
+        if seconds_to_wait > 0:
+            with self.update_wait_cond:
+                logging.debug(
+                    "Closest task action in %s. Sleeping until then. "
+                    "Interruptible if task specs change." % (time_to_wait)
+                )
+                self.update_wait_cond.wait(seconds_to_wait)
+
+                # This function will be entered again and reference_datetime
+                # will be renewed.
+                return
 
         # We need to organize tasks by targets to avoid running 2 tasks on the
         # same target at the same time.
