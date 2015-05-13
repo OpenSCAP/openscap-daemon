@@ -458,7 +458,7 @@ class Task(object):
 
             else:
                 logging.debug(
-                    "Evaluating task '%s'. It was set to be run once outside"
+                    "Evaluating task '%s'. It was set to be run once outside "
                     "its schedule." %
                     (self.id_)
                 )
