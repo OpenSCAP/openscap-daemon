@@ -103,6 +103,14 @@ class SCAPClientDbus(dbus.service.Object):
         return self.system.run_task_outside_schedule(task_id)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="", out_signature="x")
+    def CreateTask(self):
+        """Creates a new task with empty contents, the task is created
+        in a disabled state so it won't be run.
+        """
+        return self.system.create_task()
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="x", out_signature="ax")
     def GetTaskResultIDs(self, task_id):
         """Retrieves list of available task result IDs.

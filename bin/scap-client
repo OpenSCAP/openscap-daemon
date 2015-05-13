@@ -155,7 +155,11 @@ def cli_task_create(dbus_iface, args):
         else:
             schedule_repeat_after = int(schedule_repeat_after_str)
 
+        # most users need just drop_missed_aligned, we will not offer the
+        # other options here
         schedule_slip_mode = task.SlipMode.DROP_MISSED_ALIGNED
+
+        task_id = dbus_iface.CreateTask()
 
         print(title)
         print(target)

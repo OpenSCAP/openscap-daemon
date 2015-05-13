@@ -184,6 +184,31 @@ class System(object):
 
         return task.title
 
+    def create_task(self):
+        task_id = 1
+
+        with self.tasks_lock:
+            while task_id in self.tasks:
+                task_id += 1
+
+            task = Task()
+            task.id_ = task_id
+            task.config_file = os.path.join(
+                self.tasks_dir, "%i.xml" % (task_id)
+            )
+
+            self.tasks[task_id] = task
+            #task.save()
+            logging.info("Created new empty task with ID '%i'." % (task_id))
+
+            # Do not notify the update_wait_cond, the task is disabled so it
+            # doesn't affect the schedule in any way
+
+            # with self.update_wait_cond:
+            #    self.update_wait_cond.notify_all()
+
+        return task_id
+
     def get_closest_datetime(self, reference_datetime):
         ret = None
 
