@@ -509,7 +509,7 @@ class Task(object):
 
                 shutil.move(wip_result, target_dir)
                 logging.info(
-                    "Evaluated task '%s' successfully, new results in '%s'." %
+                    "Evaluated task '%s', new result in '%s'." %
                     (self.id_, target_dir)
                 )
 

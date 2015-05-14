@@ -21,7 +21,6 @@
 import subprocess
 import tempfile
 import os.path
-import shutil
 import logging
 
 from xml.etree import cElementTree as ElementTree
@@ -29,6 +28,7 @@ from scap_client import et_helpers
 
 # TODO: configurable
 OSCAP_PATH = "oscap"
+
 
 def get_profile_choices_for_input(input_file, tailoring_file):
     # Ideally oscap would have a command line to do this, but as of now it
@@ -210,44 +210,36 @@ def evaluate_task(task, task_results_dir):
     with open(os.path.join(working_directory, "exit_code"), "w") as f:
         f.write("%i" % (exit_code))
 
-    logging.info(
-        "Evaluated task '%s', exit code %i." %
-        (task.id_, exit_code)
-    )
-
     # Exit code 0 means evaluation was successful and machine is compliant.
     # Exit code 1 means there was an error while evaluating.
     # Exit code 2 means there were no errors but the machine is not compliant.
-    # We will treat all exit codes except 0 and 2 as fatal errors.
 
-    if exit_code not in [0, 2]:
-        stdout_contents = "Unknown"
-        stderr_contents = "Unknown"
+    if exit_code == 0:
+        logging.info(
+            "Evaluated task '%i', exit code %i means the target evaluated "
+            "as compliant." % (task.id_, exit_code)
+        )
+        # TODO: Assert that arf was generated
 
-        if working_directory is not None:
-            if stdout_file is not None:
-                try:
-                    with open(stdout_file.name, "r") as f:
-                        stdout_contents = f.read().decode("utf-8")
-                except:
-                    pass
+    elif exit_code == 2:
+        logging.warning(
+            "Evaluated task '%i', exit code %i means the target evaluated "
+            "as non-compliant!" % (task.id_, exit_code)
+        )
+        # TODO: Assert that arf was generated
 
-            if stderr_file is not None:
-                try:
-                    with open(stderr_file.name, "r") as f:
-                        stderr_contents = f.read().decode("utf-8")
-                except:
-                    pass
+    elif exit_code == 1:
+        logging.error(
+            "Task '%i' failed to evaluate, oscap returned 1 as exit code, "
+            "it won't be possible to get ARF or generate reports for this "
+            "result!" % (task.id_)
+        )
+        # TODO: Assert that arf was NOT generated
 
-        if working_directory is not None:
-            shutil.rmtree(working_directory)
-
-        raise RuntimeError(
-            "`oscap` exit code was %i! Expected 0 or 2.\n\n"
-            "stdout:\n"
-            "%s\n\n"
-            "stderr:\n"
-            "%s\n\n" % (exit_code, stdout_contents, stderr_contents)
+    else:
+        logging.error(
+            "Evaluated task '%i', unknown exit code %i!." %
+            (task.id_, exit_code)
         )
 
     return working_directory
