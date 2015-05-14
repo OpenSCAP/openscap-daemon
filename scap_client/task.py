@@ -175,7 +175,8 @@ class Task(object):
     def set_input_file(self, file_path):
         self.input_temp_file = None
         if file_path is not None:
-            self.input_file = os.path.abspath(file_path)
+            self.input_file = \
+                os.path.abspath(file_path) if file_path is not None else None
 
         else:
             self.input_file = None
@@ -193,7 +194,8 @@ class Task(object):
 
     def set_tailoring_file(self, file_path):
         self.tailoring_temp_file = None
-        self.tailoring_file = os.path.abspath(file_path)
+        self.tailoring_file = \
+            os.path.abspath(file_path) if file_path is not None else None
 
     def set_tailoring_contents(self, tailoring_contents):
         if tailoring_contents is not None:

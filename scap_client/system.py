@@ -251,7 +251,7 @@ class System(object):
             task = self.tasks[task_id]
 
         with task.update_lock:
-            if os.path.isabs(input_):
+            if input_ is None or os.path.isabs(input_):
                 task.set_input_file(input_)
 
             else:
@@ -270,7 +270,7 @@ class System(object):
             task = self.tasks[task_id]
 
         with task.update_lock:
-            if os.path.isabs(tailoring):
+            if tailoring is None or os.path.isabs(tailoring):
                 task.set_tailoring_file(tailoring)
 
             else:

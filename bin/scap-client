@@ -20,7 +20,7 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 from scap_client import dbus_daemon
-from scap_client import task
+# from scap_client import task
 
 import dbus
 import gobject
@@ -173,10 +173,11 @@ def cli_task_create(dbus_iface, args):
         dbus_iface.SetTaskTailoring(task_id, tailoring_file)
         dbus_iface.SetTaskProfileID(task_id, profile)
         dbus_iface.SetTaskOnlineRemediation(task_id, online_remediation)
+        dbus_iface.SetTaskScheduleRepeatAfter(task_id, schedule_repeat_after)
+        # We set not before last on purpose, after it's set the task is enabled
         dbus_iface.SetTaskScheduleNotBefore(
             task_id, schedule_not_before.strftime("%Y-%m-%dT%H:%M")
         )
-        dbus_iface.SetTaskScheduleRepeatAfter(task_id, schedule_repeat_after)
         # TODO: Setting Schedule SlipMode
 
     else:

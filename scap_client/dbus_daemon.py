@@ -143,7 +143,9 @@ class SCAPClientDbus(dbus.service.Object):
 
         The change is persistent after the function returns.
         """
-        return self.system.set_task_input(task_id, input_)
+        return self.system.set_task_input(
+            task_id, input_ if input_ != "" else None
+        )
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
@@ -155,7 +157,9 @@ class SCAPClientDbus(dbus.service.Object):
 
         The change is persistent after the function returns.
         """
-        return self.system.set_task_tailoring(task_id, tailoring)
+        return self.system.set_task_tailoring(
+            task_id, tailoring if tailoring != "" else None
+        )
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
