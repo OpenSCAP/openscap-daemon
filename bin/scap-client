@@ -27,6 +27,7 @@ import gobject
 import argparse
 import sys
 from datetime import datetime
+import os.path
 
 
 def get_dbus_interface():
@@ -107,10 +108,14 @@ def cli_task_create(dbus_iface, args):
         else:
             input_file = ssg_choices[int(input_ssg_choice) - 1]
 
+        input_file = os.path.abspath(input_file)
+
         tailoring_file = raw_input(
             "Tailoring file (absolute path, empty for no tailoring): ")
-        if tailoring_file is None:
+        if tailoring_file in [None, ""]:
             tailoring_file = ""
+        else:
+            tailoring_file = os.path.abspath(tailoring_file)
 
         print("Found the following possible profiles: ")
         profile_choices = dbus_iface.GetProfileChoicesForInput(
@@ -133,7 +138,9 @@ def cli_task_create(dbus_iface, args):
         print("Schedule: ")
         schedule_not_before = None
         schedule_not_before_str = \
-            raw_input(" - not before (YYYY-MM-DD HH:MM, empty for NOW): ")
+            raw_input(
+                " - not before (YYYY-MM-DD HH:MM in UTC, empty for NOW): "
+            )
         if schedule_not_before_str == "":
             schedule_not_before = datetime.now()
         else:
@@ -160,11 +167,11 @@ def cli_task_create(dbus_iface, args):
         schedule_slip_mode = task.SlipMode.DROP_MISSED_ALIGNED
 
         task_id = dbus_iface.CreateTask()
+        dbus_iface.SetTaskTitle(task_id, title)
+        dbus_iface.SetTaskTarget(task_id, target)
+        dbus_iface.SetTaskInput(task_id, input_file)
+        dbus_iface.SetTaskTailoring(task_id, tailoring_file)
 
-        print(title)
-        print(target)
-        print(input_file)
-        print(tailoring_file)
         print(profile)
         print(online_remediation)
         print(schedule_not_before)

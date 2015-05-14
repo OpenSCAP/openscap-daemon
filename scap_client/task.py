@@ -172,20 +172,53 @@ class Task(object):
         assert(ret > 0)
         return ret
 
+    def set_input_file(self, file_path):
+        self.input_temp_file = None
+        if file_path is not None:
+            self.input_file = os.path.abspath(file_path)
+
+        else:
+            self.input_file = None
+
+    def set_input_contents(self, input_contents):
+        if input_contents is not None:
+            self.input_temp_file = tempfile.NamedTemporaryFile()
+            self.input_temp_file.write(input_contents.encode("utf-8"))
+            self.input_temp_file.flush()
+
+            self.input_file = os.path.abspath(self.input_temp_file.name)
+
+        else:
+            self.input_file = None
+
+    def set_tailoring_file(self, file_path):
+        self.tailoring_temp_file = None
+        self.tailoring_file = os.path.abspath(file_path)
+
+    def set_tailoring_contents(self, tailoring_contents):
+        if tailoring_contents is not None:
+            self.tailoring_temp_file = tempfile.NamedTemporaryFile()
+            self.tailoring_temp_file.write(tailoring_contents.encode("utf-8"))
+            self.tailoring_temp_file.flush()
+
+            self.tailoring_file = os.path.abspath(self.tailoring_temp_file.name)
+
+        else:
+            self.tailoring_file = None
+
     def load_from_xml_element(self, root, config_file):
         self.id_ = Task.get_task_id_from_filepath(config_file)
         self.title = et_helpers.get_element_text(root, "title")
 
         self.target = et_helpers.get_element_text(root, "target")
 
-        self.input_file = et_helpers.get_element_attr(root, "input", "href")
-        if self.input_file is None:
-            input_file_contents = et_helpers.get_element_text(root, "input")
-            self.input_temp_file = tempfile.NamedTemporaryFile()
-            self.input_temp_file.write(input_file_contents.encode("utf-8"))
-            self.input_temp_file.flush()
+        input_file = et_helpers.get_element_attr(root, "input", "href")
+        if input_file is not None:
+            self.set_input_file(input_file)
 
-            self.input_file = os.path.abspath(self.input_temp_file.name)
+        else:
+            input_file_contents = et_helpers.get_element_text(root, "input")
+            self.set_input_contents(input_file_contents)
 
         self.input_datastream_id = \
             et_helpers.get_element_attr(root, "input", "datastream_id")
@@ -193,21 +226,15 @@ class Task(object):
             et_helpers.get_element_attr(root, "input", "xccdf_id")
 
         # TODO: in the future we want datastream tailoring as well
-        self.tailoring_file = \
+        tailoring_file = \
             et_helpers.get_element_attr(root, "tailoring", "href")
-        if self.tailoring_file is None:
+        if tailoring_file is not None:
+            self.set_tailoring_file(tailoring_file)
+
+        else:
             tailoring_file_contents = \
                 et_helpers.get_element_text(root, "tailoring")
-
-            if tailoring_file_contents is not None:
-                self.tailoring_temp_file = tempfile.NamedTemporaryFile()
-                self.tailoring_temp_file.write(
-                    tailoring_file_contents.encode("utf-8")
-                )
-                self.tailoring_temp_file.flush()
-
-                self.tailoring_file = \
-                    os.path.abspath(self.tailoring_temp_file.name)
+            self.set_tailoring_contents(tailoring_file_contents)
 
         self.profile_id = et_helpers.get_element_text(root, "profile")
         self.online_remediation = \

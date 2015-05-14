@@ -176,13 +176,6 @@ class System(object):
 
         return ret
 
-    def get_task_title(self, task_id):
-        task = None
-        with self.tasks_lock:
-            task = self.tasks[task_id]
-
-        return task.title
-
     def create_task(self):
         task_id = 1
 
@@ -197,7 +190,12 @@ class System(object):
             )
 
             self.tasks[task_id] = task
-            #task.save()
+
+            # We do not save the task on purpose, empty tasks are worthless.
+            # The task will be saved to disk as soon as one of its properties is
+            # set.
+            # task.save()
+
             logging.info("Created new empty task with ID '%i'." % (task_id))
 
             # Do not notify the update_wait_cond, the task is disabled so it
@@ -207,6 +205,84 @@ class System(object):
             #    self.update_wait_cond.notify_all()
 
         return task_id
+
+    def set_task_title(self, task_id, title):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            task.title = title
+
+            # TODO: Be persistent as we promised!
+            #task.save()
+
+    def get_task_title(self, task_id):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.title
+
+    def set_task_target(self, task_id, target):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            task.target = target
+
+            # TODO: Be persistent as we promised!
+            #task.save()
+
+    def get_task_target(self, task_id):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.target
+
+    def set_task_input(self, task_id, input_):
+        """input can be an absolute file path or the XML source itself. This is
+        autodetected.
+        """
+
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            if os.path.isabs(input_):
+                task.set_input_file(input_)
+
+            else:
+                task.set_input_contents(input_)
+
+            # TODO: Be persistent as we promised!
+            #task.save()
+
+    def set_task_tailoring(self, task_id, tailoring):
+        """tailoring can be an absolute file path or the XML source itself.
+        This is autodetected.
+        """
+
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            if os.path.isabs(tailoring):
+                task.set_tailoring_file(tailoring)
+
+            else:
+                task.set_tailoring_contents(tailoring)
+
+            # TODO: Be persistent as we promised!
+            #task.save()
 
     def get_closest_datetime(self, reference_datetime):
         ret = None

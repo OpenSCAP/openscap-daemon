@@ -107,8 +107,54 @@ class SCAPClientDbus(dbus.service.Object):
     def CreateTask(self):
         """Creates a new task with empty contents, the task is created
         in a disabled state so it won't be run.
+
+        The task is not persistent until some of its attributes are changed.
+        Empty tasks are worthless, so we don't save them until they have at
+        least some data.
         """
         return self.system.create_task()
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xs", out_signature="")
+    def SetTaskTitle(self, task_id, title):
+        """Set title of existing task with given ID.
+
+        The change is persistent after the function returns.
+        """
+        return self.system.set_task_title(task_id, title)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xs", out_signature="")
+    def SetTaskTarget(self, task_id, target):
+        """Set target of existing task with given ID.
+
+        The change is persistent after the function returns.
+        """
+        return self.system.set_task_target(task_id, target)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xs", out_signature="")
+    def SetTaskInput(self, task_id, input_):
+        """Set input of existing task with given ID.
+
+        input can be absolute file path or the XML source itself, this is
+        is autodetected.
+
+        The change is persistent after the function returns.
+        """
+        return self.system.set_task_input(task_id, input_)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xs", out_signature="")
+    def SetTaskTailoring(self, task_id, tailoring):
+        """Set tailoring of existing task with given ID.
+
+        tailoring can be absolute file path or the XML source itself, this is
+        is autodetected.
+
+        The change is persistent after the function returns.
+        """
+        return self.system.set_task_tailoring(task_id, tailoring)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="x", out_signature="ax")
