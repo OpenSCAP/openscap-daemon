@@ -311,6 +311,11 @@ class System(object):
 
             task.save()
 
+        # This changes the schedule which potentially obsoletes the precomputed
+        # schedule. Make sure we re-schedule everything.
+        with self.update_wait_cond:
+            self.update_wait_cond.notify_all()
+
     def set_task_schedule_repeat_after(self, task_id, schedule_repeat_after):
         task = None
 
@@ -321,6 +326,11 @@ class System(object):
             task.schedule_repeat_after = schedule_repeat_after
 
             task.save()
+
+        # This changes the schedule which potentially obsoletes the precomputed
+        # schedule. Make sure we re-schedule everything.
+        with self.update_wait_cond:
+            self.update_wait_cond.notify_all()
 
     def get_closest_datetime(self, reference_datetime):
         ret = None
