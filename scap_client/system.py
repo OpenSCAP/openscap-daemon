@@ -216,6 +216,11 @@ class System(object):
             task.enabled = bool(enabled)
             task.save()
 
+        logging.info(
+            "%s task with ID %i." %
+            ("Enabled" if enabled else "Disabled", task_id)
+        )
+
         if task.enabled:
             with self.update_wait_cond:
                 self.update_wait_cond.notify_all()
@@ -229,6 +234,11 @@ class System(object):
         with task.update_lock:
             task.title = title
             task.save()
+
+        logging.info(
+            "Set title of task with ID %i to '%s'." %
+            (task_id, title)
+        )
 
     def get_task_title(self, task_id):
         task = None
@@ -246,6 +256,11 @@ class System(object):
         with task.update_lock:
             task.target = target
             task.save()
+
+        logging.info(
+            "Set target of task with ID %i to '%s'." %
+            (task_id, target)
+        )
 
     def get_task_target(self, task_id):
         task = None
@@ -268,8 +283,18 @@ class System(object):
             if input_ is None or os.path.isabs(input_):
                 task.set_input_file(input_)
 
+                logging.info(
+                    "Set input content of task with ID %i to file '%s'." %
+                    (task_id, input_)
+                )
+
             else:
                 task.set_input_contents(input_)
+
+                logging.info(
+                    "Set input content of task with ID %i to custom XML."
+                    (task_id)
+                )
 
             task.save()
 
@@ -287,8 +312,18 @@ class System(object):
             if tailoring is None or os.path.isabs(tailoring):
                 task.set_tailoring_file(tailoring)
 
+                logging.info(
+                    "Set tailoring content of task with ID %i to file '%s'." %
+                    (task_id, tailoring)
+                )
+
             else:
                 task.set_tailoring_contents(tailoring)
+
+                logging.info(
+                    "Set tailoring content of task with ID %i to custom XML."
+                    (task_id)
+                )
 
             task.save()
 
@@ -300,8 +335,12 @@ class System(object):
 
         with task.update_lock:
             task.profile_id = profile_id
-
             task.save()
+
+        logging.info(
+            "Set profile ID of task with ID %i to '%s'." %
+            (task_id, profile_id)
+        )
 
     def set_task_online_remediation(self, task_id, remediation_enabled):
         task = None
@@ -311,8 +350,12 @@ class System(object):
 
         with task.update_lock:
             task.online_remediation = bool(remediation_enabled)
-
             task.save()
+
+        logging.info(
+            "%s online remedition of task with ID %i." %
+            ("Enabled" if remediation_enabled else "Disabled", task_id)
+        )
 
     def set_task_schedule_not_before(self, task_id, schedule_not_before):
         task = None
@@ -322,8 +365,12 @@ class System(object):
 
         with task.update_lock:
             task.schedule_not_before = schedule_not_before
-
             task.save()
+
+        logging.info(
+            "Set schedule not before of task with ID %i to %s." %
+            (task_id, schedule_not_before)
+        )
 
         # This changes the schedule which potentially obsoletes the precomputed
         # schedule. Make sure we re-schedule everything.
@@ -339,8 +386,12 @@ class System(object):
 
         with task.update_lock:
             task.schedule_repeat_after = schedule_repeat_after
-
             task.save()
+
+        logging.info(
+            "Set schedule repeat after of task with ID %i to %s." %
+            (task_id, schedule_repeat_after)
+        )
 
         # This changes the schedule which potentially obsoletes the precomputed
         # schedule. Make sure we re-schedule everything.
