@@ -157,6 +157,27 @@ class SCAPClientDbus(dbus.service.Object):
         return self.system.set_task_tailoring(task_id, tailoring)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xs", out_signature="")
+    def SetTaskProfileID(self, task_id, profile_id):
+        """Set profile ID of existing task with given ID.
+
+        The change is persistent after the function returns.
+        """
+        return self.system.set_task_profile_id(task_id, profile_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xb", out_signature="")
+    def SetTaskOnlineRemediation(self, task_id, online_remediation):
+        """Sets whether online remedation of existing task with given ID
+        is enabled.
+
+        The change is persistent after the function returns.
+        """
+        return self.system.set_task_online_remediation(
+            task_id, online_remediation
+        )
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="x", out_signature="ax")
     def GetTaskResultIDs(self, task_id):
         """Retrieves list of available task result IDs.

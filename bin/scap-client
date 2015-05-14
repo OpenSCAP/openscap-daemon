@@ -171,9 +171,9 @@ def cli_task_create(dbus_iface, args):
         dbus_iface.SetTaskTarget(task_id, target)
         dbus_iface.SetTaskInput(task_id, input_file)
         dbus_iface.SetTaskTailoring(task_id, tailoring_file)
+        dbus_iface.SetTaskProfileID(task_id, profile)
+        dbus_iface.SetTaskOnlineRemediation(task_id, online_remediation)
 
-        print(profile)
-        print(online_remediation)
         print(schedule_not_before)
         print(schedule_repeat_after)
         print(schedule_slip_mode)

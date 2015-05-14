@@ -284,6 +284,30 @@ class System(object):
             # TODO: Be persistent as we promised!
             #task.save()
 
+    def set_task_profile_id(self, task_id, profile_id):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            task.profile_id = profile_id
+
+            # TODO: Be persistent as we promised!
+            #task.save()
+
+    def set_task_online_remediation(self, task_id, remediation_enabled):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            task.online_remediation = bool(remediation_enabled)
+
+            # TODO: Be persistent as we promised!
+            #task.save()
+
     def get_closest_datetime(self, reference_datetime):
         ret = None
 
