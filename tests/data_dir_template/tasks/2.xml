@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<task>
+<task enabled="true">
     <title>Weekly SCAP Security Guide Evaluation</title>
     <target>localhost</target>
     <input>&lt;?xml version="1.0" encoding="UTF-8"?&gt;

@@ -80,6 +80,16 @@ def cli_task(dbus_iface, args):
                 args.task_id, utf8_strings=True
             )
 
+        elif args.task_action == "enable":
+            dbus_iface.SetTaskEnabled(
+                args.task_id, True, utf8_strings=True
+            )
+
+        elif args.task_action == "disable":
+            dbus_iface.SetTaskEnabled(
+                args.task_id, False, utf8_strings=True
+            )
+
         else:
             raise RuntimeError("Unknown action '%s'." % (args.task_action))
 
@@ -173,10 +183,14 @@ def cli_task_create(dbus_iface, args):
         dbus_iface.SetTaskTailoring(task_id, tailoring_file)
         dbus_iface.SetTaskProfileID(task_id, profile)
         dbus_iface.SetTaskOnlineRemediation(task_id, online_remediation)
-        dbus_iface.SetTaskScheduleRepeatAfter(task_id, schedule_repeat_after)
-        # We set not before last on purpose, after it's set the task is enabled
         dbus_iface.SetTaskScheduleNotBefore(
             task_id, schedule_not_before.strftime("%Y-%m-%dT%H:%M")
+        )
+        dbus_iface.SetTaskScheduleRepeatAfter(task_id, schedule_repeat_after)
+
+        print(
+            "Task created with ID '%i'. It is currently set as disabled. "
+            "You can enable it with `scap-client task %i enable`."
         )
         # TODO: Setting Schedule SlipMode
 
@@ -250,7 +264,8 @@ def main():
     )
     task_parser.add_argument(
         "task_action", metavar="ACTION", type=str,
-        choices=["info", "guide", "run"], default="info", nargs="?"
+        choices=["info", "guide", "run", "enable", "disable"],
+        default="info", nargs="?"
     )
 
     task_create_parser = subparsers.add_parser(

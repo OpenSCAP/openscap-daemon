@@ -206,6 +206,20 @@ class System(object):
 
         return task_id
 
+    def set_task_enabled(self, task_id, enabled):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            task.enabled = bool(enabled)
+            task.save()
+
+        if task.enabled:
+            with self.update_wait_cond:
+                self.update_wait_cond.notify_all()
+
     def set_task_title(self, task_id, title):
         task = None
 
@@ -313,8 +327,9 @@ class System(object):
 
         # This changes the schedule which potentially obsoletes the precomputed
         # schedule. Make sure we re-schedule everything.
-        with self.update_wait_cond:
-            self.update_wait_cond.notify_all()
+        if task.enabled:
+            with self.update_wait_cond:
+                self.update_wait_cond.notify_all()
 
     def set_task_schedule_repeat_after(self, task_id, schedule_repeat_after):
         task = None
@@ -329,8 +344,9 @@ class System(object):
 
         # This changes the schedule which potentially obsoletes the precomputed
         # schedule. Make sure we re-schedule everything.
-        with self.update_wait_cond:
-            self.update_wait_cond.notify_all()
+        if task.enabled:
+            with self.update_wait_cond:
+                self.update_wait_cond.notify_all()
 
     def get_closest_datetime(self, reference_datetime):
         ret = None
@@ -471,18 +487,28 @@ class System(object):
             reference_datetime = datetime.now()
 
             closest_datetime = self.get_closest_datetime(reference_datetime)
-            time_to_wait = closest_datetime - reference_datetime
-            # because of ntp, daylight savings, etc, lets be safe and reschedule
-            # every hour at least
-            seconds_to_wait = min(60 * 60, time_to_wait.total_seconds())
-
-            if seconds_to_wait > 0:
+            if closest_datetime is None:
                 with self.update_wait_cond:
                     logging.debug(
-                        "Closest task action in %s. Sleeping until then. "
-                        "Interruptible if task specs change." % (time_to_wait)
+                        "No task is scheduled to run. Sleeping for an hour. "
+                        "Interruptible if task specs change."
                     )
-                    self.update_wait_cond.wait(seconds_to_wait)
+                    self.update_wait_cond.wait(60 * 60)
+
+            else:
+                time_to_wait = closest_datetime - reference_datetime
+                # because of ntp, daylight savings, etc, lets be safe
+                # and reschedule every hour at least
+                seconds_to_wait = min(60 * 60, time_to_wait.total_seconds())
+
+                if seconds_to_wait > 0:
+                    with self.update_wait_cond:
+                        logging.debug(
+                            "Closest task action in %s. Sleeping until then. "
+                            "Interruptible if task specs change." %
+                            (time_to_wait)
+                        )
+                        self.update_wait_cond.wait(seconds_to_wait)
 
             self.update(reference_datetime)
 

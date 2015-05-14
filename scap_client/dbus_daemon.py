@@ -116,6 +116,15 @@ class SCAPClientDbus(dbus.service.Object):
         return self.system.create_task()
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xb", out_signature="")
+    def SetTaskEnabled(self, task_id, enabled):
+        """Sets enabled flag of an existing task with given ID.
+
+        The change is persistent after the function returns.
+        """
+        return self.system.set_task_enabled(task_id, enabled)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
     def SetTaskTitle(self, task_id, title):
         """Set title of existing task with given ID.

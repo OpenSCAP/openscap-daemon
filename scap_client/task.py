@@ -85,6 +85,7 @@ class Task(object):
     def __init__(self):
         self.id_ = None
         self.config_file = None
+        self.enabled = False
 
         self.title = None
         self.target = "localhost"
@@ -150,6 +151,7 @@ class Task(object):
         # different paths and the tasks wouldn't end up being equivalent.
 
         return \
+            self.enabled == other.enabled and \
             self.title == other.title and \
             self.target == other.target and \
             self.input_file == other.input_file and \
@@ -210,6 +212,8 @@ class Task(object):
 
     def load_from_xml_element(self, root, config_file):
         self.id_ = Task.get_task_id_from_filepath(config_file)
+        self.enabled = root.get("enabled", "false") == "true"
+
         self.title = et_helpers.get_element_text(root, "title")
 
         self.target = et_helpers.get_element_text(root, "target")
@@ -282,6 +286,7 @@ class Task(object):
 
     def to_xml_element(self):
         root = ElementTree.Element("task")
+        root.set("enabled", "true" if self.enabled else "false")
 
         if self.title is not None:
             title_element = ElementTree.Element("title")
@@ -440,6 +445,9 @@ class Task(object):
         return ret
 
     def get_next_update_time(self, reference_datetime):
+        if not self.enabled:
+            return None
+
         if self.run_outside_schedule_once:
             return reference_datetime
 
@@ -459,6 +467,14 @@ class Task(object):
         """
 
         with self.update_lock:
+            # We will never update disabled tasks
+            if not self.enabled:
+                logging.debug(
+                    "Task '%i' is disabled, not updating it." %
+                    (self.id_)
+                )
+                return
+
             if not self.is_valid():
                 raise RuntimeError("Can't tick an invalid Task.")
 
@@ -473,13 +489,14 @@ class Task(object):
                     # this Task is not scheduled to run right now,
                     # it is disabled
                     logging.debug(
-                        "Task '%s' is disabled. schedule_not_before is None." %
+                        "Task '%i' is enabled but schedule_not_before is None. "
+                        "It won't be run automatically." %
                         (self.id_)
                     )
 
                 elif self.schedule_not_before <= reference_datetime:
                     logging.debug(
-                        "Evaluating task '%s'. It was scheduled to be "
+                        "Evaluating task '%i'. It was scheduled to be "
                         "evaluated later than %s, reference_datetime %s is "
                         "higher than or equal." %
                         (self.id_, self.schedule_not_before, reference_datetime)
@@ -488,7 +505,7 @@ class Task(object):
 
             else:
                 logging.debug(
-                    "Evaluating task '%s'. It was set to be run once outside "
+                    "Evaluating task '%i'. It was set to be run once outside "
                     "its schedule." %
                     (self.id_)
                 )
@@ -528,6 +545,12 @@ class Task(object):
         return oscap_helpers.generate_guide_for_task(self)
 
     def run_outside_schedule(self):
+        if not self.enabled:
+            raise RuntimeError(
+                "This task is disabled. Enable it first if you want to run it "
+                "once outside the schedule!"
+            )
+
         if self.run_outside_schedule_once:
             raise RuntimeError(
                 "This task was already scheduled to be run once "

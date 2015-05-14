@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<task>
+<task enabled="true">
     <title>Weekly SCAP Security Guide Evaluation</title>
     <target>localhost</target>
     <input href="/usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml" />
     <profile>xccdf_org.ssgproject.content_profile_common</profile>
     <online_remediation>false</online_remediation>
-    <schedule not_before="2015-05-14T13:43" repeat_after="1" slip_mode="drop_missed_aligned" />
+    <schedule not_before="2015-05-14T16:43" repeat_after="1" slip_mode="drop_missed_aligned" />
 </task>
