@@ -214,9 +214,7 @@ class System(object):
 
         with task.update_lock:
             task.title = title
-
-            # TODO: Be persistent as we promised!
-            #task.save()
+            task.save()
 
     def get_task_title(self, task_id):
         task = None
@@ -233,9 +231,7 @@ class System(object):
 
         with task.update_lock:
             task.target = target
-
-            # TODO: Be persistent as we promised!
-            #task.save()
+            task.save()
 
     def get_task_target(self, task_id):
         task = None
@@ -261,8 +257,7 @@ class System(object):
             else:
                 task.set_input_contents(input_)
 
-            # TODO: Be persistent as we promised!
-            #task.save()
+            task.save()
 
     def set_task_tailoring(self, task_id, tailoring):
         """tailoring can be an absolute file path or the XML source itself.
@@ -281,8 +276,7 @@ class System(object):
             else:
                 task.set_tailoring_contents(tailoring)
 
-            # TODO: Be persistent as we promised!
-            #task.save()
+            task.save()
 
     def set_task_profile_id(self, task_id, profile_id):
         task = None
@@ -293,8 +287,7 @@ class System(object):
         with task.update_lock:
             task.profile_id = profile_id
 
-            # TODO: Be persistent as we promised!
-            #task.save()
+            task.save()
 
     def set_task_online_remediation(self, task_id, remediation_enabled):
         task = None
@@ -305,8 +298,29 @@ class System(object):
         with task.update_lock:
             task.online_remediation = bool(remediation_enabled)
 
-            # TODO: Be persistent as we promised!
-            #task.save()
+            task.save()
+
+    def set_task_schedule_not_before(self, task_id, schedule_not_before):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            task.schedule_not_before = schedule_not_before
+
+            task.save()
+
+    def set_task_schedule_repeat_after(self, task_id, schedule_repeat_after):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            task.schedule_repeat_after = schedule_repeat_after
+
+            task.save()
 
     def get_closest_datetime(self, reference_datetime):
         ret = None
@@ -314,6 +328,8 @@ class System(object):
         with self.tasks_lock:
             for task in self.tasks.itervalues():
                 next_update_time = task.get_next_update_time(reference_datetime)
+                if next_update_time is None:
+                    continue
 
                 if ret is None or next_update_time < ret:
                     ret = next_update_time

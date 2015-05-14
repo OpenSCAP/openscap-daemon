@@ -87,7 +87,7 @@ class Task(object):
         self.config_file = None
 
         self.title = None
-        self.target = None
+        self.target = "localhost"
         self.input_file = None
         self.input_temp_file = None
         self.input_datastream_id = None
@@ -97,7 +97,7 @@ class Task(object):
         self.profile_id = None
         self.online_remediation = False
         self.schedule_not_before = None
-        self.schedule_repeat_after = None
+        self.schedule_repeat_after = 0
         self.schedule_slip_mode = SlipMode.DROP_MISSED_ALIGNED
 
         # If True, this task will be evaluated once without affecting the
@@ -290,18 +290,19 @@ class Task(object):
         target_element.text = self.target
         root.append(target_element)
 
-        input_element = ElementTree.Element("input")
-        if self.input_temp_file is None:
-            input_element.set("href", self.input_file)
-        else:
-            with open(self.input_temp_file.name, "r") as f:
-                input_element.text = f.read().decode("utf-8")
+        if self.input_file is not None:
+            input_element = ElementTree.Element("input")
+            if self.input_temp_file is None:
+                input_element.set("href", self.input_file)
+            else:
+                with open(self.input_temp_file.name, "r") as f:
+                    input_element.text = f.read().decode("utf-8")
 
-        if self.input_datastream_id is not None:
-            input_element.set("datastream_id", self.input_datastream_id)
-        if self.input_xccdf_id is not None:
-            input_element.set("xccdf_id", self.input_xccdf_id)
-        root.append(input_element)
+            if self.input_datastream_id is not None:
+                input_element.set("datastream_id", self.input_datastream_id)
+            if self.input_xccdf_id is not None:
+                input_element.set("xccdf_id", self.input_xccdf_id)
+            root.append(input_element)
 
         if self.tailoring_file is not None:
             tailoring_element = ElementTree.Element("tailoring")

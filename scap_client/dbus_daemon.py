@@ -24,6 +24,7 @@ import dbus.service
 import gobject
 import threading
 import logging
+from datetime import datetime
 
 OBJECT_PATH = "/SCAPClient"
 DBUS_INTERFACE = "org.OpenSCAP.SCAPClientInterface"
@@ -175,6 +176,38 @@ class SCAPClientDbus(dbus.service.Object):
         """
         return self.system.set_task_online_remediation(
             task_id, online_remediation
+        )
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xs", out_signature="")
+    def SetTaskScheduleNotBefore(self, task_id, schedule_not_before_str):
+        """Sets time when the task is next scheduled to run. The time is passed
+        as a string in format YYYY-MM-DDTHH:MM in UTC with no timezone info!
+        Example: 2015-05-14T13:49
+
+        The change is persistent after the function returns.
+        """
+        schedule_not_before = datetime.strptime(
+            schedule_not_before_str,
+            "%Y-%m-%dT%H:%M"
+        )
+
+        return self.system.set_task_schedule_not_before(
+            task_id, schedule_not_before
+        )
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xx", out_signature="")
+    def SetTaskScheduleRepeatAfter(self, task_id, schedule_repeat_after):
+        """Sets number of hours after which the task should be repeated.
+
+        For example 24 for daily tasks, 24*7 for weekly tasks, ...
+
+        The change is persistent after the function returns.
+        """
+
+        return self.system.set_task_schedule_repeat_after(
+            task_id, schedule_repeat_after
         )
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,

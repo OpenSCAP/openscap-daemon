@@ -47,6 +47,9 @@ class SerializationTest(tests.harness.APITest):
             not self.system.tasks[1].is_equivalent_to(self.system.tasks[2])
         )
 
+        task_id = self.system.create_task()
+        self.system.tasks[task_id].save()
+
 
 if __name__ == "__main__":
     SerializationTest.run()

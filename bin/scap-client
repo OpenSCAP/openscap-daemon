@@ -164,7 +164,7 @@ def cli_task_create(dbus_iface, args):
 
         # most users need just drop_missed_aligned, we will not offer the
         # other options here
-        schedule_slip_mode = task.SlipMode.DROP_MISSED_ALIGNED
+        # schedule_slip_mode = task.SlipMode.DROP_MISSED_ALIGNED
 
         task_id = dbus_iface.CreateTask()
         dbus_iface.SetTaskTitle(task_id, title)
@@ -173,10 +173,11 @@ def cli_task_create(dbus_iface, args):
         dbus_iface.SetTaskTailoring(task_id, tailoring_file)
         dbus_iface.SetTaskProfileID(task_id, profile)
         dbus_iface.SetTaskOnlineRemediation(task_id, online_remediation)
-
-        print(schedule_not_before)
-        print(schedule_repeat_after)
-        print(schedule_slip_mode)
+        dbus_iface.SetTaskScheduleNotBefore(
+            task_id, schedule_not_before.strftime("%Y-%m-%dT%H:%M")
+        )
+        dbus_iface.SetTaskScheduleRepeatAfter(task_id, schedule_repeat_after)
+        # TODO: Setting Schedule SlipMode
 
     else:
         raise NotImplementedError("Not yet!")
