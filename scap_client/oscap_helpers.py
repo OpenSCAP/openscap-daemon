@@ -28,6 +28,7 @@ from scap_client import et_helpers
 
 # TODO: configurable
 OSCAP_PATH = "oscap"
+OSCAP_SSH_PATH = "oscap-ssh"
 
 
 def get_profile_choices_for_input(input_file, tailoring_file):
@@ -82,9 +83,6 @@ def get_profile_choices_for_input(input_file, tailoring_file):
 
 
 def generate_guide_args_for_task(task):
-    # TODO
-    assert(task.target == "localhost")
-
     ret = [OSCAP_PATH, "xccdf", "generate", "guide"]
 
     # TODO: Is this supported in OpenSCAP?
@@ -131,16 +129,35 @@ def generate_guide_for_task(task):
     return ret
 
 
-class EvaluationFailedError(RuntimeError):
-    def __init__(self, msg):
-        super(self, RuntimeError).__init__(msg)
+def split_ssh_target(target):
+    assert(target.startswith("ssh://"))
+
+    without_prefix = target[6:]
+
+    if ":" in without_prefix:
+        host, port_str = without_prefix.split(":")
+        return host, int(port_str)
+
+    else:
+        return without_prefix, 22
 
 
 def evaluation_args_for_task(task):
-    # TODO
-    assert(task.target == "localhost")
+    ret = []
 
-    ret = [OSCAP_PATH, "xccdf", "eval"]
+    if task.target == "localhost":
+        ret.extend([OSCAP_PATH])
+
+    elif task.target.startswith("ssh://"):
+        host, port = split_ssh_target(task.target)
+        ret.extend([OSCAP_SSH_PATH, host, str(port)])
+
+    else:
+        raise RuntimeError(
+            "Unrecognized target '%s' in task '%i'." % (task.target, task.id_)
+        )
+
+    ret.extend(["xccdf", "eval"])
 
     if task.input_datastream_id is not None:
         ret.extend(["--datastream-id", task.input_datastream_id])
@@ -246,14 +263,7 @@ def evaluate_task(task, task_results_dir):
 
 
 def generate_report_args_for_result(task, arf_path):
-    # TODO
-    assert(task.target == "localhost")
-
-    ret = [OSCAP_PATH, "xccdf", "generate", "report"]
-
-    ret.append(arf_path)
-
-    return ret
+    return [OSCAP_PATH, "xccdf", "generate", "report", arf_path]
 
 
 def generate_report_for_result(task, results_dir, result_id):
@@ -296,6 +306,6 @@ def generate_report_for_result(task, results_dir, result_id):
 
 __all__ = [
     "generate_guide_for_task",
-    "EvaluationFailedError", "evaluate_task",
+    "evaluate_task",
     "generate_report_for_result"
 ]
