@@ -116,6 +116,16 @@ class SCAPClientDbus(dbus.service.Object):
         return self.system.create_task()
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="x", out_signature="")
+    def RemoveTask(self, task_id):
+        """Removes task with given ID and deletes its config file. The task has
+        to be disabled, else the operation fails.
+
+        The change is persistent after the function returns.
+        """
+        return self.system.remove_task(task_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xb", out_signature="")
     def SetTaskEnabled(self, task_id, enabled):
         """Sets enabled flag of an existing task with given ID.

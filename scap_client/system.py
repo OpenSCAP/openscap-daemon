@@ -206,6 +206,21 @@ class System(object):
 
         return task_id
 
+    def remove_task(self, task_id):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+            if task.enabled:
+                raise RuntimeError(
+                    "Can't remove enabled task '%i'. Please disable it first." %
+                    (task_id)
+                )
+
+            del self.tasks[task_id]
+
+        os.remove(os.path.join(self.tasks_dir, "%i.xml" % (task_id)))
+
     def set_task_enabled(self, task_id, enabled):
         task = None
 
