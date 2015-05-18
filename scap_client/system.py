@@ -228,6 +228,7 @@ class System(object):
             del self.tasks[task_id]
 
         os.remove(os.path.join(self.tasks_dir, "%i.xml" % (task_id)))
+        logging.info("Removed task '%i'." % (task_id))
 
     def set_task_enabled(self, task_id, enabled):
         task = None
