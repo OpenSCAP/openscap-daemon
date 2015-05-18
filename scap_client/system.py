@@ -217,6 +217,14 @@ class System(object):
                     (task_id)
                 )
 
+            result_ids = task.list_result_ids(self.results_dir)
+            if len(result_ids) > 0:
+                raise RuntimeError(
+                    "Can't remove task '%i', in has %i results stored. "
+                    "Please remove all the results first." %
+                    (task_id, len(result_ids))
+                )
+
             del self.tasks[task_id]
 
         os.remove(os.path.join(self.tasks_dir, "%i.xml" % (task_id)))
