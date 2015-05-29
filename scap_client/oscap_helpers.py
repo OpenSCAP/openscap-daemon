@@ -213,13 +213,22 @@ def evaluate_task(task, task_results_dir):
         (task.id_, " ".join(args))
     )
 
-    exit_code = subprocess.call(
-        args,
-        cwd=working_directory,
-        stdout=stdout_file,
-        stderr=stderr_file,
-        shell=False
-    )
+    exit_code = 1
+
+    try:
+        exit_code = subprocess.call(
+            args,
+            cwd=working_directory,
+            stdout=stdout_file,
+            stderr=stderr_file,
+            shell=False
+        )
+
+    except:
+        logging.exception(
+            "Failed to execute 'oscap' while evaluating task '%s'." %
+            (task.id_)
+        )
 
     stdout_file.flush()
     stderr_file.flush()
