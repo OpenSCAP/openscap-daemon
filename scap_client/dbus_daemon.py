@@ -24,6 +24,7 @@ import dbus.service
 import gobject
 import threading
 import logging
+import os
 from datetime import datetime
 
 OBJECT_PATH = "/SCAPClient"
@@ -289,8 +290,12 @@ def main():
     # for easier testing
     bus = dbus.SessionBus()
     name = dbus.service.BusName(BUS_NAME, bus)
-    # TODO: hardcoded path
-    obj = SCAPClientDbus(bus, "../tests/data_dir_template")
+
+    data_dir = os.path.join("/", "var", "lib", "scap-client")
+    if "SCAP_CLIENT_DATA_DIR" in os.environ:
+        data_dir = os.environ["SCAP_CLIENT_DATA_DIR"]
+
+    obj = SCAPClientDbus(bus, data_dir)
 
     loop = gobject.MainLoop()
     loop.run()
