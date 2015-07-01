@@ -164,10 +164,13 @@ def cli_task_create(dbus_iface, args):
 
         schedule_repeat_after = None
         schedule_repeat_after_str = \
-            raw_input(" - repeat after (hours or @daily, @weekly, @monthly): ")
+            raw_input(" - repeat after (hours or @daily, @weekly, @monthly, "
+                      "empty or 0 for no repeat): ")
 
         schedule_repeat_after = 0
-        if schedule_repeat_after_str == "@daily":
+        if not schedule_repeat_after_str:
+            pass  # empty means no repeat
+        elif schedule_repeat_after_str == "@daily":
             schedule_repeat_after = 1 * 24
         elif schedule_repeat_after_str == "@weekly":
             schedule_repeat_after = 7 * 24
