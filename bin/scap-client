@@ -194,7 +194,8 @@ def cli_task_create(dbus_iface, args):
 
         print(
             "Task created with ID '%i'. It is currently set as disabled. "
-            "You can enable it with `scap-client task %i enable`."
+            "You can enable it with `scap-client task %i enable`." %
+            (task_id, task_id)
         )
         # TODO: Setting Schedule SlipMode
 
