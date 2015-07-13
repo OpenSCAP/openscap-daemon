@@ -30,50 +30,6 @@ import logging
 import tempfile
 
 
-class SlipMode(object):
-    """This enum describes how to behave when scheduling repeated tasks.
-
-    Consider task 1 which is scheduled to run hourly every hour. Last run was
-    at 23:00. Schedule is to run 0:00, 1:00, 2:00, ... After last run, the
-    machine was turned off for 3 hours. Time is now 2:05.
-
-    With no_slip we will run 3 evaluations and the next schedule is 4:00.
-    With slip_missed we will run 1 evaluation and the next schedule is 4:05.
-    With slip_missed_aligned we will run 1 evaluation the next schedule is 4:00.
-
-    The de-facto standard is drop_missed_aligned. The tools will try their best
-    to be right on the timetable. In case of misses they will run one task ASAP
-    and try to adhere precisely to the timetable again.
-    """
-
-    UNKNOWN = 0
-    NO_SLIP = 1
-    DROP_MISSED = 2
-    DROP_MISSED_ALIGNED = 3
-
-    @staticmethod
-    def from_string(slip_mode):
-        if slip_mode == "no_slip":
-            return SlipMode.NO_SLIP
-        elif slip_mode == "drop_missed":
-            return SlipMode.DROP_MISSED
-        elif slip_mode == "drop_missed_aligned":
-            return SlipMode.DROP_MISSED_ALIGNED
-
-        return SlipMode.UNKNOWN
-
-    @staticmethod
-    def to_string(slip_mode):
-        if slip_mode == SlipMode.NO_SLIP:
-            return "no_slip"
-        elif slip_mode == SlipMode.DROP_MISSED:
-            return "drop_missed"
-        elif slip_mode == SlipMode.DROP_MISSED_ALIGNED:
-            return "drop_missed_aligned"
-
-        return "unknown"
-
-
 class SCAPInput(object):
     """Encapsulates all sorts of SCAP input, either embedded in the task spec
     itself or separate in a file installed via RPM or other means.
@@ -231,6 +187,126 @@ class SCAPTailoring(object):
         return ret
 
 
+class SlipMode(object):
+    """This enum describes how to behave when scheduling repeated tasks.
+
+    Consider task 1 which is scheduled to run hourly every hour. Last run was
+    at 23:00. Schedule is to run 0:00, 1:00, 2:00, ... After last run, the
+    machine was turned off for 3 hours. Time is now 2:05.
+
+    With no_slip we will run 3 evaluations and the next schedule is 4:00.
+    With slip_missed we will run 1 evaluation and the next schedule is 4:05.
+    With slip_missed_aligned we will run 1 evaluation the next schedule is 4:00.
+
+    The de-facto standard is drop_missed_aligned. The tools will try their best
+    to be right on the timetable. In case of misses they will run one task ASAP
+    and try to adhere precisely to the timetable again.
+    """
+
+    UNKNOWN = 0
+    NO_SLIP = 1
+    DROP_MISSED = 2
+    DROP_MISSED_ALIGNED = 3
+
+    @staticmethod
+    def from_string(slip_mode):
+        if slip_mode == "no_slip":
+            return SlipMode.NO_SLIP
+        elif slip_mode == "drop_missed":
+            return SlipMode.DROP_MISSED
+        elif slip_mode == "drop_missed_aligned":
+            return SlipMode.DROP_MISSED_ALIGNED
+
+        return SlipMode.UNKNOWN
+
+    @staticmethod
+    def to_string(slip_mode):
+        if slip_mode == SlipMode.NO_SLIP:
+            return "no_slip"
+        elif slip_mode == SlipMode.DROP_MISSED:
+            return "drop_missed"
+        elif slip_mode == SlipMode.DROP_MISSED_ALIGNED:
+            return "drop_missed_aligned"
+
+        return "unknown"
+
+
+class Schedule(object):
+    def __init__(self):
+        self.not_before = None
+        self.repeat_after = 0
+        self.slip_mode = SlipMode.DROP_MISSED_ALIGNED
+
+    def is_equivalent_to(self, other):
+        return \
+            self.not_before == other.not_before and \
+            self.repeat_after == other.repeat_after and \
+            self.slip_mode == other.slip_mode
+
+    def load_from_xml_element(self, element):
+        schedule_not_before_attr = element.get("not_before")
+
+        # we expect UTC, no timezone shifts
+        if schedule_not_before_attr is not None:
+            self.not_before = datetime.strptime(
+                schedule_not_before_attr,
+                "%Y-%m-%dT%H:%M"
+            )
+        else:
+            self.not_before = None
+
+        schedule_repeat_after_attr = element.get("repeat_after")
+
+        if schedule_repeat_after_attr is not None:
+            self.repeat_after = int(schedule_repeat_after_attr)
+        else:
+            self.repeat_after = None
+
+        self.slip_mode = SlipMode.from_string(
+            element.get("slip_mode", "drop_missed_aligned")
+        )
+
+    def to_xml_element(self):
+        ret = ElementTree.Element("schedule")
+        if self.not_before is not None:
+            ret.set("not_before", self.not_before.strftime("%Y-%m-%dT%H:%M"))
+
+        ret.set("repeat_after", str(self.repeat_after))
+        ret.set("slip_mode", SlipMode.to_string(self.slip_mode))
+
+        return ret
+
+    def next_not_before(self, reference_datetime):
+        """Calculates the next schedule_not_before based on
+        schedule_repeat_after and schedule_slip_mode.
+        """
+
+        if self.not_before is None:
+            # the task is already disabled, no need to schedule next run
+            return None
+
+        if self.repeat_after is None:
+            # task repetition is disabled
+            return None
+
+        if self.slip_mode == SlipMode.NO_SLIP:
+            return self.not_before + timedelta(hours=self.repeat_after)
+
+        elif self.slip_mode == SlipMode.DROP_MISSED:
+            return reference_datetime + timedelta(hours=self.repeat_after)
+
+        elif self.slip_mode == SlipMode.DROP_MISSED_ALIGNED:
+            candidate = self.not_before + timedelta(hours=self.repeat_after)
+
+            while candidate <= reference_datetime:
+                candidate += timedelta(hours=self.repeat_after)
+
+            return candidate
+
+        else:
+            raise RuntimeError("Unrecognized slip_mode.")
+
+
 class Task(object):
     """This class defined input content, tailoring, profile, ..., and schedule
     for an SCAP evaluation task.
@@ -250,10 +326,8 @@ class Task(object):
         self.tailoring = SCAPTailoring()
         self.profile_id = None
         self.online_remediation = False
-        self.schedule_not_before = None
-        self.schedule_repeat_after = 0
-        self.schedule_slip_mode = SlipMode.DROP_MISSED_ALIGNED
 
+        self.schedule = Schedule()
         # If True, this task will be evaluated once without affecting the
         # schedule. This feature is important for test runs. This variable does
         # not persist because it is not saved to the config file!
@@ -280,9 +354,9 @@ class Task(object):
         ret += "- online remediation: \t%s\n" % \
             ("enabled" if self.online_remediation else "disabled")
         ret += "- schedule:\n"
-        ret += "  - not before: \t%s\n" % (self.schedule_not_before)
-        ret += "  - repeat after: \t%s\n" % (self.schedule_repeat_after)
-        ret += "  - slip mode: \t%s\n" % (self.schedule_slip_mode)
+        ret += "  - not before: \t%s\n" % (self.schedule.not_before)
+        ret += "  - repeat after: \t%s\n" % (self.schedule.repeat_after)
+        ret += "  - slip mode: \t%s\n" % (self.schedule.slip_mode)
 
         return ret
 
@@ -308,9 +382,8 @@ class Task(object):
             self.tailoring.is_equivalent_to(other.tailoring) and \
             self.profile_id == other.profile_id and \
             self.online_remediation == other.online_remediation and \
-            self.schedule_not_before == other.schedule_not_before and \
-            self.schedule_repeat_after == other.schedule_repeat_after and \
-            self.schedule_slip_mode == other.schedule_slip_mode
+            self.schedule.is_equivalent_to(other.schedule) and \
+            self.run_outside_schedule_once == other.run_outside_schedule_once
 
     @staticmethod
     def get_task_id_from_filepath(filepath):
@@ -364,29 +437,9 @@ class Task(object):
         self.online_remediation = \
             et_helpers.get_element_text(root, "online_remediation") == "true"
 
-        schedule_not_before_attr = et_helpers.get_element_attr(
-            root, "schedule", "not_before")
-
-        # we expect UTC, no timezone shifts
-        if schedule_not_before_attr is not None:
-            self.schedule_not_before = datetime.strptime(
-                schedule_not_before_attr,
-                "%Y-%m-%dT%H:%M"
-            )
-        else:
-            self.schedule_not_before = None
-
-        schedule_repeat_after_attr = et_helpers.get_element_attr(
-            root, "schedule", "repeat_after")
-
-        if schedule_repeat_after_attr is not None:
-            self.schedule_repeat_after = int(schedule_repeat_after_attr)
-        else:
-            self.schedule_repeat_after = None
-
-        self.schedule_slip_mode = SlipMode.from_string(
-            et_helpers.get_element_attr(
-                root, "schedule", "slip_mode", "drop_missed_aligned")
+        self.schedule = Schedule()
+        self.schedule.load_from_xml_element(
+            et_helpers.get_element(root, "schedule")
         )
 
         self.config_file = config_file
@@ -433,17 +486,7 @@ class Task(object):
             "true" if self.online_remediation else "false"
         root.append(online_remediation_element)
 
-        schedule_element = ElementTree.Element("schedule")
-        if self.schedule_not_before is not None:
-            schedule_element.set(
-                "not_before",
-                self.schedule_not_before.strftime("%Y-%m-%dT%H:%M")
-            )
-
-        schedule_element.set("repeat_after",
-                             str(self.schedule_repeat_after))
-        schedule_element.set("slip_mode",
-                             SlipMode.to_string(self.schedule_slip_mode))
+        schedule_element = self.schedule.to_xml_element()
         root.append(schedule_element)
 
         # TODO: Maybe move this to save_as? Is there value in returning an
@@ -464,37 +507,8 @@ class Task(object):
         self.save_as(self.config_file)
 
     def next_schedule_not_before(self, reference_datetime):
-        """Calculates the next schedule_not_before based on
-        schedule_repeat_after and schedule_slip_mode.
-        """
-
-        if self.schedule_not_before is None:
-            # the task is already disabled, no need to schedule next run
-            return None
-
-        if self.schedule_repeat_after is None:
-            # task repetition is disabled
-            return None
-
-        if self.schedule_slip_mode == SlipMode.NO_SLIP:
-            return self.schedule_not_before + \
-                timedelta(hours=self.schedule_repeat_after)
-
-        elif self.schedule_slip_mode == SlipMode.DROP_MISSED:
-            return reference_datetime + \
-                timedelta(hours=self.schedule_repeat_after)
-
-        elif self.schedule_slip_mode == SlipMode.DROP_MISSED_ALIGNED:
-            candidate = self.schedule_not_before + \
-                timedelta(hours=self.schedule_repeat_after)
-
-            while candidate <= reference_datetime:
-                candidate += timedelta(hours=self.schedule_repeat_after)
-
-            return candidate
-
-        else:
-            raise RuntimeError("Unrecognized schedule_slip_mode.")
+        # TODO: Get rid of this delegate
+        return self.schedule.next_not_before(reference_datetime)
 
     def _get_task_results_dir(self, results_dir):
         ret = os.path.join(results_dir, str(self.id_))
@@ -552,7 +566,7 @@ class Task(object):
         if self.run_outside_schedule_once:
             return reference_datetime
 
-        return self.schedule_not_before
+        return self.schedule.not_before
 
     def update(self, reference_datetime, results_dir,
                work_in_progress_results_dir):
@@ -586,21 +600,21 @@ class Task(object):
                 # it would be great to refactor this and only do it once but
                 # then we would lose the logging...
 
-                if self.schedule_not_before is None:
+                if self.schedule.not_before is None:
                     # this Task is not scheduled to run right now,
                     # it is disabled
                     logging.debug(
-                        "Task '%i' is enabled but schedule_not_before is None. "
+                        "Task '%i' is enabled but schedule.not_before is None. "
                         "It won't be run automatically." %
                         (self.id_)
                     )
 
-                elif self.schedule_not_before <= reference_datetime:
+                elif self.schedule.not_before <= reference_datetime:
                     logging.debug(
                         "Evaluating task '%i'. It was scheduled to be "
                         "evaluated later than %s, reference_datetime %s is "
                         "higher than or equal." %
-                        (self.id_, self.schedule_not_before, reference_datetime)
+                        (self.id_, self.schedule.not_before, reference_datetime)
                     )
                     update_now = True
 
@@ -634,8 +648,8 @@ class Task(object):
                 )
 
                 if not self.run_outside_schedule_once:
-                    self.schedule_not_before = \
-                        self.next_schedule_not_before(reference_datetime)
+                    self.schedule.not_before = \
+                        self.schedule.next_not_before(reference_datetime)
 
                     self.save()
 
