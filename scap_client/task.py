@@ -92,6 +92,9 @@ class SCAPInput(object):
         return self.file_path is not None
 
     def is_equivalent_to(self, other):
+        # TODO input_file and tailoring_file may have the same contents and
+        # different paths and the tasks wouldn't end up being equivalent.
+
         return \
             self.file_path == other.file_path and \
             self.datastream_id == other.datastream_id and \
@@ -158,6 +161,76 @@ class SCAPInput(object):
         return ret
 
 
+class SCAPTailoring(object):
+    """Encapsulates SCAP tailoring. At this point we only support separate files
+    as tailorings, not the input SCAP file. The tailoring has to be plain
+    XCCDF tailoring, no datastreams!
+    """
+
+    def __init__(self):
+        self.file_path = None
+        self.temp_file = None
+
+    def is_equivalent_to(self, other):
+        # TODO input_file and tailoring_file may have the same contents and
+        # different paths and the tasks wouldn't end up being equivalent.
+
+        return \
+            self.file_path == other.file_path
+
+    def set_file_path(self, file_path):
+        """Sets given file_path to be the input file. If you use this method
+        no temporary files will be allocated, the file_path will be passed to
+        `oscap` as is, in its absolute form.
+        """
+
+        self.temp_file = None
+        if file_path is not None:
+            self.file_path = \
+                os.path.abspath(file_path) if file_path is not None else None
+
+        else:
+            self.file_path = None
+
+    def set_contents(self, input_contents):
+        """Sets given input_contents XML to be the input source. This method
+        allocates a temporary file that exists for the lifetime of this
+        instance.
+        """
+
+        if input_contents is not None:
+            self.temp_file = tempfile.NamedTemporaryFile()
+            self.temp_file.write(input_contents.encode("utf-8"))
+            self.temp_file.flush()
+
+            self.file_path = os.path.abspath(self.temp_file.name)
+
+        else:
+            self.file_path = None
+
+    def load_from_xml_element(self, element):
+        input_file = element.get("href")
+        if input_file is not None:
+            self.set_file_path(input_file)
+
+        else:
+            input_file_contents = element.text
+            self.set_contents(input_file_contents)
+
+    def to_xml_element(self):
+        if self.file_path is None:
+            return None
+
+        ret = ElementTree.Element("tailoring")
+        if self.temp_file is None:
+            ret.set("href", self.file_path)
+        else:
+            with open(self.temp_file.name, "r") as f:
+                ret.text = f.read().decode("utf-8")
+
+        return ret
+
+
 class Task(object):
     """This class defined input content, tailoring, profile, ..., and schedule
     for an SCAP evaluation task.
@@ -174,8 +247,7 @@ class Task(object):
         self.title = None
         self.target = "localhost"
         self.input_ = SCAPInput()
-        self.tailoring_file = None
-        self.tailoring_temp_file = None
+        self.tailoring = SCAPTailoring()
         self.profile_id = None
         self.online_remediation = False
         self.schedule_not_before = None
@@ -201,8 +273,8 @@ class Task(object):
             ret += "    - bundled"
         ret += "  - datastream_id: \t%s\n" % (self.input_.datastream_id)
         ret += "  - xccdf_id: \t%s\n" % (self.input_.xccdf_id)
-        ret += "- tailoring file: \t%s\n" % (self.tailoring_file)
-        if self.tailoring_temp_file is not None:
+        ret += "- tailoring file: \t%s\n" % (self.tailoring.file_file)
+        if self.tailoring.temp_file is not None:
             ret += "  - bundled"
         ret += "- profile ID: \t%s\n" % (self.profile_id)
         ret += "- online remediation: \t%s\n" % \
@@ -228,15 +300,12 @@ class Task(object):
         id_ and config_file.
         """
 
-        # TODO input_file and tailoring_file may have the same contents and
-        # different paths and the tasks wouldn't end up being equivalent.
-
         return \
             self.enabled == other.enabled and \
             self.title == other.title and \
             self.target == other.target and \
             self.input_.is_equivalent_to(other.input_) and \
-            self.tailoring_file == other.tailoring_file and \
+            self.tailoring.is_equivalent_to(other.tailoring) and \
             self.profile_id == other.profile_id and \
             self.online_remediation == other.online_remediation and \
             self.schedule_not_before == other.schedule_not_before and \
@@ -262,20 +331,12 @@ class Task(object):
         self.input_.set_contents(input_contents)
 
     def set_tailoring_file(self, file_path):
-        self.tailoring_temp_file = None
-        self.tailoring_file = \
-            os.path.abspath(file_path) if file_path is not None else None
+        # TODO: Get rid of this delegate
+        self.tailoring.set_file_path(file_path)
 
     def set_tailoring_contents(self, tailoring_contents):
-        if tailoring_contents is not None:
-            self.tailoring_temp_file = tempfile.NamedTemporaryFile()
-            self.tailoring_temp_file.write(tailoring_contents.encode("utf-8"))
-            self.tailoring_temp_file.flush()
-
-            self.tailoring_file = os.path.abspath(self.tailoring_temp_file.name)
-
-        else:
-            self.tailoring_file = None
+        # TODO: Get rid of this delegate
+        self.tailoring.set_contents(tailoring_contents)
 
     def load_from_xml_element(self, root, config_file):
         self.id_ = Task.get_task_id_from_filepath(config_file)
@@ -285,18 +346,19 @@ class Task(object):
 
         self.target = et_helpers.get_element_text(root, "target")
 
-        self.input_.load_from_xml_element(et_helpers.get_element(root, "input"))
+        self.input_ = SCAPInput()
+        self.input_.load_from_xml_element(
+            et_helpers.get_element(root, "input")
+        )
 
-        # TODO: in the future we want datastream tailoring as well
-        tailoring_file = \
-            et_helpers.get_element_attr(root, "tailoring", "href")
-        if tailoring_file is not None:
-            self.set_tailoring_file(tailoring_file)
-
-        else:
-            tailoring_file_contents = \
-                et_helpers.get_element_text(root, "tailoring")
-            self.set_tailoring_contents(tailoring_file_contents)
+        self.tailoring = SCAPTailoring()
+        try:
+            self.tailoring.load_from_xml_element(
+                et_helpers.get_element(root, "tailoring")
+            )
+        except RuntimeError:
+            # tailoring is optional, if it's not present just skip tailoring
+            pass
 
         self.profile_id = et_helpers.get_element_text(root, "profile")
         self.online_remediation = \
@@ -357,15 +419,8 @@ class Task(object):
         if input_element is not None:
             root.append(input_element)
 
-        if self.tailoring_file is not None:
-            tailoring_element = ElementTree.Element("tailoring")
-
-            if self.tailoring_temp_file is None:
-                tailoring_element.set("href", self.tailoring_file)
-            else:
-                with open(self.tailoring_temp_file.name, "r") as f:
-                    tailoring_element.text = f.read().decode("utf-8")
-
+        tailoring_element = self.tailoring.to_xml_element()
+        if tailoring_element is not None:
             root.append(tailoring_element)
 
         if self.profile_id is not None:

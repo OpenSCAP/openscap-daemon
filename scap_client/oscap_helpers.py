@@ -94,8 +94,8 @@ def generate_guide_args_for_task(task):
         ret.extend(["--xccdf-id", task.input_.xccdf_id])
 
     # TODO: Is this supported in OpenSCAP?
-    if task.tailoring_file is not None:
-        ret.extend(["--tailoring-file", task.tailoring_file])
+    if task.tailoring.file_path is not None:
+        ret.extend(["--tailoring-file", task.tailoring.file_path])
 
     if task.profile_id is not None:
         ret.extend(["--profile", task.profile_id])
@@ -165,8 +165,8 @@ def evaluation_args_for_task(task):
     if task.input_.xccdf_id is not None:
         ret.extend(["--xccdf-id", task.input_.xccdf_id])
 
-    if task.tailoring_file is not None:
-        ret.extend(["--tailoring-file", task.tailoring_file])
+    if task.tailoring.file_path is not None:
+        ret.extend(["--tailoring-file", task.tailoring.file_path])
 
     if task.profile_id is not None:
         ret.extend(["--profile", task.profile_id])
