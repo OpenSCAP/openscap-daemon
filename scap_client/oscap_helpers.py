@@ -86,12 +86,12 @@ def generate_guide_args_for_task(task):
     ret = [OSCAP_PATH, "xccdf", "generate", "guide"]
 
     # TODO: Is this supported in OpenSCAP?
-    if task.input_datastream_id is not None:
-        ret.extend(["--datastream-id", task.input_datastream_id])
+    if task.input_.datastream_id is not None:
+        ret.extend(["--datastream-id", task.input_.datastream_id])
 
     # TODO: Is this supported in OpenSCAP?
-    if task.input_xccdf_id is not None:
-        ret.extend(["--xccdf-id", task.input_xccdf_id])
+    if task.input_.xccdf_id is not None:
+        ret.extend(["--xccdf-id", task.input_.xccdf_id])
 
     # TODO: Is this supported in OpenSCAP?
     if task.tailoring_file is not None:
@@ -100,7 +100,7 @@ def generate_guide_args_for_task(task):
     if task.profile_id is not None:
         ret.extend(["--profile", task.profile_id])
 
-    ret.append(task.input_file)
+    ret.append(task.input_.file_path)
 
     return ret
 
@@ -159,11 +159,11 @@ def evaluation_args_for_task(task):
 
     ret.extend(["xccdf", "eval"])
 
-    if task.input_datastream_id is not None:
-        ret.extend(["--datastream-id", task.input_datastream_id])
+    if task.input_.datastream_id is not None:
+        ret.extend(["--datastream-id", task.input_.datastream_id])
 
-    if task.input_xccdf_id is not None:
-        ret.extend(["--xccdf-id", task.input_xccdf_id])
+    if task.input_.xccdf_id is not None:
+        ret.extend(["--xccdf-id", task.input_.xccdf_id])
 
     if task.tailoring_file is not None:
         ret.extend(["--tailoring-file", task.tailoring_file])
@@ -178,7 +178,7 @@ def evaluation_args_for_task(task):
     # generated from that.
     ret.extend(["--results-arf", "arf.xml"])
 
-    ret.append(task.input_file)
+    ret.append(task.input_.file_path)
 
     return ret
 

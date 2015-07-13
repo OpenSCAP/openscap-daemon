@@ -74,6 +74,90 @@ class SlipMode(object):
         return "unknown"
 
 
+class SCAPInput(object):
+    """Encapsulates all sorts of SCAP input, either embedded in the task spec
+    itself or separate in a file installed via RPM or other means.
+
+    This does not include tailoring! That is handled separately,
+    see SCAPTailoring class.
+    """
+
+    def __init__(self):
+        self.file_path = None
+        self.temp_file = None
+        self.datastream_id = None
+        self.xccdf_id = None
+
+    def is_valid(self):
+        return self.file_path is not None
+
+    def is_equivalent_to(self, other):
+        return \
+            self.file_path == other.file_path and \
+            self.datastream_id == other.datastream_id and \
+            self.xccdf_id == other.xccdf_id
+
+    def set_file_path(self, file_path):
+        """Sets given file_path to be the input file. If you use this method
+        no temporary files will be allocated, the file_path will be passed to
+        `oscap` as is, in its absolute form.
+        """
+
+        self.temp_file = None
+        if file_path is not None:
+            self.file_path = \
+                os.path.abspath(file_path) if file_path is not None else None
+
+        else:
+            self.file_path = None
+
+    def set_contents(self, input_contents):
+        """Sets given input_contents XML to be the input source. This method
+        allocates a temporary file that exists for the lifetime of this
+        instance.
+        """
+
+        if input_contents is not None:
+            self.temp_file = tempfile.NamedTemporaryFile()
+            self.temp_file.write(input_contents.encode("utf-8"))
+            self.temp_file.flush()
+
+            self.file_path = os.path.abspath(self.temp_file.name)
+
+        else:
+            self.file_path = None
+
+    def load_from_xml_element(self, element):
+        input_file = element.get("href")
+        if input_file is not None:
+            self.set_file_path(input_file)
+
+        else:
+            input_file_contents = element.text
+            self.set_contents(input_file_contents)
+
+        self.input_datastream_id = element.get("datastream_id")
+        self.input_xccdf_id = element.get("xccdf_id")
+
+    def to_xml_element(self):
+        if self.file_path is None:
+            return None
+
+        ret = ElementTree.Element("input")
+        if self.temp_file is None:
+            ret.set("href", self.file_path)
+        else:
+            with open(self.temp_file.name, "r") as f:
+                ret.text = f.read().decode("utf-8")
+
+        if self.datastream_id is not None:
+            ret.set("datastream_id", self.datastream_id)
+        if self.input_xccdf_id is not None:
+            ret.set("xccdf_id", self.xccdf_id)
+
+        return ret
+
+
 class Task(object):
     """This class defined input content, tailoring, profile, ..., and schedule
     for an SCAP evaluation task.
@@ -89,10 +173,7 @@ class Task(object):
 
         self.title = None
         self.target = "localhost"
-        self.input_file = None
-        self.input_temp_file = None
-        self.input_datastream_id = None
-        self.input_xccdf_id = None
+        self.input_ = SCAPInput()
         self.tailoring_file = None
         self.tailoring_temp_file = None
         self.profile_id = None
@@ -115,14 +196,14 @@ class Task(object):
         ret += "- title: \t%s\n" % (self.title)
         ret += "- target: \t%s\n" % (self.target)
         ret += "- input:\n"
-        ret += "  - file: \t%s\n" % (self.input_file)
-        if self.input_temp_file is not None:
+        ret += "  - file: \t%s\n" % (self.input_.file_path)
+        if self.input_.temp_file is not None:
             ret += "    - bundled"
-        ret += "  - datastream_id: \t%s\n" % (self.input_datastream_id)
-        ret += "  - xccdf_id: \t%s\n" % (self.input_xccdf_id)
-        ret += "  - tailoring file: \t%s\n" % (self.tailoring_file)
+        ret += "  - datastream_id: \t%s\n" % (self.input_.datastream_id)
+        ret += "  - xccdf_id: \t%s\n" % (self.input_.xccdf_id)
+        ret += "- tailoring file: \t%s\n" % (self.tailoring_file)
         if self.tailoring_temp_file is not None:
-            ret += "    - bundled"
+            ret += "  - bundled"
         ret += "- profile ID: \t%s\n" % (self.profile_id)
         ret += "- online remediation: \t%s\n" % \
             ("enabled" if self.online_remediation else "disabled")
@@ -134,7 +215,7 @@ class Task(object):
         return ret
 
     def is_valid(self):
-        if self.input_file is None:
+        if not self.input_.is_valid():
             return False
 
         if self.target is None:
@@ -154,9 +235,7 @@ class Task(object):
             self.enabled == other.enabled and \
             self.title == other.title and \
             self.target == other.target and \
-            self.input_file == other.input_file and \
-            self.input_datastream_id == other.input_datastream_id and \
-            self.input_xccdf_id == other.input_xccdf_id and \
+            self.input_.is_equivalent_to(other.input_) and \
             self.tailoring_file == other.tailoring_file and \
             self.profile_id == other.profile_id and \
             self.online_remediation == other.online_remediation and \
@@ -175,24 +254,12 @@ class Task(object):
         return ret
 
     def set_input_file(self, file_path):
-        self.input_temp_file = None
-        if file_path is not None:
-            self.input_file = \
-                os.path.abspath(file_path) if file_path is not None else None
-
-        else:
-            self.input_file = None
+        # TODO: Get rid of this delegate
+        self.input_.set_file_path(file_path)
 
     def set_input_contents(self, input_contents):
-        if input_contents is not None:
-            self.input_temp_file = tempfile.NamedTemporaryFile()
-            self.input_temp_file.write(input_contents.encode("utf-8"))
-            self.input_temp_file.flush()
-
-            self.input_file = os.path.abspath(self.input_temp_file.name)
-
-        else:
-            self.input_file = None
+        # TODO: Get rid of this delegate
+        self.input_.set_contents(input_contents)
 
     def set_tailoring_file(self, file_path):
         self.tailoring_temp_file = None
@@ -218,18 +285,7 @@ class Task(object):
 
         self.target = et_helpers.get_element_text(root, "target")
 
-        input_file = et_helpers.get_element_attr(root, "input", "href")
-        if input_file is not None:
-            self.set_input_file(input_file)
-
-        else:
-            input_file_contents = et_helpers.get_element_text(root, "input")
-            self.set_input_contents(input_file_contents)
-
-        self.input_datastream_id = \
-            et_helpers.get_element_attr(root, "input", "datastream_id")
-        self.input_xccdf_id = \
-            et_helpers.get_element_attr(root, "input", "xccdf_id")
+        self.input_.load_from_xml_element(et_helpers.get_element(root, "input"))
 
         # TODO: in the future we want datastream tailoring as well
         tailoring_file = \
@@ -297,18 +353,8 @@ class Task(object):
         target_element.text = self.target
         root.append(target_element)
 
-        if self.input_file is not None:
-            input_element = ElementTree.Element("input")
-            if self.input_temp_file is None:
-                input_element.set("href", self.input_file)
-            else:
-                with open(self.input_temp_file.name, "r") as f:
-                    input_element.text = f.read().decode("utf-8")
-
-            if self.input_datastream_id is not None:
-                input_element.set("datastream_id", self.input_datastream_id)
-            if self.input_xccdf_id is not None:
-                input_element.set("xccdf_id", self.input_xccdf_id)
+        input_element = self.input_.to_xml_element()
+        if input_element is not None:
             root.append(input_element)
 
         if self.tailoring_file is not None:

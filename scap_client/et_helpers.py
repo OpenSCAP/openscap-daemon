@@ -34,6 +34,26 @@ def get_element_text(parent, element_name, default=None):
     return ret
 
 
+def get_element(parent, element_name):
+    ret = None
+    for element in parent.findall(element_name):
+        if ret is not None:
+            raise RuntimeError(
+                "Found multiple '%s' elements." %
+                (element_name)
+            )
+
+        ret = element
+
+    if ret is None:
+        raise RuntimeError(
+            "Found no element of tag '%s'!" %
+            (element_name)
+        )
+
+    return ret
+
+
 def get_element_attr(parent, element_name, attr_name, default=None):
     ret = None
     for element in parent.findall(element_name):
