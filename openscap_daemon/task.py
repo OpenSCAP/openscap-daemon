@@ -95,8 +95,8 @@ class SCAPInput(object):
             input_file_contents = element.text
             self.set_contents(input_file_contents)
 
-        self.input_datastream_id = element.get("datastream_id")
-        self.input_xccdf_id = element.get("xccdf_id")
+        self.datastream_id = element.get("datastream_id")
+        self.xccdf_id = element.get("xccdf_id")
 
     def to_xml_element(self):
         if self.file_path is None:
@@ -111,7 +111,7 @@ class SCAPInput(object):
 
         if self.datastream_id is not None:
             ret.set("datastream_id", self.datastream_id)
-        if self.input_xccdf_id is not None:
+        if self.xccdf_id is not None:
             ret.set("xccdf_id", self.xccdf_id)
 
         return ret
