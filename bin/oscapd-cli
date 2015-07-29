@@ -242,11 +242,11 @@ def cli_result(dbus_iface, args):
             )
             print("%i" % (exit_code))
 
-        elif args.result_action == "html":
-            html = dbus_iface.GenerateReportForTaskResult(
+        elif args.result_action == "report":
+            report = dbus_iface.GenerateReportForTaskResult(
                 args.task_id, args.result_id, utf8_strings=True
             )
-            print(html)
+            print(report)
 
         else:
             raise RuntimeError(
@@ -306,7 +306,7 @@ def main():
     )
     result_parser.add_argument(
         "result_action", metavar="ACTION", type=str,
-        choices=["arf", "stdout", "stderr", "exit_code", "html"],
+        choices=["arf", "stdout", "stderr", "exit_code", "report"],
         default="arf", nargs="?"
     )
     result_parser.set_defaults(action="result")
