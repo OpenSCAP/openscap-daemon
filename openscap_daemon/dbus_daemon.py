@@ -27,18 +27,18 @@ import logging
 import os
 from datetime import datetime
 
-OBJECT_PATH = "/SCAPClient"
-DBUS_INTERFACE = "org.OpenSCAP.SCAPClientInterface"
-BUS_NAME = "org.OpenSCAP.SCAPClient"
+OBJECT_PATH = "/OpenSCAP/daemon"
+DBUS_INTERFACE = "org.OpenSCAP.daemon.Interface"
+BUS_NAME = "org.OpenSCAP.daemon"
 
 # Internal note: Python does not support unsigned long integer while dbus does,
 # to avoid weird issues I just use 64bit integer in the interface signatures.
 # "2^63-1 IDs should be enough for everyone."
 
 
-class SCAPClientDbus(dbus.service.Object):
+class OpenSCAPDaemonDbus(dbus.service.Object):
     def __init__(self, bus, data_dir_path):
-        super(SCAPClientDbus, self).__init__(bus, OBJECT_PATH)
+        super(OpenSCAPDaemonDbus, self).__init__(bus, OBJECT_PATH)
 
         self.system = System(data_dir_path)
         self.system.load_tasks()
@@ -292,10 +292,10 @@ def main():
     name = dbus.service.BusName(BUS_NAME, bus)
 
     data_dir = os.path.join("/", "var", "lib", "oscapd")
-    if "SCAP_CLIENT_DATA_DIR" in os.environ:
-        data_dir = os.environ["SCAP_CLIENT_DATA_DIR"]
+    if "OSCAPD_DATA_DIR" in os.environ:
+        data_dir = os.environ["OSCAPD_DATA_DIR"]
 
-    obj = SCAPClientDbus(bus, data_dir)
+    obj = OpenSCAPDaemonDbus(bus, data_dir)
 
     loop = gobject.MainLoop()
     loop.run()

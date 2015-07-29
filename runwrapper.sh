@@ -25,7 +25,7 @@ PARENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # add directory with "openscap_daemon" to $PYTHONPATH
 export PYTHONPATH=$PARENT_DIR:$PYTHONPATH
 
-export SCAP_CLIENT_DATA_DIR="$PARENT_DIR/tests/data_dir_template"
+export OSCAPD_DATA_DIR="$PARENT_DIR/tests/data_dir_template"
 
 if [ "x$RUNWRAPPER_NO_FORK" != "x1" ]; then
     # fork a new shell to avoid polluting the environment
