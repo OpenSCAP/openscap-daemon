@@ -120,7 +120,7 @@ oscapd-cli result 1 4 report > report.html
 firefox report.html
 ```
 
-## Solicited evaluation
+### Solicited evaluation
 Sometimes we may want to run the evaluation outside the schedule for testing
 or other purposes. The task may even be scheduled to never run automatically!
 Such tasks are sometimes necessary.
@@ -138,7 +138,7 @@ oscapd-cli result 1
 oscapd-cli result 1 8 arf > exported-arf.xml
 ```
 
-## Evaluate something else than local machine
+### Evaluate something else than local machine
 Every task has a *target* attribute that can take various forms:
 * localhost -- scan the local machine, the same machine the daemon runs on
 * ssh://auditor@192.168.0.22 -- scan remote machine of given IP with given username
@@ -159,8 +159,7 @@ this is done automatically.
   * *1.0.x*, *1.1.x* and *1.2.x* fully supported
 * [*dbus-python*](http://www.freedesktop.org/wiki/Software/DBusBindings/)
 
-Installation on Linux
----------------------
+## Installation on Linux
 ```bash
 cd openscap-daemon
 sudo python2 setup.py install
