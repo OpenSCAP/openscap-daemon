@@ -19,7 +19,7 @@ CLI use cases
 
 =====
 
-$ scap-client task list
+$ oscapd-cli task list
 
 Active tasks:
 
@@ -37,7 +37,7 @@ ID  | Title
 
 
 
-$ scap-client task 2
+$ oscapd-cli task 2
 
 ID:          2
 Title:       Weekly USGCB evaluation
@@ -64,28 +64,28 @@ ID  | Timestamp
 
 
 
-$ scap-client result 23
+$ oscapd-cli result 23
 
 ID:         23
 Task ID:    2
 Timestamp:  2015-04-03
-ARF path:   /var/lib/scap-client/results/23/results-arf.xml
+ARF path:   /var/lib/oscapd-cli/results/23/results-arf.xml
 
 
 
-$ scap-client result 23 report > report.html
+$ oscapd-cli result 23 report > report.html
 
-$ scap-client result 23 arf > arf.xml
+$ oscapd-cli result 23 arf > arf.xml
 
 # generate report of last result from task 2
-$ scap-client result 2/last report
+$ oscapd-cli result 2/last report
 
-$ scap-client task 2 disable
-$ scap-client task 2 enable
+$ oscapd-cli task 2 disable
+$ oscapd-cli task 2 enable
 
 
-# manually update scap-client, for debugging purposes
-$ scap-client update
+# manually update oscapd-cli, for debugging purposes
+$ oscapd-cli update
 
 Found 4 tasks in total, 3 enabled tasks.
 

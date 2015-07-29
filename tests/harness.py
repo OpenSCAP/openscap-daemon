@@ -3,23 +3,23 @@
 # Copyright 2015 Red Hat Inc., Durham, North Carolina.
 # All Rights Reserved.
 #
-# scap-client is free software: you can redistribute it and/or modify
+# openscap-daemon is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 2.1 of the License, or
 # (at your option) any later version.
 #
-# scap-client is distributed in the hope that it will be useful,
+# openscap-daemon is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 
 # You should have received a copy of the GNU Lesser General Public License
-# along with scap-client.  If not, see <http://www.gnu.org/licenses/>.
+# along with openscap-daemon.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-import scap_client
+import openscap_daemon
 
 import tempfile
 import shutil
@@ -46,7 +46,7 @@ class APITest(object):
         # their place. This is necessary so that we can later copy in our test
         # files.
 
-        scap_client.System.prepare_data_dir(self.data_dir_path)
+        openscap_daemon.System.prepare_data_dir(self.data_dir_path)
 
     def copy_to_data(self, template_path):
         """Overrides of setup_data are supposed to use this to copy special
@@ -59,7 +59,7 @@ class APITest(object):
         )
 
     def init_system(self):
-        self.system = scap_client.System(self.data_dir_path)
+        self.system = openscap_daemon.System(self.data_dir_path)
 
     def teardown_data(self):
         # Most implementations won't do anything here, the entire directory will
