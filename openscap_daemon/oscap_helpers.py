@@ -25,6 +25,7 @@ import logging
 
 from xml.etree import cElementTree as ElementTree
 from openscap_daemon import et_helpers
+from openscap_daemon.compat import subprocess_check_output
 
 # TODO: configurable
 OSCAP_PATH = "oscap"
@@ -116,7 +117,7 @@ def generate_guide_for_task(task):
         (task.id_, " ".join(args))
     )
 
-    ret = subprocess.check_output(
+    ret = subprocess_check_output(
         args,
         shell=False
     ).decode("utf-8")
@@ -300,7 +301,7 @@ def generate_report_for_result(task, results_dir, result_id):
         (result_id, task.id_, " ".join(args))
     )
 
-    ret = subprocess.check_output(
+    ret = subprocess_check_output(
         args,
         shell=False
     ).decode("utf-8")
