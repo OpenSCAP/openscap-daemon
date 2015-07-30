@@ -25,6 +25,7 @@ pushd $PARENT_DIR
 
 RUNWRAPPER_NO_FORK=1 source ../runwrapper.sh
 
+EXIT_CODE=0
 for file in test_*.py
 do
     echo -n -e "$file\t\t...\t"
@@ -36,7 +37,10 @@ do
         echo
         echo "$output"
         echo
+        EXIT_CODE=1
     fi
 done
 
 popd
+
+exit $EXIT_CODE
