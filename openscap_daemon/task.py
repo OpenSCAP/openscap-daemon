@@ -47,12 +47,16 @@ class SCAPInput(object):
     def is_valid(self):
         return self.file_path is not None
 
-    def is_equivalent_to(self, other):
-        # TODO input_file and tailoring_file may have the same contents and
-        # different paths and the tasks wouldn't end up being equivalent.
+    def get_xml_source(self):
+        if self.file_path is None:
+            return None
 
+        with open(self.file_path, "r") as f:
+            return f.read().decode("utf-8")
+
+    def is_equivalent_to(self, other):
         return \
-            self.file_path == other.file_path and \
+            self.get_xml_source() == other.get_xml_source() and \
             self.datastream_id == other.datastream_id and \
             self.xccdf_id == other.xccdf_id
 
@@ -127,12 +131,16 @@ class SCAPTailoring(object):
         self.file_path = None
         self.temp_file = None
 
-    def is_equivalent_to(self, other):
-        # TODO input_file and tailoring_file may have the same contents and
-        # different paths and the tasks wouldn't end up being equivalent.
+    def get_xml_source(self):
+        if self.file_path is None:
+            return None
 
+        with open(self.file_path, "r") as f:
+            return f.read().decode("utf-8")
+
+    def is_equivalent_to(self, other):
         return \
-            self.file_path == other.file_path
+            self.get_xml_source() == other.get_xml_source()
 
     def set_file_path(self, file_path):
         """Sets given file_path to be the input file. If you use this method
