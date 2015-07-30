@@ -24,6 +24,8 @@ PARENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # add directory with "openscap_daemon" to $PYTHONPATH
 export PYTHONPATH=$PARENT_DIR:$PYTHONPATH
+# force python to print using utf-8
+export PYTHONIOENCODING=UTF-8
 
 export OSCAPD_DATA_DIR="$PARENT_DIR/tests/data_dir_template"
 
