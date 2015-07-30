@@ -159,6 +159,15 @@ this is done automatically.
   * *1.0.x*, *1.1.x* and *1.2.x* fully supported
 * [*dbus-python*](http://www.freedesktop.org/wiki/Software/DBusBindings/)
 
+## Running the test-suite
+The test-suite can be run without installing the software.
+
+```bash
+cd openscap-daemon
+cd tests
+./make_check
+```
+
 ## Installation on Linux
 ```bash
 cd openscap-daemon
