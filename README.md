@@ -173,3 +173,23 @@ cd tests
 cd openscap-daemon
 sudo python2 setup.py install
 ```
+
+## API Consumers
+> Please do not rely on the API just yet, we reserve the right to make breaking
+> changes. The API will stabilize in time for 1.0.0 release.
+
+OpenSCAP-daemon provides a stable dbus API that is designed to be used by
+other projects.
+
+### Cockpit Integration
+Features:
+* declare new tasks, schedule when they run, set how they repeat
+* generate HTML guides of scheduled tasks
+* show past results of tasks
+* get ARFs, HTML reports for past results
+* set tasks to automatically push results to external result stores
+  * most importantly to [*scaptimony*](http://github.com/OpenSCAP/scaptimony)
+
+### Foreman Integration
+Provide a way to reliably do one-off tasks. Unify various `oscap` runners into
+one code-base.
