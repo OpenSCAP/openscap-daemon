@@ -27,7 +27,7 @@ use-cases.
   * **virtual machine** -- `oscap-vm` -- work in progress
   * **container** -- `oscap-docker` -- work in progress
 * flexible task definition and planning
-  * use any valid *SCAP* content -- for example 
+  * use any valid *SCAP* content -- for example
     [SCAP Security Guide](http://github.com/OpenSCAP/scap-security-guide),
     [NIST USGCB](http://usgcb.nist.gov/), or even
     [RHSA OVAL](https://www.redhat.com/security/data/oval/)
@@ -50,6 +50,8 @@ We have learned many important lessons when developing the lower layers of the
 - **datastreams** -- *SDS* (source datastream) and *ARF* (results datastream)
   are both  used as primary data formats for maximum compatibility between
   various tools
+- **interactive CLI** -- the CLI should be as interactive as possible, user
+  shouldn't need to type any IDs or other lengthy options
 
 ## Example Use-Cases
 
