@@ -260,56 +260,65 @@ def main():
     )
     subparsers = parser.add_subparsers()
 
-    task_parser = subparsers.add_parser(
-        "task",
-        help="Show info about tasks that have already been defined."
-    )
-    task_parser.set_defaults(action="task")
-    task_parser.add_argument(
-        "task_id", metavar="TASK_ID", type=int, nargs="?",
-        help="ID of the task to display, if none is provided a summary of all "
-        "tasks is displayed"
-    )
-    task_parser.add_argument(
-        "task_action", metavar="ACTION", type=str,
-        choices=["info", "guide", "run", "enable", "disable", "remove"],
-        default="info", nargs="?"
-    )
+    def add_task_parser(subparsers):
+        task_parser = subparsers.add_parser(
+            "task",
+            help="Show info about tasks that have already been defined. "
+            "Perform operations on already defined tasks."
+        )
+        task_parser.set_defaults(action="task")
+        task_parser.add_argument(
+            "task_id", metavar="TASK_ID", type=int, nargs="?",
+            help="ID of the task to display, if none is provided a summary of "
+            "all tasks is displayed"
+        )
+        task_parser.add_argument(
+            "task_action", metavar="ACTION", type=str,
+            choices=["info", "guide", "run", "enable", "disable", "remove"],
+            default="info", nargs="?"
+        )
+    add_task_parser(subparsers)
 
-    task_create_parser = subparsers.add_parser(
-        "task_create",
-        help="Create new task."
-    )
-    task_create_parser.set_defaults(action="task_create")
-    task_create_parser.add_argument(
-        "-i", "--interactive", action="store_true", dest="interactive"
-    )
+    def add_task_create_parser(subparsers):
+        task_create_parser = subparsers.add_parser(
+            "task_create",
+            help="Create new task."
+        )
+        task_create_parser.set_defaults(action="task_create")
+        task_create_parser.add_argument(
+            "-i", "--interactive", action="store_true", dest="interactive"
+        )
+    add_task_create_parser(subparsers)
 
-    status_parser = subparsers.add_parser(
-        "status",
-        help="Displays status, tasks that are planned and tasks that are being "
-        "evaluated."
-    )
-    status_parser.set_defaults(action="status")
+    def add_status_parser(subparsers):
+        status_parser = subparsers.add_parser(
+            "status",
+            help="Displays status, tasks that are planned and tasks that are "
+            "being evaluated."
+        )
+        status_parser.set_defaults(action="status")
+    add_status_parser(subparsers)
 
-    result_parser = subparsers.add_parser(
-        "result",
-        help="Displays info about past results"
-    )
-    result_parser.add_argument(
-        "task_id", metavar="TASK_ID", type=int
-    )
-    result_parser.add_argument(
-        "result_id", metavar="RESULT_ID", type=int, nargs="?",
-        help="ID of the result we want to display, if none is provided "
-        "a summary of all results of given task is displayed."
-    )
-    result_parser.add_argument(
-        "result_action", metavar="ACTION", type=str,
-        choices=["arf", "stdout", "stderr", "exit_code", "report"],
-        default="arf", nargs="?"
-    )
-    result_parser.set_defaults(action="result")
+    def add_result_parser(subparsers):
+        result_parser = subparsers.add_parser(
+            "result",
+            help="Displays info about past results"
+        )
+        result_parser.add_argument(
+            "task_id", metavar="TASK_ID", type=int
+        )
+        result_parser.add_argument(
+            "result_id", metavar="RESULT_ID", type=int, nargs="?",
+            help="ID of the result we want to display, if none is provided "
+            "a summary of all results of given task is displayed."
+        )
+        result_parser.add_argument(
+            "result_action", metavar="ACTION", type=str,
+            choices=["arf", "stdout", "stderr", "exit_code", "report"],
+            default="arf", nargs="?"
+        )
+        result_parser.set_defaults(action="result")
+    add_result_parser(subparsers)
 
     args = parser.parse_args()
 
