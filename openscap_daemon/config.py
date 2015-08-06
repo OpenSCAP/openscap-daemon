@@ -55,9 +55,9 @@ class Configuration(object):
         ):
             if possible_prefixes is None:
                 possible_prefixes = (
-                    os.path.join("usr", "bin"),
-                    os.path.join("usr", "local", "bin"),
-                    os.path.join("opt", "openscap", "bin")
+                    os.path.join("/", "usr", "bin"),
+                    os.path.join("/", "usr", "local", "bin"),
+                    os.path.join("/", "opt", "openscap", "bin")
                 )
 
             ret = ""
@@ -90,9 +90,9 @@ class Configuration(object):
 
         if self.ssg_path == "":
             self.ssg_path = autodetect_content_path([
-                os.path.join("usr", "share", "xml", "scap", "ssg", "content"),
-                os.path.join("usr", "local", "share", "xml", "scap", "ssg", "content"),
-                os.path.join("opt", "ssg", "content")
+                os.path.join("/", "usr", "share", "xml", "scap", "ssg", "content"),
+                os.path.join("/", "usr", "local", "share", "xml", "scap", "ssg", "content"),
+                os.path.join("/", "opt", "ssg", "content")
             ])
 
     def load(self, config_file):
