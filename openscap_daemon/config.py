@@ -25,11 +25,17 @@ except ImportError:
 
 import os
 import os.path
+import logging
+import shutil
 
 class Configuration(object):
     def __init__(self):
         self.config_file = None
 
+        self.tasks_dir = os.path.join("/", "var", "lib", "oscapd", "tasks")
+        self.results_dir = os.path.join("/", "var", "lib", "oscapd", "results")
+        self.work_in_progress_dir = \
+            os.path.join("/", "var", "lib", "oscapd", "work_in_progress")
         self.jobs = 4
 
         self.oscap_path = ""
@@ -40,7 +46,7 @@ class Configuration(object):
 
         self.ssg_path = ""
 
-    def autodetect_paths(self):
+    def autodetect_tool_paths(self):
         """This will try a few well-known public paths and change the paths
         accordingly. This method will only try to autodetect paths that are
         empty!
@@ -49,10 +55,7 @@ class Configuration(object):
         SCAP Security Guide content.
         """
 
-        def autodetect_tool_path(
-            possible_names,
-            possible_prefixes=None
-        ):
+        def autodetect_tool_path(possible_names,possible_prefixes=None):
             if possible_prefixes is None:
                 possible_prefixes = (
                     os.path.join("/", "usr", "bin"),
@@ -72,13 +75,6 @@ class Configuration(object):
 
             return ret
 
-        def autodetect_content_path(possible_paths):
-            for path in possible_paths:
-                if os.path.isdir(path):
-                    return path
-
-            return ""
-
         if self.oscap_path == "":
             self.oscap_path = autodetect_tool_path(["oscap", "oscap.exe"])
         if self.oscap_ssh_path == "":
@@ -87,6 +83,14 @@ class Configuration(object):
             self.oscap_vm_path = autodetect_tool_path(["oscap-vm"])
         if self.oscap_docker_path == "":
             self.oscap_docker_path = autodetect_tool_path(["oscap-docker"])
+
+    def autodetect_content_paths(self):
+        def autodetect_content_path(possible_paths):
+            for path in possible_paths:
+                if os.path.isdir(path):
+                    return path
+
+            return ""
 
         if self.ssg_path == "":
             self.ssg_path = autodetect_content_path([
@@ -99,33 +103,60 @@ class Configuration(object):
         config = configparser.SafeConfigParser()
         config.read(config_file)
 
+        base_dir = os.path.dirname(config_file)
+
+        def absolutize(path):
+            path = str(path)
+            if os.path.isabs(path):
+                return path
+
+            return os.path.normpath(os.path.join(base_dir, path))
+
+        # General section
+        try:
+            self.tasks_dir = absolutize(config.get("General", "tasks-dir"))
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
+            self.results_dir = absolutize(config.get("General", "results-dir"))
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
+            self.work_in_progress_dir = absolutize(config.get("General", "work-in-progress-dir"))
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
         try:
             self.jobs = config.getint("General", "jobs")
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
+        # Tools section
         try:
-            self.oscap_path = str(config.get("Tools", "oscap"))
+            self.oscap_path = absolutize(config.get("Tools", "oscap"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
         try:
-            self.oscap_ssh_path = str(config.get("Tools", "oscap-ssh"))
+            self.oscap_ssh_path = absolutize(config.get("Tools", "oscap-ssh"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
         try:
-            self.oscap_vm_path = str(config.get("Tools", "oscap-vm"))
+            self.oscap_vm_path = absolutize(config.get("Tools", "oscap-vm"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
         try:
-            self.oscap_docker_path = str(config.get("Tools", "oscap-docker"))
+            self.oscap_docker_path = absolutize(config.get("Tools", "oscap-docker"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
+        # Content section
         try:
-            self.ssg_path = str(config.get("Content", "ssg"))
+            self.ssg_path = absolutize(config.get("Content", "ssg"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
@@ -135,6 +166,9 @@ class Configuration(object):
         config = configparser.SafeConfigParser()
 
         config.add_section("General")
+        config.set("General", "tasks-dir", str(self.tasks_dir))
+        config.set("General", "results-dir", str(self.results_dir))
+        config.set("General", "work-in-progress_dir", str(self.work_in_progress_dir))
         config.set("General", "jobs", str(self.jobs))
 
         config.add_section("Tools")
@@ -153,3 +187,38 @@ class Configuration(object):
 
     def save(self):
         self.save_as(self.config_file)
+
+    def prepare_dirs(self):
+        if not os.path.exists(self.tasks_dir):
+            logging.info(
+                "Creating tasks directory at '%s' because it didn't exist." %
+                (self.tasks_dir)
+            )
+            os.makedirs(self.tasks_dir, 0750)
+
+        if not os.path.exists(self.results_dir):
+            logging.info(
+                "Creating results directory at '%s' because it didn't exist." %
+                (self.results_dir)
+            )
+            os.makedirs(self.results_dir)
+
+        if not os.path.exists(self.work_in_progress_dir):
+            logging.info(
+                "Creating results work in progress directory at '%s' because "
+                "it didn't exist." %
+                (self.work_in_progress_dir)
+            )
+            os.makedirs(self.work_in_progress_dir)
+
+        for dir_ in os.listdir(self.work_in_progress_dir):
+            full_path = os.path.join(self.work_in_progress_dir, dir_)
+
+            logging.info(
+                "Found '%s' in work_in_progress results directory, full path "
+                "is '%s'. This is most likely a left-over from an earlier "
+                "crash. Deleting..." %
+                (dir_, full_path)
+            )
+
+            shutil.rmtree(full_path)

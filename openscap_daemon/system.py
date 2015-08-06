@@ -26,66 +26,17 @@ import Queue
 import shutil
 
 from openscap_daemon.task import Task
+from openscap_daemon.config import Configuration
 from openscap_daemon import oscap_helpers
 
 
 class System(object):
-    @staticmethod
-    def prepare_data_dir(data_dir):
-        tasks_dir = os.path.join(data_dir, "tasks")
-        results_dir = os.path.join(data_dir, "results")
-        work_in_progress_results_dir = \
-            os.path.join(results_dir, "work_in_progress")
-
-        if not os.path.exists(data_dir):
-            logging.info(
-                "Creating data directory at '%s' because it doesn't exist." %
-                (data_dir)
-            )
-            os.mkdir(data_dir)
-
-        if not os.path.exists(tasks_dir):
-            logging.info(
-                "Creating tasks directory at '%s' because it doesn't exist." %
-                (tasks_dir)
-            )
-            os.mkdir(tasks_dir)
-
-        if not os.path.exists(results_dir):
-            logging.info(
-                "Creating results directory at '%s' because it doesn't exist." %
-                (results_dir)
-            )
-            os.mkdir(results_dir)
-
-        if not os.path.exists(work_in_progress_results_dir):
-            logging.info(
-                "Creating results work in progresss directory at '%s' because "
-                "it doesn't exist." %
-                (work_in_progress_results_dir)
-            )
-            os.mkdir(work_in_progress_results_dir)
-
-        for dir_ in os.listdir(work_in_progress_results_dir):
-            full_path = os.path.join(work_in_progress_results_dir, dir_)
-
-            logging.info(
-                "Found '%s' in work_in_progress results directory, full path "
-                "is '%s'. This is most likely a left-over from an earlier "
-                "crash. Deleting..." %
-                (dir_, full_path)
-            )
-
-            shutil.rmtree(full_path)
-
-    def __init__(self, data_dir):
-        System.prepare_data_dir(data_dir)
-
-        self.data_dir = os.path.abspath(data_dir)
-        self.tasks_dir = os.path.join(self.data_dir, "tasks")
-        self.results_dir = os.path.join(self.data_dir, "results")
-        self.work_in_progress_results_dir = \
-            os.path.join(self.results_dir, "work_in_progress")
+    def __init__(self, config_file):
+        self.config = Configuration()
+        self.config.load(config_file)
+        self.config.autodetect_tool_paths()
+        self.config.autodetect_content_paths()
+        self.config.prepare_dirs()
 
         self.tasks = dict()
         self.tasks_lock = threading.Lock()
@@ -93,14 +44,9 @@ class System(object):
         self.update_wait_cond = threading.Condition()
 
     def get_ssg_choices(self):
-        # TODO: This has to be configurable in the future
-        ssg_path = os.path.join(
-            "/", "usr", "share", "xml", "scap", "ssg", "content"
-        )
-
         ret = []
-        for ssg_file in os.listdir(ssg_path):
-            full_path = os.path.join(ssg_path, ssg_file)
+        for ssg_file in os.listdir(self.config.ssg_path):
+            full_path = os.path.join(self.config.ssg_path, ssg_file)
 
             if not os.path.isfile(full_path):
                 continue
@@ -118,8 +64,9 @@ class System(object):
         )
 
     def load_tasks(self):
-        logging.info("Loading task definitions from '%s'..." % (self.tasks_dir))
-        task_files = os.listdir(self.tasks_dir)
+        logging.info("Loading task definitions from '%s'..." %
+                     (self.config.tasks_dir))
+        task_files = os.listdir(self.config.tasks_dir)
 
         task_count = 0
         for task_file in task_files:
@@ -127,17 +74,17 @@ class System(object):
                 logging.warning(
                     "Found '%s' in task definitions directory '%s'. Paths "
                     "not ending with '.xml' are unexpected in the task "
-                    "definitions directory " % (task_file, self.tasks_dir)
+                    "definitions directory " % (task_file, self.config.tasks_dir)
                 )
                 continue
 
-            full_path = os.path.join(self.tasks_dir, task_file)
+            full_path = os.path.join(self.config.tasks_dir, task_file)
 
             if not os.path.isfile(full_path):
                 logging.warning(
                     "Found '%s' in task definitions directory '%s'. This path "
                     "is not a file. Only files are expected in the task "
-                    "definitions directory " % (full_path, self.tasks_dir)
+                    "definitions directory " % (full_path, self.config.tasks_dir)
                 )
                 continue
 
@@ -158,7 +105,8 @@ class System(object):
         )
 
     def save_tasks(self):
-        logging.info("Saving task definitions to '%s'..." % (self.tasks_dir))
+        logging.info("Saving task definitions to '%s'..." %
+                     (self.config.tasks_dir))
         task_count = 0
         with self.tasks_lock:
             for _, task in self.tasks.iteritems():
@@ -186,7 +134,7 @@ class System(object):
             task = Task()
             task.id_ = task_id
             task.config_file = os.path.join(
-                self.tasks_dir, "%i.xml" % (task_id)
+                self.config.tasks_dir, "%i.xml" % (task_id)
             )
 
             self.tasks[task_id] = task
@@ -217,7 +165,7 @@ class System(object):
                     (task_id)
                 )
 
-            result_ids = task.list_result_ids(self.results_dir)
+            result_ids = task.list_result_ids(self.config.results_dir)
             if len(result_ids) > 0:
                 raise RuntimeError(
                     "Can't remove task '%i', in has %i results stored. "
@@ -227,7 +175,7 @@ class System(object):
 
             del self.tasks[task_id]
 
-        os.remove(os.path.join(self.tasks_dir, "%i.xml" % (task_id)))
+        os.remove(os.path.join(self.config.tasks_dir, "%i.xml" % (task_id)))
         logging.info("Removed task '%i'." % (task_id))
 
     def set_task_enabled(self, task_id, enabled):
@@ -316,7 +264,7 @@ class System(object):
                 task.set_input_contents(input_)
 
                 logging.info(
-                    "Set input content of task with ID %i to custom XML."
+                    "Set input content of task with ID %i to custom XML." %
                     (task_id)
                 )
 
@@ -507,8 +455,8 @@ class System(object):
 
                                 task.update(
                                     reference_datetime,
-                                    self.results_dir,
-                                    self.work_in_progress_results_dir
+                                    self.config.results_dir,
+                                    self.config.work_in_progress_dir
                                 )
 
                         except:
@@ -610,7 +558,7 @@ class System(object):
             task = self.tasks[task_id]
 
         # TODO: Is this a race condition? look into task.update
-        return task.list_result_ids(self.results_dir)
+        return task.list_result_ids(self.config.results_dir)
 
     def get_arf_of_task_result(self, task_id, result_id):
         task = None
@@ -618,7 +566,7 @@ class System(object):
             task = self.tasks[task_id]
 
         return task.get_arf_of_result(
-            self.results_dir,
+            self.config.results_dir,
             result_id
         )
 
@@ -628,7 +576,7 @@ class System(object):
             task = self.tasks[task_id]
 
         return task.get_stdout_of_result(
-            self.results_dir,
+            self.config.results_dir,
             result_id
         )
 
@@ -638,7 +586,7 @@ class System(object):
             task = self.tasks[task_id]
 
         return task.get_stderr_of_result(
-            self.results_dir,
+            self.config.results_dir,
             result_id
         )
 
@@ -648,7 +596,7 @@ class System(object):
             task = self.tasks[task_id]
 
         return task.get_exit_code_of_result(
-            self.results_dir,
+            self.config.results_dir,
             result_id
         )
 
@@ -658,6 +606,6 @@ class System(object):
             task = self.tasks[task_id]
 
         return task.generate_report_for_result(
-            self.results_dir,
+            self.config.results_dir,
             result_id
         )

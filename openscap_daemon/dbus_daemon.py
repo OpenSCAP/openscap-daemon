@@ -37,10 +37,10 @@ BUS_NAME = "org.OpenSCAP.daemon"
 
 
 class OpenSCAPDaemonDbus(dbus.service.Object):
-    def __init__(self, bus, data_dir_path):
+    def __init__(self, bus, config_file):
         super(OpenSCAPDaemonDbus, self).__init__(bus, OBJECT_PATH)
 
-        self.system = System(data_dir_path)
+        self.system = System(config_file)
         self.system.load_tasks()
 
         self.system_worker_thread = threading.Thread(
@@ -291,11 +291,13 @@ def main():
     bus = dbus.SessionBus()
     name = dbus.service.BusName(BUS_NAME, bus)
 
-    data_dir = os.path.join("/", "var", "lib", "oscapd")
-    if "OSCAPD_DATA_DIR" in os.environ:
-        data_dir = os.environ["OSCAPD_DATA_DIR"]
+    config_file = os.path.join("/", "etc", "oscapd", "config.ini")
+    if "OSCAPD_CONFIG_FILE" in os.environ:
+        config_file = os.environ["OSCAPD_CONFIG_FILE"]
 
-    obj = OpenSCAPDaemonDbus(bus, data_dir)
+    print config_file
+
+    obj = OpenSCAPDaemonDbus(bus, config_file)
 
     loop = gobject.MainLoop()
     loop.run()

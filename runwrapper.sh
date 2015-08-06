@@ -27,7 +27,7 @@ export PYTHONPATH=$PARENT_DIR:$PYTHONPATH
 # force python to print using utf-8
 export PYTHONIOENCODING=UTF-8
 
-export OSCAPD_DATA_DIR="$PARENT_DIR/tests/data_dir_template"
+export OSCAPD_CONFIG_FILE="$PARENT_DIR/tests/data_dir_template/config.ini"
 
 if [ "x$RUNWRAPPER_NO_FORK" != "x1" ]; then
     # fork a new shell to avoid polluting the environment

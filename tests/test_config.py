@@ -45,7 +45,7 @@ class ConfigTest(tests.harness.APITest):
 
         assert(config.oscap_path == "/a/b/c/oscap")
         assert(config.oscap_ssh_path == "/d/e/f/oscap-ssh")
-        assert(config.oscap_vm_path == "C:\\openscap\\bin\\oscap-vm")
+        assert(config.oscap_vm_path == "/openscap/bin/oscap-vm")
         assert(config.oscap_docker_path == "/g/h/i/j/oscap-docker")
 
         assert(config.ssg_path == "/g/h/i/ssg/content")
@@ -62,7 +62,7 @@ class ConfigTest(tests.harness.APITest):
 
         assert(config2.oscap_path == "/a/b/c/oscap")
         assert(config2.oscap_ssh_path == "/d/e/f/oscap-ssh")
-        assert(config2.oscap_vm_path == "C:\\openscap\\bin\\oscap-vm")
+        assert(config2.oscap_vm_path == "/openscap/bin/oscap-vm")
         assert(config2.oscap_docker_path == "/g/h/i/j/oscap-docker")
 
         assert(config2.ssg_path == "/g/h/i/ssg/content")

@@ -20,6 +20,7 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 import openscap_daemon
+from openscap_daemon.config import Configuration
 
 import tempfile
 import shutil
@@ -39,14 +40,8 @@ class APITest(object):
     """
 
     def __init__(self, data_dir_path):
+        self.system = None
         self.data_dir_path = data_dir_path
-
-    def setup_data(self):
-        # This ensures that data_dir is prepared and all the directories are in
-        # their place. This is necessary so that we can later copy in our test
-        # files.
-
-        openscap_daemon.System.prepare_data_dir(self.data_dir_path)
 
     def copy_to_data(self, template_path):
         """Overrides of setup_data are supposed to use this to copy special
@@ -58,8 +53,23 @@ class APITest(object):
             os.path.join(self.data_dir_path, template_path)
         )
 
+    def setup_data(self):
+        # This ensures that data_dir is prepared and all the directories are in
+        # their place. This is necessary so that we can later copy in our test
+        # files.
+
+        assert(os.path.isdir(self.data_dir_path))
+        self.copy_to_data("config.ini")
+
+        # we do this to create all the necessary directories
+        fake_config = Configuration()
+        fake_config.load(os.path.join(self.data_dir_path, "config.ini"))
+        fake_config.prepare_dirs()
+
     def init_system(self):
-        self.system = openscap_daemon.System(self.data_dir_path)
+        self.system = openscap_daemon.System(
+            os.path.join(self.data_dir_path, "config.ini")
+        )
 
     def teardown_data(self):
         # Most implementations won't do anything here, the entire directory will
