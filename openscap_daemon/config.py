@@ -38,10 +38,15 @@ class Configuration(object):
         self.oscap_vm_path = ""
         self.oscap_docker_path = ""
 
-    def autodetect_tool_paths(self):
+        self.ssg_path = ""
+
+    def autodetect_paths(self):
         """This will try a few well-known public paths and change the paths
         accordingly. This method will only try to autodetect paths that are
         empty!
+
+        Auto-detection is implemented for oscap and various related tools and
+        SCAP Security Guide content.
         """
 
         def autodetect_tool_path(
@@ -67,17 +72,28 @@ class Configuration(object):
 
             return ret
 
+        def autodetect_content_path(possible_paths):
+            for path in possible_paths:
+                if os.path.isdir(path):
+                    return path
+
+            return ""
+
         if self.oscap_path == "":
             self.oscap_path = autodetect_tool_path(["oscap", "oscap.exe"])
-
         if self.oscap_ssh_path == "":
             self.oscap_ssh_path = autodetect_tool_path(["oscap-ssh"])
-
         if self.oscap_vm_path == "":
             self.oscap_vm_path = autodetect_tool_path(["oscap-vm"])
-
         if self.oscap_docker_path == "":
             self.oscap_docker_path = autodetect_tool_path(["oscap-docker"])
+
+        if self.ssg_path == "":
+            self.ssg_path = autodetect_content_path([
+                os.path.join("usr", "share", "xml", "scap", "ssg", "content"),
+                os.path.join("usr", "local", "share", "xml", "scap", "ssg", "content"),
+                os.path.join("opt", "ssg", "content")
+            ])
 
     def load(self, config_file):
         config = configparser.SafeConfigParser()
@@ -89,22 +105,27 @@ class Configuration(object):
             pass
 
         try:
-            self.oscap_path = str(config.get("Paths", "oscap"))
+            self.oscap_path = str(config.get("Tools", "oscap"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
         try:
-            self.oscap_ssh_path = str(config.get("Paths", "oscap-ssh"))
+            self.oscap_ssh_path = str(config.get("Tools", "oscap-ssh"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
         try:
-            self.oscap_vm_path = str(config.get("Paths", "oscap-vm"))
+            self.oscap_vm_path = str(config.get("Tools", "oscap-vm"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
         try:
-            self.oscap_docker_path = str(config.get("Paths", "oscap-docker"))
+            self.oscap_docker_path = str(config.get("Tools", "oscap-docker"))
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
+            self.ssg_path = str(config.get("Content", "ssg"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
@@ -116,11 +137,14 @@ class Configuration(object):
         config.add_section("General")
         config.set("General", "jobs", str(self.jobs))
 
-        config.add_section("Paths")
-        config.set("Paths", "oscap", str(self.oscap_path))
-        config.set("Paths", "oscap-ssh", str(self.oscap_ssh_path))
-        config.set("Paths", "oscap-vm", str(self.oscap_vm_path))
-        config.set("Paths", "oscap-docker", str(self.oscap_docker_path))
+        config.add_section("Tools")
+        config.set("Tools", "oscap", str(self.oscap_path))
+        config.set("Tools", "oscap-ssh", str(self.oscap_ssh_path))
+        config.set("Tools", "oscap-vm", str(self.oscap_vm_path))
+        config.set("Tools", "oscap-docker", str(self.oscap_docker_path))
+
+        config.add_section("Content")
+        config.set("Content", "ssg", str(self.ssg_path))
 
         with open(config_file, "w") as f:
             config.write(f)
