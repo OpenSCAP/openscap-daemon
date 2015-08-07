@@ -71,14 +71,18 @@ def cli_task(dbus_iface, args):
     if args.task_id is None:
         # args.task_action is ignored in this scope
 
-        table = [["ID", "Title", "Target"]]
+        table = [["ID", "Title", "Target", "Enabled"]]
         task_ids = dbus_iface.ListTaskIDs()
 
         for task_id in task_ids:
             title = dbus_iface.GetTaskTitle(task_id, utf8_strings=True)
             target = dbus_iface.GetTaskTarget(task_id, utf8_strings=True)
+            # TODO: Maybe we can show the disabled state in a better way?
+            enabled = \
+                "enabled" if dbus_iface.GetTaskEnabled(task_id) else \
+                "disabled"
 
-            table.append([str(task_id), title, target])
+            table.append([str(task_id), title, target, enabled])
 
         cli_helpers.print_table(table)
 
@@ -92,13 +96,17 @@ def cli_task(dbus_iface, args):
             table.append(["ID", str(args.task_id)])
             table.append(["Target", target])
             cli_helpers.print_table(table, first_row_header=False)
+            print("")
 
             result_ids = dbus_iface.GetTaskResultIDs(args.task_id)
             if len(result_ids) > 0:
-                print("")
                 print("Latest results:")
                 cli_print_results_table(dbus_iface, args.task_id, result_ids, 5)
+                print("")
 
+            if not dbus_iface.GetTaskEnabled(args.task_id):
+                print("This task is currently disabled. Enable it by calling:")
+                print("$ oscapd-cli task %i enable" % (args.task_id))
             # TODO
 
         elif args.task_action == "guide":

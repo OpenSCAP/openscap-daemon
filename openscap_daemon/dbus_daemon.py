@@ -145,6 +145,13 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return self.system.set_task_enabled(task_id, enabled)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="x", out_signature="b")
+    def GetTaskEnabled(self, task_id):
+        """Retrieves the enabled flag of an existing task with given ID.
+        """
+        return self.system.get_task_enabled(task_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
     def SetTaskTarget(self, task_id, target):
         """Set target of existing task with given ID.

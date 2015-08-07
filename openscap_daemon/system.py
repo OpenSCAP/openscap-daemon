@@ -197,6 +197,13 @@ class System(object):
             with self.update_wait_cond:
                 self.update_wait_cond.notify_all()
 
+    def get_task_enabled(self, task_id):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.enabled
+
     def set_task_title(self, task_id, title):
         task = None
         with self.tasks_lock:
