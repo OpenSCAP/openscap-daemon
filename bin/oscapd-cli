@@ -21,6 +21,7 @@
 
 from openscap_daemon import dbus_daemon
 from openscap_daemon import oscap_helpers
+from openscap_daemon import cli_helpers
 
 import dbus
 import gobject
@@ -54,24 +55,25 @@ def cli_task(dbus_iface, args):
     if args.task_id is None:
         # args.task_action is ignored in this scope
 
-        print("Tasks Overview")
-        print("")
-        print("-" * 79)
-        print("ID\t|\tTitle\t|\tTarget")
-        print("-" * 79)
+        table = [["ID", "Title", "Target"]]
         task_ids = dbus_iface.ListTaskIDs()
 
         for task_id in task_ids:
             title = dbus_iface.GetTaskTitle(task_id, utf8_strings=True)
             target = dbus_iface.GetTaskTarget(task_id, utf8_strings=True)
-            print("%i\t|\t%s\t|\t%s" % (task_id, title, target))
+
+            table.append([str(task_id), title, target])
+
+        cli_helpers.print_table(table)
 
     else:
         if args.task_action == "info":
             title = dbus_iface.GetTaskTitle(args.task_id, utf8_strings=True)
 
-            print("ID:\t%i" % (args.task_id))
-            print("Title:\t%s" % (title))
+            table = []
+            table.append(["ID", str(args.task_id)])
+            table.append(["Title", title])
+            cli_helpers.print_table(table)
 
             # TODO
 
@@ -222,9 +224,8 @@ def cli_result(dbus_iface, args):
 
         print("Results of Task \"%s\", ID = %i" % (task_title, args.task_id))
         print("")
-        print("-" * 79)
-        print("ID\t|\tTimestamp\t|\tStatus")
-        print("-" * 79)
+
+        table = [["ID", "Timestamp", "Status"]]
 
         result_ids = dbus_iface.GetTaskResultIDs(args.task_id)
         for result_id in result_ids:
@@ -232,7 +233,9 @@ def cli_result(dbus_iface, args):
                 args.task_id, result_id
             )
             status = oscap_helpers.get_status_from_exit_code(exit_code)
-            print("%i\t|\tabcdefgh\t|\t%s" % (result_id, status))
+            table.append([str(result_id), "TODO", status])
+
+        cli_helpers.print_table(table)
 
     else:
         if args.result_action == "arf":
