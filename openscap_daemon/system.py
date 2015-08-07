@@ -291,7 +291,7 @@ class System(object):
                 task.set_tailoring_contents(tailoring)
 
                 logging.info(
-                    "Set tailoring content of task with ID %i to custom XML."
+                    "Set tailoring content of task with ID %i to custom XML." %
                     (task_id)
                 )
 
