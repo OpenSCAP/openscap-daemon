@@ -52,13 +52,19 @@ def get_dbus_interface():
 
 def cli_task(dbus_iface, args):
     if args.task_id is None:
-        # args.action is ignored in this scope
+        # args.task_action is ignored in this scope
 
+        print("Tasks Overview")
+        print("")
+        print("-" * 79)
+        print("ID\t|\tTitle\t|\tTarget")
+        print("-" * 79)
         task_ids = dbus_iface.ListTaskIDs()
 
         for task_id in task_ids:
             title = dbus_iface.GetTaskTitle(task_id, utf8_strings=True)
-            print("%i\t\t%s\t\t..." % (task_id, title))
+            target = dbus_iface.GetTaskTarget(task_id, utf8_strings=True)
+            print("%i\t|\t%s\t|\t%s" % (task_id, title, target))
 
     else:
         if args.task_action == "info":
@@ -214,7 +220,7 @@ def cli_result(dbus_iface, args):
     if args.result_id is None:
         task_title = dbus_iface.GetTaskTitle(args.task_id)
 
-        print("Results of task \"%s\", ID = %i" % (task_title, args.task_id))
+        print("Results of Task \"%s\", ID = %i" % (task_title, args.task_id))
         print("")
         print("-" * 79)
         print("ID\t|\tTimestamp\t|\tStatus")

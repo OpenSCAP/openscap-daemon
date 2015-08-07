@@ -154,6 +154,13 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return self.system.set_task_target(task_id, target)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="x", out_signature="s")
+    def GetTaskTarget(self, task_id):
+        """Retrieves target of existing task with given ID.
+        """
+        return self.system.get_task_target(task_id)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
     def SetTaskInput(self, task_id, input_):
         """Set input of existing task with given ID.
