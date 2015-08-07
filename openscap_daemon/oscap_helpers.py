@@ -314,8 +314,24 @@ def generate_report_for_result(task, results_dir, result_id):
     return ret
 
 
+def get_status_from_exit_code(exit_code):
+    """Returns human readable status based on given `oscap` exit_code
+    """
+
+    status = "Unknown (exit_code = %i)" % (exit_code)
+    if exit_code == 0:
+        status = "Compliant"
+    elif exit_code == 1:
+        status = "Non-Compliant"
+    elif exit_code == 2:
+        status = "Evaluation Error"
+
+    return status
+
+
 __all__ = [
     "generate_guide_for_task",
     "evaluate_task",
-    "generate_report_for_result"
+    "generate_report_for_result",
+    "get_status_from_exit_code"
 ]

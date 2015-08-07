@@ -20,7 +20,7 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 from openscap_daemon import dbus_daemon
-# from openscap_daemon import task
+from openscap_daemon import oscap_helpers
 
 import dbus
 import gobject
@@ -212,10 +212,21 @@ def cli_status(dbus_iface, args):
 
 def cli_result(dbus_iface, args):
     if args.result_id is None:
+        task_title = dbus_iface.GetTaskTitle(args.task_id)
+
+        print("Results of task \"%s\", ID = %i" % (task_title, args.task_id))
+        print("")
+        print("-" * 79)
+        print("ID\t|\tTimestamp\t|\tStatus")
+        print("-" * 79)
+
         result_ids = dbus_iface.GetTaskResultIDs(args.task_id)
         for result_id in result_ids:
-            # TODO
-            print("%i\t\t\tabcd" % (result_id))
+            exit_code = dbus_iface.GetExitCodeOfTaskResult(
+                args.task_id, result_id
+            )
+            status = oscap_helpers.get_status_from_exit_code(exit_code)
+            print("%i\t|\tabcdefgh\t|\t%s" % (result_id, status))
 
     else:
         if args.result_action == "arf":
