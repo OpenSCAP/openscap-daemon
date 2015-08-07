@@ -74,17 +74,26 @@ def cli_task(dbus_iface, args):
         table = [["ID", "Title", "Target", "Enabled"]]
         task_ids = dbus_iface.ListTaskIDs()
 
+        enabled_count = 0
         for task_id in task_ids:
             title = dbus_iface.GetTaskTitle(task_id, utf8_strings=True)
             target = dbus_iface.GetTaskTarget(task_id, utf8_strings=True)
-            # TODO: Maybe we can show the disabled state in a better way?
-            enabled = \
-                "enabled" if dbus_iface.GetTaskEnabled(task_id) else \
-                "disabled"
+            enabled = dbus_iface.GetTaskEnabled(task_id)
+            if enabled:
+                enabled_count += 1
 
-            table.append([str(task_id), title, target, enabled])
+            table.append([
+                str(task_id),
+                title,
+                target,
+                # TODO: Maybe we can show the disabled state in a better way?
+                "enabled" if enabled else "disabled"
+            ])
 
         cli_helpers.print_table(table)
+        print("")
+        print("Found %i tasks, %i of them enabled." %
+              (len(task_ids), enabled_count))
 
     else:
         if args.task_action == "info":
