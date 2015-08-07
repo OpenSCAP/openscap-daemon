@@ -48,12 +48,16 @@ def print_table(table, first_row_header=True):
     if first_row_header:
         assert(len(table) > 0)
 
-        print("-" * total_width)
+        print("-+-".join(
+            "-" * max_size for max_size in column_max_sizes.itervalues())
+        )
         print(" | ".join(
             [str(cell).ljust(column_max_sizes[table[start_row].index(cell)])
              for cell in table[start_row]]
         ))
-        print("-" * total_width)
+        print("-+-".join(
+            "-" * max_size for max_size in column_max_sizes.itervalues())
+        )
         start_row += 1
 
     for row in table[start_row:]:
