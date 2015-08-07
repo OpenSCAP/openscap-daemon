@@ -199,7 +199,6 @@ class System(object):
 
     def set_task_title(self, task_id, title):
         task = None
-
         with self.tasks_lock:
             task = self.tasks[task_id]
 
@@ -221,7 +220,6 @@ class System(object):
 
     def set_task_target(self, task_id, target):
         task = None
-
         with self.tasks_lock:
             task = self.tasks[task_id]
 

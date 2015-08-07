@@ -83,6 +83,15 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return self.system.list_task_ids()
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="xs", out_signature="")
+    def SetTaskTitle(self, task_id, title):
+        """Set title of existing task with given ID.
+
+        The change is persistent after the function returns.
+        """
+        return self.system.set_task_title(task_id, title)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="x", out_signature="s")
     def GetTaskTitle(self, task_id):
         """Retrieves title of task with given ID.
@@ -134,15 +143,6 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         The change is persistent after the function returns.
         """
         return self.system.set_task_enabled(task_id, enabled)
-
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
-                         in_signature="xs", out_signature="")
-    def SetTaskTitle(self, task_id, title):
-        """Set title of existing task with given ID.
-
-        The change is persistent after the function returns.
-        """
-        return self.system.set_task_title(task_id, title)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
