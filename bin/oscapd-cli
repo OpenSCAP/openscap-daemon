@@ -51,6 +51,22 @@ def get_dbus_interface():
     return dbus.Interface(obj, dbus_daemon.DBUS_INTERFACE)
 
 
+def cli_print_results_table(dbus_iface, task_id, result_ids, max_items=-1):
+    table = [["ID", "Timestamp", "Status"]]
+
+    for result_id in result_ids[:max_items]:
+        exit_code = dbus_iface.GetExitCodeOfTaskResult(
+            task_id, result_id
+        )
+        status = oscap_helpers.get_status_from_exit_code(exit_code)
+        table.append([str(result_id), "TODO", status])
+
+    cli_helpers.print_table(table)
+
+    if max_items != -1 and max_items < len(result_ids):
+        print("... and %i more" % (len(result_ids) - max_items))
+
+
 def cli_task(dbus_iface, args):
     if args.task_id is None:
         # args.task_action is ignored in this scope
@@ -69,11 +85,19 @@ def cli_task(dbus_iface, args):
     else:
         if args.task_action == "info":
             title = dbus_iface.GetTaskTitle(args.task_id, utf8_strings=True)
+            target = dbus_iface.GetTaskTarget(args.task_id, utf8_strings=True)
 
             table = []
-            table.append(["ID", str(args.task_id)])
             table.append(["Title", title])
-            cli_helpers.print_table(table)
+            table.append(["ID", str(args.task_id)])
+            table.append(["Target", target])
+            cli_helpers.print_table(table, first_row_header=False)
+
+            result_ids = dbus_iface.GetTaskResultIDs(args.task_id)
+            if len(result_ids) > 0:
+                print("")
+                print("Latest results:")
+                cli_print_results_table(dbus_iface, args.task_id, result_ids, 5)
 
             # TODO
 
@@ -225,17 +249,8 @@ def cli_result(dbus_iface, args):
         print("Results of Task \"%s\", ID = %i" % (task_title, args.task_id))
         print("")
 
-        table = [["ID", "Timestamp", "Status"]]
-
         result_ids = dbus_iface.GetTaskResultIDs(args.task_id)
-        for result_id in result_ids:
-            exit_code = dbus_iface.GetExitCodeOfTaskResult(
-                args.task_id, result_id
-            )
-            status = oscap_helpers.get_status_from_exit_code(exit_code)
-            table.append([str(result_id), "TODO", status])
-
-        cli_helpers.print_table(table)
+        cli_print_results_table(dbus_iface, args.task_id, result_ids)
 
     else:
         if args.result_action == "arf":
