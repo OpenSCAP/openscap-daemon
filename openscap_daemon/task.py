@@ -338,8 +338,7 @@ class Task(object):
 
         return self.schedule.not_before
 
-    def update(self, reference_datetime, results_dir,
-               work_in_progress_results_dir):
+    def update(self, reference_datetime, config):
         """Figures out if the task should be run right now, alters the schedule
         values accordingly.
 
@@ -400,12 +399,12 @@ class Task(object):
 
             if update_now:
                 wip_result = oscap_helpers.evaluate(
-                    self.evaluation_spec, work_in_progress_results_dir)
+                    self.evaluation_spec, config.work_in_progress_dir, config)
 
                 # We already have update_lock, there is no risk of a race
                 # condition between acquiring target dir and moving the results
                 # there.
-                target_dir = self._get_next_target_dir(results_dir)
+                target_dir = self._get_next_target_dir(config.results_dir)
                 logging.debug(
                     "Moving results of task '%s' from '%s' to '%s'." %
                     (self.id_, wip_result, target_dir)
@@ -426,8 +425,8 @@ class Task(object):
                 else:
                     self.run_outside_schedule_once = False
 
-    def generate_guide(self):
-        return self.evaluation_spec.generate_guide()
+    def generate_guide(self, config):
+        return self.evaluation_spec.generate_guide(config)
 
     def run_outside_schedule(self):
         if not self.enabled:
@@ -449,11 +448,13 @@ class Task(object):
             (self.id_)
         )
 
-    def get_arf_of_result(self, results_dir, result_id):
+    def get_arf_of_result(self, result_id, config):
         # TODO: This needs refactoring in the future, the secret that the file
         #       is called "arf.xml" is all over the place.
         path = os.path.join(
-            results_dir, str(self.id_), str(result_id), "arf.xml"
+            self._get_task_results_dir(config.results_dir),
+            str(result_id),
+            "arf.xml"
         )
 
         logging.debug(
@@ -472,39 +473,48 @@ class Task(object):
 
         return ret
 
-    def get_stdout_of_result(self, results_dir, result_id):
+    def get_stdout_of_result(self, result_id, config):
         path = os.path.join(
-            results_dir, str(self.id_), str(result_id), "stdout"
+            self._get_task_results_dir(config.results_dir),
+            str(result_id),
+            "stderr"
         )
+
         ret = ""
         with open(path, "r") as f:
             ret = f.read()
 
         return ret
 
-    def get_stderr_of_result(self, results_dir, result_id):
+    def get_stderr_of_result(self, result_id, config):
         path = os.path.join(
-            results_dir, str(self.id_), str(result_id), "stderr"
+            self._get_task_results_dir(config.results_dir),
+            str(result_id),
+            "stderr"
         )
+
         ret = ""
         with open(path, "r") as f:
             ret = f.read()
 
         return ret
 
-    def get_exit_code_of_result(self, results_dir, result_id):
+    def get_exit_code_of_result(self, result_id, config):
         path = os.path.join(
-            results_dir, str(self.id_), str(result_id), "exit_code"
+            self._get_task_results_dir(config.results_dir),
+            str(result_id),
+            "exit_code"
         )
+
         ret = ""
         with open(path, "r") as f:
             ret = f.read()
 
         return int(ret.strip())
 
-    def generate_report_for_result(self, results_dir, result_id):
+    def generate_report_for_result(self, result_id, config):
         return oscap_helpers.generate_report_for_result(
             self.evaluation_spec,
-            os.path.join(results_dir, str(self.id_)),
+            self._get_task_results_dir(config.results_dir),
             result_id
         )

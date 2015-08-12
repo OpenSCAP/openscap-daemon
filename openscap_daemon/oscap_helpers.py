@@ -27,10 +27,6 @@ from xml.etree import cElementTree as ElementTree
 from openscap_daemon import et_helpers
 from openscap_daemon.compat import subprocess_check_output
 
-# TODO: configurable
-OSCAP_PATH = "oscap"
-OSCAP_SSH_PATH = "oscap-ssh"
-
 
 def get_profile_choices_for_input(input_file, tailoring_file):
     # Ideally oscap would have a command line to do this, but as of now it
@@ -83,8 +79,8 @@ def get_profile_choices_for_input(input_file, tailoring_file):
     return ret
 
 
-def get_generate_guide_args(spec):
-    ret = [OSCAP_PATH, "xccdf", "generate", "guide"]
+def get_generate_guide_args(spec, config):
+    ret = [config.oscap_path, "xccdf", "generate", "guide"]
 
     # TODO: Is this supported in OpenSCAP?
     if spec.input_.datastream_id is not None:
@@ -106,13 +102,13 @@ def get_generate_guide_args(spec):
     return ret
 
 
-def generate_guide(spec):
+def generate_guide(spec, config):
     if not spec.is_valid():
         raise RuntimeError(
             "Can't generate guide for an invalid EvaluationSpec."
         )
 
-    args = get_generate_guide_args(spec)
+    args = get_generate_guide_args(spec, config)
 
     logging.debug(
         "Generating guide for evaluation spec with command '%s'." %
@@ -142,15 +138,15 @@ def split_ssh_target(target):
         return without_prefix, 22
 
 
-def get_evaluation_args(spec):
+def get_evaluation_args(spec, config):
     ret = []
 
     if spec.target == "localhost":
-        ret.extend([OSCAP_PATH])
+        ret.extend([config.oscap_path])
 
     elif spec.target.startswith("ssh://"):
         host, port = split_ssh_target(spec.target)
-        ret.extend([OSCAP_SSH_PATH, host, str(port)])
+        ret.extend([config.oscap_ssh_path, host, str(port)])
 
     else:
         raise RuntimeError(
@@ -183,7 +179,7 @@ def get_evaluation_args(spec):
     return ret
 
 
-def evaluate(spec, results_dir):
+def evaluate(spec, results_dir, config):
     """Calls oscap to evaluate given task, creates a uniquely named directory
     in given results_dir for it. Returns absolute path to that directory in
     case of success.
@@ -202,7 +198,7 @@ def evaluate(spec, results_dir):
     stdout_file = open(os.path.join(working_directory, "stdout"), "w")
     stderr_file = open(os.path.join(working_directory, "stderr"), "w")
 
-    args = get_evaluation_args(spec)
+    args = get_evaluation_args(spec, config)
 
     logging.debug(
         "Starting evaluation with command '%s'." %
@@ -210,6 +206,8 @@ def evaluate(spec, results_dir):
     )
 
     exit_code = 1
+
+    print("args: %s" % (" ".join(args)))
 
     try:
         exit_code = subprocess.call(
@@ -266,11 +264,11 @@ def evaluate(spec, results_dir):
     return working_directory
 
 
-def get_generate_report_args_for_arf(spec, arf_path):
-    return [OSCAP_PATH, "xccdf", "generate", "report", arf_path]
+def get_generate_report_args_for_arf(spec, arf_path, config):
+    return [config.oscap_path, "xccdf", "generate", "report", arf_path]
 
 
-def generate_report_for_result(spec, results_dir, result_id):
+def generate_report_for_result(spec, results_dir, result_id, config):
     """This function assumes that the ARF was generated using evaluate
     in this same package. That's why we can avoid --datastream-id, ...
 
@@ -288,7 +286,7 @@ def generate_report_for_result(spec, results_dir, result_id):
                            "Expected ARF at '%s' but the file doesn't exist."
                            % (result_id, arf_path))
 
-    args = get_generate_report_args_for_arf(spec, arf_path)
+    args = get_generate_report_args_for_arf(spec, arf_path, config)
 
     logging.debug(
         "Generating report for result %i of EvaluationSpec with command '%s'." %

@@ -293,5 +293,5 @@ class EvaluationSpec(object):
 
         return ret
 
-    def generate_guide(self):
-        return oscap_helpers.generate_guide(self)
+    def generate_guide(self, config):
+        return oscap_helpers.generate_guide(self, config)

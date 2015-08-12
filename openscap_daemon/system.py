@@ -23,7 +23,6 @@ from datetime import datetime
 import threading
 import logging
 import Queue
-import shutil
 
 from openscap_daemon.task import Task
 from openscap_daemon.config import Configuration
@@ -458,11 +457,7 @@ class System(object):
                                     "'%s'." % (task.id_, target)
                                 )
 
-                                task.update(
-                                    reference_datetime,
-                                    self.config.results_dir,
-                                    self.config.work_in_progress_dir
-                                )
+                                task.update(reference_datetime, self.config)
 
                         except:
                             logging.exception(
@@ -545,7 +540,7 @@ class System(object):
         with self.tasks_lock:
             task = self.tasks[task_id]
 
-        return task.evaluation_spec.generate_guide()
+        return task.evaluation_spec.generate_guide(self.config)
 
     def run_task_outside_schedule(self, task_id):
         task = None
