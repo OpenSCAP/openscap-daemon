@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <task enabled="true">
     <title>Weekly SCAP Security Guide Evaluation</title>
-    <target>localhost</target>
-    <input>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+    <evaluation_spec>
+        <target>localhost</target>
+        <input>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;ds:data-stream-collection xmlns:ds="http://scap.nist.gov/schema/scap/source/1.2" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:cat="urn:oasis:names:tc:entity:xmlns:xml:catalog" id="scap_org.open-scap_collection_from_xccdf_ssg-fedora-xccdf-1.2.xml" schematron-version="1.0"&gt;
   &lt;ds:data-stream id="scap_org.open-scap_datastream_from_xccdf_ssg-fedora-xccdf-1.2.xml" scap-version="1.2" use-case="OTHER"&gt;
     &lt;ds:dictionaries&gt;
@@ -10399,8 +10400,9 @@ To verify insecure file locking has been disabled, run the following command:
   &lt;/variables&gt;
 &lt;/oval_definitions&gt;&lt;/ds:component&gt;&lt;/ds:data-stream-collection&gt;
         
-    </input>
-    <profile>xccdf_org.ssgproject.content_profile_common</profile>
-    <online_remediation>false</online_remediation>
-    <schedule not_before="2015-07-29T18:30" repeat_after="1" slip_mode="drop_missed_aligned" />
+        </input>
+        <profile>xccdf_org.ssgproject.content_profile_common</profile>
+        <online_remediation>false</online_remediation>
+    </evaluation_spec>
+    <schedule not_before="2015-08-12T11:30" repeat_after="1" slip_mode="drop_missed_aligned" />
 </task>

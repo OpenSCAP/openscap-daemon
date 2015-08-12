@@ -83,38 +83,40 @@ def get_profile_choices_for_input(input_file, tailoring_file):
     return ret
 
 
-def generate_guide_args_for_task(task):
+def get_generate_guide_args(spec):
     ret = [OSCAP_PATH, "xccdf", "generate", "guide"]
 
     # TODO: Is this supported in OpenSCAP?
-    if task.input_.datastream_id is not None:
-        ret.extend(["--datastream-id", task.input_.datastream_id])
+    if spec.input_.datastream_id is not None:
+        ret.extend(["--datastream-id", spec.input_.datastream_id])
 
     # TODO: Is this supported in OpenSCAP?
-    if task.input_.xccdf_id is not None:
-        ret.extend(["--xccdf-id", task.input_.xccdf_id])
+    if spec.input_.xccdf_id is not None:
+        ret.extend(["--xccdf-id", spec.input_.xccdf_id])
 
     # TODO: Is this supported in OpenSCAP?
-    if task.tailoring.file_path is not None:
-        ret.extend(["--tailoring-file", task.tailoring.file_path])
+    if spec.tailoring.file_path is not None:
+        ret.extend(["--tailoring-file", spec.tailoring.file_path])
 
-    if task.profile_id is not None:
-        ret.extend(["--profile", task.profile_id])
+    if spec.profile_id is not None:
+        ret.extend(["--profile", spec.profile_id])
 
-    ret.append(task.input_.file_path)
+    ret.append(spec.input_.file_path)
 
     return ret
 
 
-def generate_guide_for_task(task):
-    if not task.is_valid():
-        raise RuntimeError("Can't generate guide for an invalid Task.")
+def generate_guide(spec):
+    if not spec.is_valid():
+        raise RuntimeError(
+            "Can't generate guide for an invalid EvaluationSpec."
+        )
 
-    args = generate_guide_args_for_task(task)
+    args = get_generate_guide_args(spec)
 
     logging.debug(
-        "Generating guide for task %i with command '%s'." %
-        (task.id_, " ".join(args))
+        "Generating guide for evaluation spec with command '%s'." %
+        (" ".join(args))
     )
 
     ret = subprocess_check_output(
@@ -122,10 +124,7 @@ def generate_guide_for_task(task):
         shell=False
     ).decode("utf-8")
 
-    logging.info(
-        "Generated guide for task %i." %
-        (task.id_)
-    )
+    logging.info("Generated guide for evaluation spec.")
 
     return ret
 
@@ -143,48 +142,48 @@ def split_ssh_target(target):
         return without_prefix, 22
 
 
-def evaluation_args_for_task(task):
+def get_evaluation_args(spec):
     ret = []
 
-    if task.target == "localhost":
+    if spec.target == "localhost":
         ret.extend([OSCAP_PATH])
 
-    elif task.target.startswith("ssh://"):
-        host, port = split_ssh_target(task.target)
+    elif spec.target.startswith("ssh://"):
+        host, port = split_ssh_target(spec.target)
         ret.extend([OSCAP_SSH_PATH, host, str(port)])
 
     else:
         raise RuntimeError(
-            "Unrecognized target '%s' in task '%i'." % (task.target, task.id_)
+            "Unrecognized target '%s' in evaluation spec." % (spec.target)
         )
 
     ret.extend(["xccdf", "eval"])
 
-    if task.input_.datastream_id is not None:
-        ret.extend(["--datastream-id", task.input_.datastream_id])
+    if spec.input_.datastream_id is not None:
+        ret.extend(["--datastream-id", spec.input_.datastream_id])
 
-    if task.input_.xccdf_id is not None:
-        ret.extend(["--xccdf-id", task.input_.xccdf_id])
+    if spec.input_.xccdf_id is not None:
+        ret.extend(["--xccdf-id", spec.input_.xccdf_id])
 
-    if task.tailoring.file_path is not None:
-        ret.extend(["--tailoring-file", task.tailoring.file_path])
+    if spec.tailoring.file_path is not None:
+        ret.extend(["--tailoring-file", spec.tailoring.file_path])
 
-    if task.profile_id is not None:
-        ret.extend(["--profile", task.profile_id])
+    if spec.profile_id is not None:
+        ret.extend(["--profile", spec.profile_id])
 
-    if task.online_remediation:
+    if spec.online_remediation:
         ret.append("--remediate")
 
     # We are on purpose only interested in ARF, everything else can be
     # generated from that.
     ret.extend(["--results-arf", "arf.xml"])
 
-    ret.append(task.input_.file_path)
+    ret.append(spec.input_.file_path)
 
     return ret
 
 
-def evaluate_task(task, task_results_dir):
+def evaluate(spec, results_dir):
     """Calls oscap to evaluate given task, creates a uniquely named directory
     in given results_dir for it. Returns absolute path to that directory in
     case of success.
@@ -192,26 +191,22 @@ def evaluate_task(task, task_results_dir):
     Throws exception in case of failure.
     """
 
-    if not task.is_valid():
-        raise RuntimeError("Can't evaluate an invalid Task.")
-
-    working_directory = None
-    stdout_file = None
-    stderr_file = None
+    if not spec.is_valid():
+        raise RuntimeError("Can't evaluate an invalid EvaluationSpec.")
 
     working_directory = tempfile.mkdtemp(
         prefix="", suffix="",
-        dir=task_results_dir
+        dir=results_dir
     )
 
     stdout_file = open(os.path.join(working_directory, "stdout"), "w")
     stderr_file = open(os.path.join(working_directory, "stderr"), "w")
 
-    args = evaluation_args_for_task(task)
+    args = get_evaluation_args(spec)
 
     logging.debug(
-        "Starting evaluation of task '%s' with command '%s'." %
-        (task.id_, " ".join(args))
+        "Starting evaluation with command '%s'." %
+        (" ".join(args))
     )
 
     exit_code = 1
@@ -227,8 +222,7 @@ def evaluate_task(task, task_results_dir):
 
     except:
         logging.exception(
-            "Failed to execute 'oscap' while evaluating task '%s'." %
-            (task.id_)
+            "Failed to execute 'oscap' while evaluating EvaluationSpec."
         )
 
     stdout_file.flush()
@@ -243,49 +237,49 @@ def evaluate_task(task, task_results_dir):
 
     if exit_code == 0:
         logging.info(
-            "Evaluated task '%i', exit code %i means the target evaluated "
-            "as compliant." % (task.id_, exit_code)
+            "Evaluated EvaluationSpec, exit code %i means the target evaluated "
+            "as compliant." % (exit_code)
         )
         # TODO: Assert that arf was generated
 
     elif exit_code == 2:
         logging.warning(
-            "Evaluated task '%i', exit code %i means the target evaluated "
-            "as non-compliant!" % (task.id_, exit_code)
+            "Evaluated EvaluationSpec, exit code %i means the target evaluated "
+            "as non-compliant!" % (exit_code)
         )
         # TODO: Assert that arf was generated
 
     elif exit_code == 1:
         logging.error(
-            "Task '%i' failed to evaluate, oscap returned 1 as exit code, "
-            "it won't be possible to get ARF or generate reports for this "
-            "result!" % (task.id_)
+            "EvaluationSpec failed to evaluate, oscap returned 1 as exit code, "
+            "it may not be possible to get ARF or generate reports for this "
+            "result!"
         )
         # TODO: Assert that arf was NOT generated
 
     else:
         logging.error(
-            "Evaluated task '%i', unknown exit code %i!." %
-            (task.id_, exit_code)
+            "Evaluated EvaluationSpec, unknown exit code %i!." %
+            (exit_code)
         )
 
     return working_directory
 
 
-def generate_report_args_for_result(task, arf_path):
+def get_generate_report_args_for_arf(spec, arf_path):
     return [OSCAP_PATH, "xccdf", "generate", "report", arf_path]
 
 
-def generate_report_for_result(task, results_dir, result_id):
-    """This function assumes that the ARF was generated using evaluate_task
+def generate_report_for_result(spec, results_dir, result_id):
+    """This function assumes that the ARF was generated using evaluate
     in this same package. That's why we can avoid --datastream-id, ...
 
     The behavior is undefined for generic ARFs!
     """
 
-    if not task.is_valid():
+    if not spec.is_valid():
         raise RuntimeError("Can't generate report for any result of an "
-                           "invalid Task.")
+                           "invalid EvaluationSpec.")
 
     arf_path = os.path.join(results_dir, str(result_id), "arf.xml")
 
@@ -294,11 +288,11 @@ def generate_report_for_result(task, results_dir, result_id):
                            "Expected ARF at '%s' but the file doesn't exist."
                            % (result_id, arf_path))
 
-    args = generate_report_args_for_result(task, arf_path)
+    args = get_generate_report_args_for_arf(spec, arf_path)
 
     logging.debug(
-        "Generating report for result %i of task %i with command '%s'." %
-        (result_id, task.id_, " ".join(args))
+        "Generating report for result %i of EvaluationSpec with command '%s'." %
+        (result_id, " ".join(args))
     )
 
     ret = subprocess_check_output(
@@ -307,8 +301,8 @@ def generate_report_for_result(task, results_dir, result_id):
     ).decode("utf-8")
 
     logging.info(
-        "Generated report for result %i of task %i." %
-        (result_id, task.id_)
+        "Generated report for result %i of EvaluationSpec." %
+        (result_id)
     )
 
     return ret
@@ -330,8 +324,8 @@ def get_status_from_exit_code(exit_code):
 
 
 __all__ = [
-    "generate_guide_for_task",
-    "evaluate_task",
-    "generate_report_for_result",
+    "generate_guide",
+    "evaluate",
+    "generate_report_for_arf",
     "get_status_from_exit_code"
 ]

@@ -231,7 +231,7 @@ class System(object):
             task = self.tasks[task_id]
 
         with task.update_lock:
-            task.target = target
+            task.evaluation_spec.target = target
             task.save()
 
         logging.info(
@@ -244,7 +244,7 @@ class System(object):
         with self.tasks_lock:
             task = self.tasks[task_id]
 
-        return task.target
+        return task.evaluation_spec.target
 
     def set_task_input(self, task_id, input_):
         """input can be an absolute file path or the XML source itself. This is
@@ -258,7 +258,7 @@ class System(object):
 
         with task.update_lock:
             if input_ is None or os.path.isabs(input_):
-                task.set_input_file(input_)
+                task.evaluation_spec.input_.set_input_file(input_)
 
                 logging.info(
                     "Set input content of task with ID %i to file '%s'." %
@@ -266,7 +266,7 @@ class System(object):
                 )
 
             else:
-                task.set_input_contents(input_)
+                task.evaluation_spec.input_.set_input_contents(input_)
 
                 logging.info(
                     "Set input content of task with ID %i to custom XML." %
@@ -287,7 +287,7 @@ class System(object):
 
         with task.update_lock:
             if tailoring is None or os.path.isabs(tailoring):
-                task.set_tailoring_file(tailoring)
+                task.evaluation_spec.tailoring.set_tailoring_file(tailoring)
 
                 logging.info(
                     "Set tailoring content of task with ID %i to file '%s'." %
@@ -295,7 +295,7 @@ class System(object):
                 )
 
             else:
-                task.set_tailoring_contents(tailoring)
+                task.evaluation_spec.tailoring.set_tailoring_contents(tailoring)
 
                 logging.info(
                     "Set tailoring content of task with ID %i to custom XML." %
@@ -311,7 +311,7 @@ class System(object):
             task = self.tasks[task_id]
 
         with task.update_lock:
-            task.profile_id = profile_id
+            task.evaluation_spec.profile_id = profile_id
             task.save()
 
         logging.info(
@@ -326,7 +326,7 @@ class System(object):
             task = self.tasks[task_id]
 
         with task.update_lock:
-            task.online_remediation = bool(remediation_enabled)
+            task.evaluation_spec.online_remediation = bool(remediation_enabled)
             task.save()
 
         logging.info(
@@ -418,10 +418,10 @@ class System(object):
         tasks_by_target = dict()
         with self.tasks_lock:
             for task in self.tasks.itervalues():
-                if task.target not in tasks_by_target:
-                    tasks_by_target[task.target] = []
+                if task.evaluation_spec.target not in tasks_by_target:
+                    tasks_by_target[task.evaluation_spec.target] = []
 
-                tasks_by_target[task.target].append(task)
+                tasks_by_target[task.evaluation_spec.target].append(task)
 
             logging.debug(
                 "Organized %i task definitions into %i buckets by target." %
@@ -545,7 +545,7 @@ class System(object):
         with self.tasks_lock:
             task = self.tasks[task_id]
 
-        return task.generate_guide()
+        return task.evaluation_spec.generate_guide()
 
     def run_task_outside_schedule(self, task_id):
         task = None

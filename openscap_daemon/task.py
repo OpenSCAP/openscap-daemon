@@ -20,6 +20,7 @@
 
 from openscap_daemon import et_helpers
 from openscap_daemon import oscap_helpers
+from openscap_daemon import evaluation_spec
 
 from xml.etree import cElementTree as ElementTree
 from datetime import datetime, timedelta
@@ -28,171 +29,6 @@ import shutil
 import threading
 import logging
 import tempfile
-
-
-class SCAPInput(object):
-    """Encapsulates all sorts of SCAP input, either embedded in the task spec
-    itself or separate in a file installed via RPM or other means.
-
-    This does not include tailoring! That is handled separately,
-    see SCAPTailoring class.
-    """
-
-    def __init__(self):
-        self.file_path = None
-        self.temp_file = None
-        self.datastream_id = None
-        self.xccdf_id = None
-
-    def is_valid(self):
-        return self.file_path is not None
-
-    def get_xml_source(self):
-        if self.file_path is None:
-            return None
-
-        with open(self.file_path, "r") as f:
-            return f.read().decode("utf-8")
-
-    def is_equivalent_to(self, other):
-        return \
-            self.get_xml_source() == other.get_xml_source() and \
-            self.datastream_id == other.datastream_id and \
-            self.xccdf_id == other.xccdf_id
-
-    def set_file_path(self, file_path):
-        """Sets given file_path to be the input file. If you use this method
-        no temporary files will be allocated, the file_path will be passed to
-        `oscap` as is, in its absolute form.
-        """
-
-        self.temp_file = None
-        if file_path is not None:
-            self.file_path = \
-                os.path.abspath(file_path) if file_path is not None else None
-
-        else:
-            self.file_path = None
-
-    def set_contents(self, input_contents):
-        """Sets given input_contents XML to be the input source. This method
-        allocates a temporary file that exists for the lifetime of this
-        instance.
-        """
-
-        if input_contents is not None:
-            self.temp_file = tempfile.NamedTemporaryFile()
-            self.temp_file.write(input_contents.encode("utf-8"))
-            self.temp_file.flush()
-
-            self.file_path = os.path.abspath(self.temp_file.name)
-
-        else:
-            self.file_path = None
-
-    def load_from_xml_element(self, element):
-        input_file = element.get("href")
-        if input_file is not None:
-            self.set_file_path(input_file)
-
-        else:
-            input_file_contents = element.text
-            self.set_contents(input_file_contents)
-
-        self.datastream_id = element.get("datastream_id")
-        self.xccdf_id = element.get("xccdf_id")
-
-    def to_xml_element(self):
-        if self.file_path is None:
-            return None
-
-        ret = ElementTree.Element("input")
-        if self.temp_file is None:
-            ret.set("href", self.file_path)
-        else:
-            with open(self.temp_file.name, "r") as f:
-                ret.text = f.read().decode("utf-8")
-
-        if self.datastream_id is not None:
-            ret.set("datastream_id", self.datastream_id)
-        if self.xccdf_id is not None:
-            ret.set("xccdf_id", self.xccdf_id)
-
-        return ret
-
-
-class SCAPTailoring(object):
-    """Encapsulates SCAP tailoring. At this point we only support separate files
-    as tailorings, not the input SCAP file. The tailoring has to be plain
-    XCCDF tailoring, no datastreams!
-    """
-
-    def __init__(self):
-        self.file_path = None
-        self.temp_file = None
-
-    def get_xml_source(self):
-        if self.file_path is None:
-            return None
-
-        with open(self.file_path, "r") as f:
-            return f.read().decode("utf-8")
-
-    def is_equivalent_to(self, other):
-        return \
-            self.get_xml_source() == other.get_xml_source()
-
-    def set_file_path(self, file_path):
-        """Sets given file_path to be the input file. If you use this method
-        no temporary files will be allocated, the file_path will be passed to
-        `oscap` as is, in its absolute form.
-        """
-
-        self.temp_file = None
-        if file_path is not None:
-            self.file_path = \
-                os.path.abspath(file_path) if file_path is not None else None
-
-        else:
-            self.file_path = None
-
-    def set_contents(self, input_contents):
-        """Sets given input_contents XML to be the input source. This method
-        allocates a temporary file that exists for the lifetime of this
-        instance.
-        """
-
-        if input_contents is not None:
-            self.temp_file = tempfile.NamedTemporaryFile()
-            self.temp_file.write(input_contents.encode("utf-8"))
-            self.temp_file.flush()
-
-            self.file_path = os.path.abspath(self.temp_file.name)
-
-        else:
-            self.file_path = None
-
-    def load_from_xml_element(self, element):
-        input_file = element.get("href")
-        if input_file is not None:
-            self.set_file_path(input_file)
-
-        else:
-            input_file_contents = element.text
-            self.set_contents(input_file_contents)
-
-    def to_xml_element(self):
-        if self.file_path is None:
-            return None
-
-        ret = ElementTree.Element("tailoring")
-        if self.temp_file is None:
-            ret.set("href", self.file_path)
-        else:
-            with open(self.temp_file.name, "r") as f:
-                ret.text = f.read().decode("utf-8")
-
-        return ret
 
 
 class SlipMode(object):
@@ -321,6 +157,8 @@ class Task(object):
 
     Example of a task:
         Run USGCB evaluation on RHEL6 localhost machine, every day at 1:00.
+
+    Task is composed of EvaluationSpec and Schedule
     """
 
     def __init__(self):
@@ -329,11 +167,7 @@ class Task(object):
         self.enabled = False
 
         self.title = None
-        self.target = "localhost"
-        self.input_ = SCAPInput()
-        self.tailoring = SCAPTailoring()
-        self.profile_id = None
-        self.online_remediation = False
+        self.evaluation_spec = evaluation_spec.EvaluationSpec()
 
         self.schedule = Schedule()
         # If True, this task will be evaluated once without affecting the
@@ -348,19 +182,7 @@ class Task(object):
         ret = "Task from config file '%s' with:\n" % (self.config_file)
         ret += "- ID: \t%i\n" % (self.id_)
         ret += "- title: \t%s\n" % (self.title)
-        ret += "- target: \t%s\n" % (self.target)
-        ret += "- input:\n"
-        ret += "  - file: \t%s\n" % (self.input_.file_path)
-        if self.input_.temp_file is not None:
-            ret += "    - bundled"
-        ret += "  - datastream_id: \t%s\n" % (self.input_.datastream_id)
-        ret += "  - xccdf_id: \t%s\n" % (self.input_.xccdf_id)
-        ret += "- tailoring file: \t%s\n" % (self.tailoring.file_file)
-        if self.tailoring.temp_file is not None:
-            ret += "  - bundled"
-        ret += "- profile ID: \t%s\n" % (self.profile_id)
-        ret += "- online remediation: \t%s\n" % \
-            ("enabled" if self.online_remediation else "disabled")
+        ret += str(self.evaluation_spec) + "\n"
         ret += "- schedule:\n"
         ret += "  - not before: \t%s\n" % (self.schedule.not_before)
         ret += "  - repeat after: \t%s\n" % (self.schedule.repeat_after)
@@ -369,10 +191,7 @@ class Task(object):
         return ret
 
     def is_valid(self):
-        if not self.input_.is_valid():
-            return False
-
-        if self.target is None:
+        if not self.evaluation_spec.is_valid():
             return False
 
         return True
@@ -383,13 +202,8 @@ class Task(object):
         """
 
         return \
-            self.enabled == other.enabled and \
+            self.evaluation_spec.is_equivalent_to(other.evaluation_spec) and \
             self.title == other.title and \
-            self.target == other.target and \
-            self.input_.is_equivalent_to(other.input_) and \
-            self.tailoring.is_equivalent_to(other.tailoring) and \
-            self.profile_id == other.profile_id and \
-            self.online_remediation == other.online_remediation and \
             self.schedule.is_equivalent_to(other.schedule) and \
             self.run_outside_schedule_once == other.run_outside_schedule_once
 
@@ -403,47 +217,16 @@ class Task(object):
         assert(ret > 0)
         return ret
 
-    def set_input_file(self, file_path):
-        # TODO: Get rid of this delegate
-        self.input_.set_file_path(file_path)
-
-    def set_input_contents(self, input_contents):
-        # TODO: Get rid of this delegate
-        self.input_.set_contents(input_contents)
-
-    def set_tailoring_file(self, file_path):
-        # TODO: Get rid of this delegate
-        self.tailoring.set_file_path(file_path)
-
-    def set_tailoring_contents(self, tailoring_contents):
-        # TODO: Get rid of this delegate
-        self.tailoring.set_contents(tailoring_contents)
-
     def load_from_xml_element(self, root, config_file):
         self.id_ = Task.get_task_id_from_filepath(config_file)
         self.enabled = root.get("enabled", "false") == "true"
 
         self.title = et_helpers.get_element_text(root, "title")
 
-        self.target = et_helpers.get_element_text(root, "target")
-
-        self.input_ = SCAPInput()
-        self.input_.load_from_xml_element(
-            et_helpers.get_element(root, "input")
+        self.evaluation_spec = evaluation_spec.EvaluationSpec()
+        self.evaluation_spec.load_from_xml_element(
+            et_helpers.get_element(root, "evaluation_spec")
         )
-
-        self.tailoring = SCAPTailoring()
-        try:
-            self.tailoring.load_from_xml_element(
-                et_helpers.get_element(root, "tailoring")
-            )
-        except RuntimeError:
-            # tailoring is optional, if it's not present just skip tailoring
-            pass
-
-        self.profile_id = et_helpers.get_element_text(root, "profile")
-        self.online_remediation = \
-            et_helpers.get_element_text(root, "online_remediation") == "true"
 
         self.schedule = Schedule()
         self.schedule.load_from_xml_element(
@@ -472,39 +255,18 @@ class Task(object):
             title_element.text = self.title
             root.append(title_element)
 
-        target_element = ElementTree.Element("target")
-        target_element.text = self.target
-        root.append(target_element)
-
-        input_element = self.input_.to_xml_element()
-        if input_element is not None:
-            root.append(input_element)
-
-        tailoring_element = self.tailoring.to_xml_element()
-        if tailoring_element is not None:
-            root.append(tailoring_element)
-
-        if self.profile_id is not None:
-            profile_element = ElementTree.Element("profile")
-            profile_element.text = self.profile_id
-            root.append(profile_element)
-
-        online_remediation_element = ElementTree.Element("online_remediation")
-        online_remediation_element.text = \
-            "true" if self.online_remediation else "false"
-        root.append(online_remediation_element)
+        evaluation_spec_element = self.evaluation_spec.to_xml_element()
+        root.append(evaluation_spec_element)
 
         schedule_element = self.schedule.to_xml_element()
         root.append(schedule_element)
-
-        # TODO: Maybe move this to save_as? Is there value in returning an
-        # indented element from this method?
-        et_helpers.indent(root)
 
         return root
 
     def save_as(self, config_file):
         root = self.to_xml_element()
+        et_helpers.indent(root)
+
         xml_source = ElementTree.tostring(root, encoding="utf-8")
         with open(config_file, "w") as f:
             f.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
@@ -637,8 +399,8 @@ class Task(object):
                 update_now = True
 
             if update_now:
-                wip_result = oscap_helpers.evaluate_task(
-                    self, work_in_progress_results_dir)
+                wip_result = oscap_helpers.evaluate(
+                    self.evaluation_spec, work_in_progress_results_dir)
 
                 # We already have update_lock, there is no risk of a race
                 # condition between acquiring target dir and moving the results
@@ -665,7 +427,7 @@ class Task(object):
                     self.run_outside_schedule_once = False
 
     def generate_guide(self):
-        return oscap_helpers.generate_guide_for_task(self)
+        return self.evaluation_spec.generate_guide()
 
     def run_outside_schedule(self):
         if not self.enabled:
@@ -742,7 +504,7 @@ class Task(object):
 
     def generate_report_for_result(self, results_dir, result_id):
         return oscap_helpers.generate_report_for_result(
-            self,
+            self.evaluation_spec,
             os.path.join(results_dir, str(self.id_)),
             result_id
         )
