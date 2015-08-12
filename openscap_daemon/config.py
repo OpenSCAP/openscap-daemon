@@ -55,7 +55,7 @@ class Configuration(object):
         SCAP Security Guide content.
         """
 
-        def autodetect_tool_path(possible_names,possible_prefixes=None):
+        def autodetect_tool_path(possible_names, possible_prefixes=None):
             if possible_prefixes is None:
                 possible_prefixes = (
                     os.path.join("/", "usr", "bin"),
@@ -63,17 +63,20 @@ class Configuration(object):
                     os.path.join("/", "opt", "openscap", "bin")
                 )
 
-            ret = ""
-
             for prefix in possible_prefixes:
                 for name in possible_names:
                     full_path = os.path.join(prefix, name)
                     if os.path.isfile(full_path) and \
                        os.access(full_path, os.X_OK):
-                        ret = full_path
-                        break
+                        logging.debug("Autodetected \"%s\" in path \"%s\"." %
+                                      (name, full_path))
+                        return full_path
 
-            return ret
+            logging.debug(
+                "Failed to autodetect tool with name %s in prefixes %s." %
+                (" or ".join(possible_names), ", ".join(possible_prefixes))
+            )
+            return ""
 
         if self.oscap_path == "":
             self.oscap_path = autodetect_tool_path(["oscap", "oscap.exe"])
@@ -88,8 +91,14 @@ class Configuration(object):
         def autodetect_content_path(possible_paths):
             for path in possible_paths:
                 if os.path.isdir(path):
+                    logging.debug("Autodetected SCAP content in path \"%s\"." %
+                                  (path))
                     return path
 
+            logging.debug(
+                "Failed to autodetect SCAP content in paths %s." %
+                (", ".join(possible_paths))
+            )
             return ""
 
         if self.ssg_path == "":
@@ -107,7 +116,7 @@ class Configuration(object):
 
         def absolutize(path):
             path = str(path)
-            if os.path.isabs(path):
+            if path == "" or os.path.isabs(path):
                 return path
 
             return os.path.normpath(os.path.join(base_dir, path))
