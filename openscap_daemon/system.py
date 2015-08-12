@@ -565,40 +565,28 @@ class System(object):
         with self.tasks_lock:
             task = self.tasks[task_id]
 
-        return task.get_arf_of_result(
-            self.config.results_dir,
-            result_id
-        )
+        return task.get_arf_of_result(result_id, self.config)
 
     def get_stdout_of_task_result(self, task_id, result_id):
         task = None
         with self.tasks_lock:
             task = self.tasks[task_id]
 
-        return task.get_stdout_of_result(
-            self.config.results_dir,
-            result_id
-        )
+        return task.get_stdout_of_result(result_id, self.config)
 
     def get_stderr_of_task_result(self, task_id, result_id):
         task = None
         with self.tasks_lock:
             task = self.tasks[task_id]
 
-        return task.get_stderr_of_result(
-            self.config.results_dir,
-            result_id
-        )
+        return task.get_stderr_of_result(result_id, self.config)
 
     def get_exit_code_of_task_result(self, task_id, result_id):
         task = None
         with self.tasks_lock:
             task = self.tasks[task_id]
 
-        return task.get_exit_code_of_result(
-            self.config.results_dir,
-            result_id
-        )
+        return task.get_exit_code_of_result(result_id, self.config)
 
     def generate_report_for_task_result(self, task_id, result_id):
         task = None
