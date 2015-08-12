@@ -179,7 +179,7 @@ def get_evaluation_args(spec, config):
     return ret
 
 
-def evaluate(spec, results_dir, config):
+def evaluate(spec, config):
     """Calls oscap to evaluate given task, creates a uniquely named directory
     in given results_dir for it. Returns absolute path to that directory in
     case of success.
@@ -192,7 +192,7 @@ def evaluate(spec, results_dir, config):
 
     working_directory = tempfile.mkdtemp(
         prefix="", suffix="",
-        dir=results_dir
+        dir=config.work_in_progress_dir
     )
 
     stdout_file = open(os.path.join(working_directory, "stdout"), "w")
@@ -206,8 +206,6 @@ def evaluate(spec, results_dir, config):
     )
 
     exit_code = 1
-
-    print("args: %s" % (" ".join(args)))
 
     try:
         exit_code = subprocess.call(

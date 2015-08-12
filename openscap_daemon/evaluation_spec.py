@@ -24,6 +24,7 @@ from openscap_daemon import oscap_helpers
 from xml.etree import cElementTree as ElementTree
 import os.path
 import tempfile
+import shutil
 
 
 class SCAPInput(object):
@@ -266,6 +267,10 @@ class EvaluationSpec(object):
         self.online_remediation = \
             et_helpers.get_element_text(element, "online_remediation") == "true"
 
+    def load_from_xml_source(self, xml_source):
+        element = ElementTree.fromstring(xml_source)
+        self.load_from_xml_element(element)
+
     def to_xml_element(self):
         ret = ElementTree.Element("evaluation_spec")
 
@@ -293,5 +298,37 @@ class EvaluationSpec(object):
 
         return ret
 
+    def to_xml_source(self):
+        element = self.to_xml_element()
+        return ElementTree.tostring(element, "utf-8")
+
     def generate_guide(self, config):
         return oscap_helpers.generate_guide(self, config)
+
+    def evaluate_into_dir(self, config):
+        return oscap_helpers.evaluate(self, config)
+
+    def evaluate(self, config):
+        wip_result = self.evaluate_into_dir(config)
+        try:
+            arf = ""
+            with open(os.path.join(wip_result, "arf.xml"), "r") as f:
+                arf = f.read()
+
+            stdout = ""
+            with open(os.path.join(wip_result, "stdout"), "r") as f:
+                stdout = f.read()
+
+            stderr = ""
+            with open(os.path.join(wip_result, "stderr"), "r") as f:
+                stderr = f.read()
+
+            exit_code = -1
+            with open(os.path.join(wip_result, "exit_code"), "r") as f:
+                exit_code = int(f.read())
+
+            return (arf, stdout, stderr, exit_code)
+
+        finally:
+            shutil.rmtree(wip_result)
+

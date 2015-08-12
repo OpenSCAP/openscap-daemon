@@ -18,8 +18,9 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 
-from task import Task
+from evaluation_spec import EvaluationSpec
 from system import System
+from task import Task
 
 
-__all__ = ["System", "Task"]
+__all__ = ["EvaluationSpec", "System", "Task"]

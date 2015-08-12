@@ -398,8 +398,7 @@ class Task(object):
                 update_now = True
 
             if update_now:
-                wip_result = oscap_helpers.evaluate(
-                    self.evaluation_spec, config.work_in_progress_dir, config)
+                wip_result = self.evaluation_spec.evaluate_into_dir(config)
 
                 # We already have update_lock, there is no risk of a race
                 # condition between acquiring target dir and moving the results

@@ -18,6 +18,7 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 from openscap_daemon import System
+from openscap_daemon import EvaluationSpec
 
 import dbus
 import dbus.service
@@ -73,6 +74,14 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return self.system.get_profile_choices_for_input(
             input_file, tailoring_file
         )
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="s", out_signature="(sssn)")
+    def EvaluateSpecXML(self, xml_source):
+        spec = EvaluationSpec()
+        spec.load_from_xml_source(xml_source)
+        arf, stdout, stderr, exit_code = spec.evaluate(self.config)
+        return (arf, stdout, stderr, exit_code)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="", out_signature="ax")
