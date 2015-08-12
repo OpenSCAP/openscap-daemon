@@ -67,8 +67,8 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="ss", out_signature="a{ss}")
     def GetProfileChoicesForInput(self, input_file, tailoring_file):
-        """Retrieves absolute paths of SSG source datastreams that are
-        available.
+        """Figures out profile ID -> profile title mappings of all available
+        profiles given the input_file and (optionally) the tailoring_file.
         """
         return self.system.get_profile_choices_for_input(
             input_file, tailoring_file
