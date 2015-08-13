@@ -318,8 +318,6 @@ def main():
     if "OSCAPD_CONFIG_FILE" in os.environ:
         config_file = os.environ["OSCAPD_CONFIG_FILE"]
 
-    print config_file
-
     obj = OpenSCAPDaemonDbus(bus, config_file)
 
     loop = gobject.MainLoop()
