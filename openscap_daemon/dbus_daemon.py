@@ -27,6 +27,9 @@ import threading
 import logging
 import os
 from datetime import datetime
+import docker
+import json
+from cve_scanner import Worker
 
 OBJECT_PATH = "/OpenSCAP/daemon"
 DBUS_INTERFACE = "org.OpenSCAP.daemon.Interface"
@@ -48,6 +51,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             target=lambda: self.system.update_worker()
         )
         self.system_worker_thread.daemon = True
+        self.docker_conn = docker.Client()
         self.system_worker_thread.start()
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
@@ -299,10 +303,66 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.generate_report_for_task_result(task_id, result_id)
 
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE, in_signature='av',
+                         out_signature='s')
+    def test(self, mytuple):
+        for i in mytuple:
+            print i
+        return "hello"
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE, in_signature='s',
+                         out_signature='s')
+    def inspect_container(self, cid):
+        ''' Returns inspect data of a container'''
+        inspect_data = self.docker_conn.inspect_container(cid)
+        return json.dumps(inspect_data)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE, in_signature='s',
+                         out_signature='s')
+    def inspect_image(self, iid):
+        ''' Returns inspect data of an image'''
+        inspect_data = self.docker_conn.inspect_image(iid)
+        return json.dumps(inspect_data)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE, out_signature='s')
+    def images(self):
+        ''''''
+        images = self.docker_conn.images(all=True)
+        return json.dumps(images)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE, out_signature='s')
+    def containers(self):
+        ''''''
+        cons = self.docker_conn.containers(all=True)
+        return json.dumps(cons)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature='bbi', out_signature='s')
+    def scan_containers(self, onlyactive, allcontainers, number):
+        worker = Worker(onlyactive=onlyactive, allcontainers=allcontainers,
+                        number=number)
+        return_json = worker.start_application()
+        return json.dumps(return_json)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE, in_signature='bbi',
+                         out_signature='s')
+    def scan_images(self, allimages, images, number):
+        worker = Worker(allimages=allimages, images=images, number=number)
+        return_json = worker.start_application()
+        return json.dumps(return_json)
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature='asi', out_signature='s')
+    def scan_list(self, scan_list, number):
+        worker = Worker(scan=scan_list, number=number)
+        return_json = worker.start_application()
+        return json.dumps(return_json)
+
 
 def main():
     # TODO: Temporary, this will be configurable in the future
-    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(levelname)s:%(message)s',
+                        level=logging.DEBUG)
 
     gobject.threads_init()
 
