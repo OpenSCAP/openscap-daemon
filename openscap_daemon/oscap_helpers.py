@@ -148,6 +148,14 @@ def get_evaluation_args(spec, config):
         host, port = split_ssh_target(spec.target)
         ret.extend([config.oscap_ssh_path, host, str(port)])
 
+    elif spec.target.startswith("docker-image://"):
+        image_name = spec.target[len("docker-image://"):]
+        ret.extend([config.oscap_docker_path, "image", image_name])
+
+    elif spec.target.startswith("docker-container://"):
+        container_name = spec.target[len("docker-container://"):]
+        ret.extend([config.oscap_docker_path, "container", container_name])
+
     else:
         raise RuntimeError(
             "Unrecognized target '%s' in evaluation spec." % (spec.target)
