@@ -304,9 +304,9 @@ def main():
     # TODO: Temporary, this will be configurable in the future
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
-    gobject.threads_init()
-
     import dbus.mainloop.glib
+    gobject.threads_init()
+    dbus.mainloop.glib.threads_init()
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
     # bus = dbus.SystemBus()

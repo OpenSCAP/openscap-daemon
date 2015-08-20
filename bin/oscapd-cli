@@ -53,7 +53,11 @@ def get_dbus_interface():
 def cli_eval(dbus_iface, args):
     eval_spec = cli_helpers.cli_create_evaluation_spec(dbus_iface)
     if eval_spec is not None:
-        arf, stdout, stderr, exit_code = dbus_iface.EvaluateSpecXML(eval_spec.to_xml_source())
+        arf, stdout, stderr, exit_code = dbus_iface.EvaluateSpecXML(
+            eval_spec.to_xml_source(),
+            utf8_strings=True,
+            timeout=30*60*1000 # in msec
+        )
 
 def cli_print_results_table(dbus_iface, task_id, result_ids, max_items=-1):
     table = [["ID", "Timestamp", "Status"]]
