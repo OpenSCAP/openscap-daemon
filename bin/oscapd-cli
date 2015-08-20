@@ -50,6 +50,10 @@ def get_dbus_interface():
 
     return dbus.Interface(obj, dbus_daemon.DBUS_INTERFACE)
 
+def cli_eval(dbus_iface, args):
+    eval_spec = cli_helpers.cli_create_evaluation_spec(dbus_iface)
+    if eval_spec is not None:
+        arf, stdout, stderr, exit_code = dbus_iface.EvaluateSpecXML(eval_spec.to_xml_source())
 
 def cli_print_results_table(dbus_iface, task_id, result_ids, max_items=-1):
     table = [["ID", "Timestamp", "Status"]]
@@ -312,6 +316,16 @@ def main():
     )
     subparsers = parser.add_subparsers()
 
+    def add_eval_parser(subparsers):
+        eval_parser = subparsers.add_parser(
+            "eval",
+            help="Interactive one-off evaluation of any target supported by "
+                 "OpenSCAP Daemon"
+        )
+        eval_parser.set_defaults(action="eval")
+        # todo non-interactive
+    add_eval_parser(subparsers)
+
     def add_task_parser(subparsers):
         task_parser = subparsers.add_parser(
             "task",
@@ -385,7 +399,9 @@ def main():
         )
         raise
 
-    if args.action == "task":
+    if args.action == "eval":
+        cli_eval(dbus_iface, args)
+    elif args.action == "task":
         cli_task(dbus_iface, args)
     elif args.action == "task_create":
         cli_task_create(dbus_iface, args)

@@ -17,6 +17,10 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
+import os.path
+from openscap_daemon import evaluation_spec
+
+
 def print_table(table, first_row_header=True):
     """Takes given table - list of lists - and prints it as a table, using
     ASCII characters for formatting.
@@ -65,3 +69,74 @@ def print_table(table, first_row_header=True):
             [str(cell).ljust(column_max_sizes[row.index(cell)])
              for cell in row]
         ))
+
+
+def cli_create_evaluation_spec(dbus_iface):
+    """Interactively create EvaluationSpec and return it. Returns None if user
+    cancels the action.
+    """
+    print("Creating EvaluationSpec interactively...")
+    print("")
+
+    try:
+        target = raw_input("Target (empty for localhost): ")
+        if not target:
+            target = "localhost"
+
+        print("Found the following SCAP Security Guide content: ")
+        ssg_choices = dbus_iface.GetSSGChoices(utf8_strings=True)
+        i = 0
+        for ssg_choice in ssg_choices:
+            print("\t%i:  %s" % (i + 1, ssg_choice))
+            i += 1
+
+        input_file = None
+        input_ssg_choice = raw_input(
+            "Choose SSG content by number (empty for custom content): ")
+        if not input_ssg_choice:
+            input_file = raw_input("Input file (absolute path): ")
+        else:
+            input_file = ssg_choices[int(input_ssg_choice) - 1]
+
+        input_file = os.path.abspath(input_file)
+
+        tailoring_file = raw_input(
+            "Tailoring file (absolute path, empty for no tailoring): ")
+        if tailoring_file in [None, ""]:
+            tailoring_file = ""
+        else:
+            tailoring_file = os.path.abspath(tailoring_file)
+
+        print("Found the following possible profiles: ")
+        profile_choices = dbus_iface.GetProfileChoicesForInput(
+            input_file, tailoring_file, utf8_strings=True
+        )
+        i = 0
+        for key, value in profile_choices.iteritems():
+            print("\t%i:  %s (id='%s')" % (i + 1, value, key))
+            i += 1
+
+        profile_choice = raw_input(
+            "Choose profile by number (empty for (default) profile): ")
+        if profile_choice is not None:
+            profile = profile_choices.keys()[int(profile_choice) - 1]
+        else:
+            profile = None
+
+        online_remediation = False
+        if raw_input("Online remediation (1, y or Y for yes, else no): ") in \
+                ["1", "y", "Y"]:
+            online_remediation = True
+
+        ret = evaluation_spec.EvaluationSpec()
+        ret.target = target
+        ret.input_.set_file_path(input_file)
+        if tailoring_file not in [None, ""]:
+            ret.tailoring.set_file_path(tailoring_file)
+        ret.profile_id = profile
+        ret.online_remediation = online_remediation
+
+        return ret
+
+    except KeyboardInterrupt:
+        return None

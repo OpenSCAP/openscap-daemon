@@ -80,7 +80,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
     def EvaluateSpecXML(self, xml_source):
         spec = EvaluationSpec()
         spec.load_from_xml_source(xml_source)
-        arf, stdout, stderr, exit_code = spec.evaluate(self.config)
+        arf, stdout, stderr, exit_code = spec.evaluate(self.system.config)
         return (arf, stdout, stderr, exit_code)
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
