@@ -76,6 +76,11 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         )
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+                         in_signature="", out_signature="a(xsi)")
+    def GetAsyncActionsStatus(self):
+        return self.system.async.get_status()
+
+    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="s", out_signature="(sssn)")
     def EvaluateSpecXML(self, xml_source):
         spec = EvaluationSpec()

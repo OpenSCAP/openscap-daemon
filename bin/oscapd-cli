@@ -50,6 +50,10 @@ def get_dbus_interface():
 
     return dbus.Interface(obj, dbus_daemon.DBUS_INTERFACE)
 
+def cli_status(dbus_iface, args):
+    async_status = dbus_iface.GetAsyncActionsStatus()
+    print(async_status)
+
 def cli_eval(dbus_iface, args):
     eval_spec = cli_helpers.cli_create_evaluation_spec(dbus_iface)
     if eval_spec is not None:
@@ -263,10 +267,6 @@ def cli_task_create(dbus_iface, args):
         raise NotImplementedError("Not yet!")
 
 
-def cli_status(dbus_iface, args):
-    pass
-
-
 def cli_result(dbus_iface, args):
     if args.result_id is None:
         task_title = dbus_iface.GetTaskTitle(args.task_id)
@@ -403,7 +403,9 @@ def main():
         )
         raise
 
-    if args.action == "eval":
+    if args.action == "status":
+        cli_status(dbus_iface, args)
+    elif args.action == "eval":
         cli_eval(dbus_iface, args)
     elif args.action == "task":
         cli_task(dbus_iface, args)
