@@ -267,7 +267,7 @@ class System(object):
 
         with task.update_lock:
             if input_ is None or os.path.isabs(input_):
-                task.evaluation_spec.input_.set_input_file(input_)
+                task.evaluation_spec.input_.set_file_path(input_)
 
                 logging.info(
                     "Set input content of task with ID %i to file '%s'." %
@@ -275,7 +275,7 @@ class System(object):
                 )
 
             else:
-                task.evaluation_spec.input_.set_input_contents(input_)
+                task.evaluation_spec.input_.set_contents(input_)
 
                 logging.info(
                     "Set input content of task with ID %i to custom XML." %
@@ -296,7 +296,7 @@ class System(object):
 
         with task.update_lock:
             if tailoring is None or os.path.isabs(tailoring):
-                task.evaluation_spec.tailoring.set_tailoring_file(tailoring)
+                task.evaluation_spec.tailoring.set_file_path(tailoring)
 
                 logging.info(
                     "Set tailoring content of task with ID %i to file '%s'." %
@@ -304,7 +304,7 @@ class System(object):
                 )
 
             else:
-                task.evaluation_spec.tailoring.set_tailoring_contents(tailoring)
+                task.evaluation_spec.tailoring.set_contents(tailoring)
 
                 logging.info(
                     "Set tailoring content of task with ID %i to custom XML." %
