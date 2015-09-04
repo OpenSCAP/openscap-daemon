@@ -545,6 +545,6 @@ class System(object):
             task = self.tasks[task_id]
 
         return task.generate_report_for_result(
-            self.config.results_dir,
-            result_id
+            result_id,
+            self.config
         )

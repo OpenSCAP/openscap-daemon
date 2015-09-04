@@ -508,5 +508,6 @@ class Task(object):
         return oscap_helpers.generate_report_for_result(
             self.evaluation_spec,
             self._get_task_results_dir(config.results_dir),
-            result_id
+            result_id,
+            config
         )
