@@ -457,13 +457,6 @@ class System(object):
                     )
 
     def schedule_tasks_worker(self):
-        # TODO: If there is a task scheduled to run at (t - e) and many tasks
-        # scheduled to run at t and e is a very small number, it can happen that
-        # the first task is evaluated and blocks evaluation of the other tasks,
-        # the other tasks will all be evaluated in parallel later when the first
-        # task finishes. This is a nasty problem and an edge-case, so we keep it
-        # unsolved for now.
-
         while True:
             reference_datetime = datetime.now()
 
