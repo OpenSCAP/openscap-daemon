@@ -20,6 +20,7 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 import tests.harness
+import time
 
 
 class BasicUpdateTest(tests.harness.APITest):
@@ -34,7 +35,10 @@ class BasicUpdateTest(tests.harness.APITest):
         assert(len(self.system.tasks) == 1)
 
         print(self.system.tasks)
-        self.system.update()
+        self.system.schedule_tasks()
+
+        while len(self.system.async.status) > 0:
+            time.sleep(1)
 
 if __name__ == "__main__":
     BasicUpdateTest.run()

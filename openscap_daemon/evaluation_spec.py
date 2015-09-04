@@ -216,7 +216,7 @@ class EvaluationSpec(object):
             ret += "    - bundled"
         ret += "  - datastream_id: \t%s\n" % (self.input_.datastream_id)
         ret += "  - xccdf_id: \t%s\n" % (self.input_.xccdf_id)
-        ret += "- tailoring file: \t%s\n" % (self.tailoring.file_file)
+        ret += "- tailoring file: \t%s\n" % (self.tailoring.file_path)
         if self.tailoring.temp_file is not None:
             ret += "  - bundled"
         ret += "- profile ID: \t%s\n" % (self.profile_id)

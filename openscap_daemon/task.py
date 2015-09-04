@@ -186,7 +186,8 @@ class Task(object):
         ret += "- schedule:\n"
         ret += "  - not before: \t%s\n" % (self.schedule.not_before)
         ret += "  - repeat after: \t%s\n" % (self.schedule.repeat_after)
-        ret += "  - slip mode: \t%s\n" % (self.schedule.slip_mode)
+        ret += "  - slip mode: \t%s\n" %\
+               (SlipMode.to_string(self.schedule.slip_mode))
 
         return ret
 

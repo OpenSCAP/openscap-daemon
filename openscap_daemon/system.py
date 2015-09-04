@@ -30,9 +30,13 @@ from openscap_daemon import oscap_helpers
 from openscap_daemon import async
 
 
+EVALUATION_PRIORITY = 0
+TASK_ACTION_PRIORITY = 10
+
+
 class System(object):
     def __init__(self, config_file):
-        #self.async = async.AsyncManager()
+        self.async = async.AsyncManager()
 
         self.config = Configuration()
         self.config.load(config_file)
@@ -42,6 +46,9 @@ class System(object):
 
         self.tasks = dict()
         self.tasks_lock = threading.Lock()
+        # a set of tasks that have already been scheduled, we keep this so that
+        # we don't schedule a task twice in a row
+        self.tasks_scheduled = set()
 
         self.update_wait_cond = threading.Condition()
 
@@ -383,6 +390,9 @@ class System(object):
 
         with self.tasks_lock:
             for task in self.tasks.itervalues():
+                if task.id_ in self.tasks_scheduled:
+                    continue
+
                 next_update_time = task.get_next_update_time(reference_datetime)
                 if next_update_time is None:
                     continue
@@ -392,7 +402,26 @@ class System(object):
 
         return ret
 
-    def update(self, reference_datetime=None, max_jobs=4):
+    class AsyncUpdateTaskAction(async.AsyncAction):
+        def __init__(self, system, task_id, reference_datetime):
+            self.system = system
+            self.task_id = task_id
+            self.reference_datetime = reference_datetime
+
+        def run(self):
+            task = None
+            with self.system.tasks_lock:
+                task = self.system.tasks[self.task_id]
+
+            task.update(self.reference_datetime, self.system.config)
+            with self.system.tasks_lock:
+                self.system.tasks_scheduled.remove(task.id_)
+
+        def __str__(self):
+            return "Update Task '%i' with reference_datetime='%s'" \
+                   % (self.task_id, self.reference_datetime)
+
+    def schedule_tasks(self, reference_datetime=None):
         """Evaluates all currently outstanding tasks and returns.
         Outstanding task means it's not_before is lower than reference_datetime,
         and it is not disabled. Tasks can be processed in parallel if their
@@ -411,97 +440,23 @@ class System(object):
             (str(reference_datetime))
         )
 
-        # We need to organize tasks by targets to avoid running 2 tasks on the
-        # same target at the same time.
-        # self.tasks needs to be locked, so that the list doesn't change while
-        # we construct the buckets. The tasks themselves can be changed while we
-        # are organizing them but if their targets change we may end up with a
-        # schedule that is not perfect. That is the trade-off we are making.
-        tasks_by_target = dict()
         with self.tasks_lock:
             for task in self.tasks.itervalues():
-                if task.evaluation_spec.target not in tasks_by_target:
-                    tasks_by_target[task.evaluation_spec.target] = []
+                if task.id_ in self.tasks_scheduled:
+                    continue
 
-                tasks_by_target[task.evaluation_spec.target].append(task)
-
-            logging.debug(
-                "Organized %i task definitions into %i buckets by target." %
-                (len(self.tasks), len(tasks_by_target))
-            )
-
-        # Each different target will be a queue item
-        queue = Queue.Queue()
-        for target, target_tasks in tasks_by_target.iteritems():
-            queue.put_nowait((target, target_tasks))
-
-        # If any error occurs we want to cancel all jobs
-        error_encountered = threading.Event()
-
-        def update_tasks_of_target(job_id):
-            logging.debug("Task update job %i started." % (job_id))
-
-            while True:
-                try:
-                    (target, target_tasks) = queue.get(False)
-
-                    logging.debug(
-                        "Started updating %i tasks of target '%s'." %
-                        (len(target_tasks), target)
+                if task.should_be_updated(reference_datetime):
+                    self.tasks_scheduled.add(task.id_)
+                    self.async.enqueue(
+                        System.AsyncUpdateTaskAction(
+                            self,
+                            task.id_,
+                            reference_datetime
+                        ),
+                        TASK_ACTION_PRIORITY
                     )
 
-                    # In case an error occurs in any of the jobs, we short
-                    # circuit everything.
-                    if not error_encountered.is_set():
-                        try:
-                            for task in target_tasks:
-                                logging.debug(
-                                    "Updating task '%s' of target of target "
-                                    "'%s'." % (task.id_, target)
-                                )
-
-                                task.update(reference_datetime, self.config)
-
-                        except:
-                            logging.exception(
-                                "Error while processing tasks of target '%s'" %
-                                (target)
-                            )
-                            error_encountered.set()
-
-                    # If an exception was caught above, fake the task as done
-                    # to allow the jobs to end
-                    queue.task_done()
-                    logging.debug(
-                        "Finished updating %i tasks of target '%s'." %
-                        (len(target_tasks), target)
-                    )
-
-                except Queue.Empty:
-                    break
-
-            logging.debug("Task update job %i finished." % (job_id))
-
-        jobs = []
-        assert(max_jobs > 0)
-        # It makes no sense to spawn more jobs than we have targets
-        number_of_jobs = min(max_jobs, len(tasks_by_target))
-        for job_id in xrange(number_of_jobs):
-            job = threading.Thread(
-                name="Task update job %i" % (job_id),
-                target=update_tasks_of_target,
-                args=(job_id,)
-            )
-            jobs.append(job)
-            job.start()
-
-        queue.join()
-
-        if error_encountered.is_set():
-            # TODO: Do we need to report this again?
-            pass
-
-    def update_worker(self):
+    def schedule_tasks_worker(self):
         # TODO: If there is a task scheduled to run at (t - e) and many tasks
         # scheduled to run at t and e is a very small number, it can happen that
         # the first task is evaluated and blocks evaluation of the other tasks,
@@ -536,7 +491,7 @@ class System(object):
                         )
                         self.update_wait_cond.wait(seconds_to_wait)
 
-            self.update(reference_datetime)
+            self.schedule_tasks(reference_datetime)
 
     def generate_guide_for_task(self, task_id):
         task = None

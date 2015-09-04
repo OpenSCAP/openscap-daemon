@@ -20,6 +20,7 @@
 import threading
 import logging
 import Queue
+import time
 
 
 class Status(object):
@@ -30,7 +31,7 @@ class Status(object):
 
     PENDING = 0
     PROCESSING = 1
-    DONE = 2
+    #DONE = 2
     UNKNOWN = 3
 
     @staticmethod
@@ -39,8 +40,8 @@ class Status(object):
             return Status.PENDING
         elif status == "processing":
             return Status.PROCESSING
-        elif status == "done":
-            return Status.DONE
+        #elif status == "done":
+        #    return Status.DONE
 
         return Status.UNKNOWN
 
@@ -50,8 +51,8 @@ class Status(object):
             return "pending"
         elif status == Status.PROCESSING:
             return "processing"
-        elif status == Status.DONE:
-            return "done"
+        #elif status == Status.DONE:
+        #    return "done"
 
         return "unknown"
 
@@ -60,20 +61,8 @@ class AsyncAction(object):
     def run(self):
         pass
 
-    def cancel(self):
-        pass
-
-
-class AsyncLambdaAction(AsyncAction):
-    def __init__(self, run, desc):
-        self.run = run
-        self.desc = desc
-
-    def run(self):
-        self.run()
-
     def __str__(self):
-        return self.desc
+        return "Unknown action"
 
 
 class AsyncManager(object):
@@ -104,12 +93,14 @@ class AsyncManager(object):
 
             self.queue.task_done()
             with self.actions_lock:
-                self.status[token] = Status.DONE
+                del self.status[token]
 
-            threading._sleep(1)
+            time.sleep(self.sleep_time)
 
     def __init__(self, workers=0):
         self.queue = Queue.PriorityQueue()
+
+        self.sleep_time = 1
 
         if workers == 0:
             try:
@@ -127,6 +118,7 @@ class AsyncManager(object):
                 target=AsyncManager._worker_main,
                 args=(self, i)
             )
+            worker.daemon = True
             self.workers.append(worker)
             worker.start()
 
@@ -140,13 +132,13 @@ class AsyncManager(object):
         with self.actions_lock:
             ret = self.last_token + 1
             self.last_token = ret
+            assert(ret not in self.status)
             self.status[ret] = Status.UNKNOWN
 
         return ret
 
     def enqueue(self, action, priority=0):
         token = self._allocate_token()
-        assert(token not in self.status)
 
         with self.actions_lock:
             self.status[token] = Status.PENDING

@@ -45,7 +45,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         self.system.load_tasks()
 
         self.system_worker_thread = threading.Thread(
-            target=lambda: self.system.update_worker()
+            target=lambda: self.system.schedule_tasks_worker()
         )
         self.system_worker_thread.daemon = True
         self.system_worker_thread.start()
