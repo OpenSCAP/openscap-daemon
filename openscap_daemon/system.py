@@ -27,10 +27,13 @@ import Queue
 from openscap_daemon.task import Task
 from openscap_daemon.config import Configuration
 from openscap_daemon import oscap_helpers
+from openscap_daemon import async
 
 
 class System(object):
     def __init__(self, config_file):
+        #self.async = async.AsyncManager()
+
         self.config = Configuration()
         self.config.load(config_file)
         self.config.autodetect_tool_paths()
@@ -404,7 +407,7 @@ class System(object):
             reference_datetime = datetime.utcnow()
 
         logging.debug(
-            "Updating system, reference_datetime='%s'." %
+            "Scheduling task updates, reference_datetime='%s'." %
             (str(reference_datetime))
         )
 

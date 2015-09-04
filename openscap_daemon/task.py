@@ -329,14 +329,49 @@ class Task(object):
         assert(not os.path.exists(ret))
         return ret
 
-    def get_next_update_time(self, reference_datetime):
+    def get_next_update_time(self, reference_datetime, log=False):
         if not self.enabled:
+            if log:
+                logging.debug(
+                    "Task '%i' is disabled, not updating it." %
+                    (self.id_)
+                )
             return None
 
         if self.run_outside_schedule_once:
+            if log:
+                logging.debug(
+                    "Evaluating task '%i'. It was set to be run once outside "
+                    "its schedule." %
+                    (self.id_)
+                )
             return reference_datetime
 
+        if self.schedule.not_before is None:
+            if log:
+                logging.debug(
+                    "Task '%i' is enabled but schedule.not_before is None. "
+                    "It won't be run automatically." %
+                    (self.id_)
+                )
+
         return self.schedule.not_before
+
+    def should_be_updated(self, reference_datetime, log=False):
+        next_update_time = self.get_next_update_time(reference_datetime, log)
+        if next_update_time is not None and \
+           next_update_time <= reference_datetime:
+            if log:
+                logging.debug(
+                    "Evaluating task '%i'. It was scheduled to be "
+                    "evaluated later than %s, reference_datetime %s is "
+                    "higher than or equal." %
+                    (self.id_, next_update_time, reference_datetime)
+                )
+
+            return True
+
+        return False
 
     def update(self, reference_datetime, config):
         """Figures out if the task should be run right now, alters the schedule
@@ -351,53 +386,10 @@ class Task(object):
         """
 
         with self.update_lock:
-            # We will never update disabled tasks
-            if not self.enabled:
-                logging.debug(
-                    "Task '%i' is disabled, not updating it." %
-                    (self.id_)
-                )
-                return
-
             if not self.is_valid():
-                raise RuntimeError("Can't tick an invalid Task.")
+                raise RuntimeError("Can't update an invalid Task.")
 
-            update_now = False
-
-            if not self.run_outside_schedule_once:
-                # This functionality is replicated in get_next_update_time,
-                # it would be great to refactor this and only do it once but
-                # then we would lose the logging...
-
-                if self.schedule.not_before is None:
-                    # this Task is not scheduled to run right now,
-                    # it is disabled
-                    logging.debug(
-                        "Task '%i' is enabled but schedule.not_before is None. "
-                        "It won't be run automatically." %
-                        (self.id_)
-                    )
-
-                elif self.schedule.not_before <= reference_datetime:
-                    logging.debug(
-                        "Evaluating task '%i'. It was scheduled to be "
-                        "evaluated later than %s, reference_datetime %s is "
-                        "higher than or equal." %
-                        (self.id_, self.schedule.not_before, reference_datetime)
-                    )
-                    update_now = True
-
-            else:
-                logging.debug(
-                    "Evaluating task '%i'. It was set to be run once outside "
-                    "its schedule." %
-                    (self.id_)
-                )
-
-                # This task is scheduled to run once ignoring the schedule
-                update_now = True
-
-            if update_now:
+            if self.should_be_updated(reference_datetime, True):
                 wip_result = self.evaluation_spec.evaluate_into_dir(config)
 
                 # We already have update_lock, there is no risk of a race
