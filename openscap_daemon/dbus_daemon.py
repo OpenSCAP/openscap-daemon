@@ -32,6 +32,14 @@ OBJECT_PATH = "/OpenSCAP/daemon"
 DBUS_INTERFACE = "org.OpenSCAP.daemon.Interface"
 BUS_NAME = "org.OpenSCAP.daemon"
 
+
+def get_dbus():
+    var_name = "OSCAPD_SESSION_BUS"
+    if os.environ.has_key(var_name) and os.environ[var_name] == "1":
+        return dbus.SessionBus()
+
+    return dbus.SystemBus()
+
 # Internal note: Python does not support unsigned long integer while dbus does,
 # to avoid weird issues I just use 64bit integer in the interface signatures.
 # "2^63-1 IDs should be enough for everyone."
@@ -314,9 +322,7 @@ def main():
     dbus.mainloop.glib.threads_init()
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-    # bus = dbus.SystemBus()
-    # for easier testing
-    bus = dbus.SessionBus()
+    bus = get_dbus()
     name = dbus.service.BusName(BUS_NAME, bus)
 
     config_file = os.path.join("/", "etc", "oscapd", "config.ini")

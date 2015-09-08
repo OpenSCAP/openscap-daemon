@@ -28,6 +28,7 @@ export PYTHONPATH=$PARENT_DIR:$PYTHONPATH
 export PYTHONIOENCODING=UTF-8
 
 export OSCAPD_CONFIG_FILE="$PARENT_DIR/tests/data_dir_template/config.ini"
+export OSCAPD_SESSION_BUS="1"
 
 if [ "x$RUNWRAPPER_NO_FORK" != "x1" ]; then
     # fork a new shell to avoid polluting the environment

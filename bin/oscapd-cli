@@ -32,11 +32,8 @@ import os.path
 
 
 def get_dbus_interface():
-    gobject.threads_init()
+    bus = dbus_daemon.get_dbus()
 
-    # bus = dbus.SystemBus()
-    # for easier testing
-    bus = dbus.SessionBus()
     if bus is None:
         return None
 
@@ -391,6 +388,8 @@ def main():
     add_result_parser(subparsers)
 
     args = parser.parse_args()
+
+    gobject.threads_init()
 
     dbus_iface = None
     try:
