@@ -59,15 +59,10 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             target=lambda: self.system.schedule_tasks_worker()
         )
         self.system_worker_thread.daemon = True
-        self.docker_conn = docker.Client()
         self.system_worker_thread.start()
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
-                         in_signature="", out_signature="s")
-    def GreetMe(self):
-        """Testing method. Don't expect it to be useful.
-        """
-        return "Hello!"
+        # TODO: Move to System
+        self.docker_conn = docker.Client()
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE,
                          in_signature="", out_signature="as")
@@ -315,13 +310,6 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """Generates and returns HTML report for report of given task.
         """
         return self.system.generate_report_for_task_result(task_id, result_id)
-
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE, in_signature='av',
-                         out_signature='s')
-    def test(self, mytuple):
-        for i in mytuple:
-            print i
-        return "hello"
 
     @dbus.service.method(dbus_interface=DBUS_INTERFACE, in_signature='s',
                          out_signature='s')
