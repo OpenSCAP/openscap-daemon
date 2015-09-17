@@ -17,6 +17,7 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
+import os
 
 OBJECT_PATH = "/OpenSCAP/daemon"
 DBUS_INTERFACE = "org.OpenSCAP.daemon.Interface"
