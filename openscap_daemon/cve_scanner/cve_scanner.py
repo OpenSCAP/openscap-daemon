@@ -1,4 +1,5 @@
 # Copyright (C) 2015 Brent Baude <bbaude@redhat.com>
+# Copyright (C) 2015 Red Hat Inc., Durham, North Carolina.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -15,6 +16,16 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
+from openscap_daemon.cve_scanner.applicationconfiguration \
+    import ApplicationConfiguration
+from openscap_daemon.cve_scanner.reporter import Reporter
+from openscap_daemon.cve_scanner.scan import Scan
+from openscap_daemon.cve_scanner.generate_summary import Create_Summary
+from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
+
+# TODO: verify that this is correct
+from oscap_docker_python.get_cve_input import getInputCVE
+
 import os
 import timeit
 import threading
@@ -22,18 +33,14 @@ import logging
 import sys
 import time
 import signal
-from applicationconfiguration import ApplicationConfiguration
-from reporter import Reporter
-from scan import Scan
-from generate_summary import Create_Summary
-from scanner_error import ImageScannerClientError
 import subprocess
-import psutil
 from datetime import datetime
 import json
 import platform
 import collections
-from get_cve_input import getInputCVE
+
+# TODO: This doesn't come with Python! It's a stealthy external dependency!
+import psutil
 
 
 class ContainerSearch(object):

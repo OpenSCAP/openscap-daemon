@@ -19,6 +19,7 @@
 
 from openscap_daemon import System
 from openscap_daemon import EvaluationSpec
+from openscap_daemon.cve_scanner.cve_scanner import Worker
 
 import dbus
 import dbus.service
@@ -27,9 +28,9 @@ import threading
 import logging
 import os
 from datetime import datetime
+# TODO: Do we want to depend on docker for *ALL* functionality?
 import docker
 import json
-from cve_scanner import Worker
 
 OBJECT_PATH = "/OpenSCAP/daemon"
 DBUS_INTERFACE = "org.OpenSCAP.daemon.Interface"

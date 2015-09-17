@@ -1,4 +1,5 @@
-# Copyright 2015 Red Hat Inc., Durham, North Carolina.
+# Copyright (C) 2015 Red Hat Inc., Durham, North Carolina.
+#
 # All Rights Reserved.
 #
 # openscap-daemon is free software: you can redistribute it and/or modify

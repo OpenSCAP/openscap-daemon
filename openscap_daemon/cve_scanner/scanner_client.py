@@ -1,4 +1,5 @@
 # Copyright (C) 2015 Brent Baude <bbaude@redhat.com>
+# Copyright (C) 2015 Red Hat Inc., Durham, North Carolina.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -16,15 +17,18 @@
 # Boston, MA 02111-1307, USA.
 
 
+from openscap_daemon import dbus_daemon
+from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
+
 import os
 import dbus
 import dbus.mainloop.glib
 import json
 import collections
-from scanner_error import ImageScannerClientError
 import docker
+
+# TODO: external dep!
 from slip.dbus import polkit
-from openscap_daemon import dbus_daemon
 
 
 class Client(object):

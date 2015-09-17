@@ -1,4 +1,5 @@
 # Copyright (C) 2015 Brent Baude <bbaude@redhat.com>
+# Copyright (C) 2015 Red Hat Inc., Durham, North Carolina.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -15,6 +16,8 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
+from openscap_daemon.cve_scanner.applicationconfiguration \
+    import ApplicationConfiguration
 
 import os
 import collections
@@ -24,8 +27,9 @@ import subprocess
 import xml.etree.ElementTree as ET
 import platform
 import StringIO
-from applicationconfiguration import ApplicationConfiguration
 from Atomic.mount import DockerMount
+
+# TODO: External dep!
 import rpm
 
 

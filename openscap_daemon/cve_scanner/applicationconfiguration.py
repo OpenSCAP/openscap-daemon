@@ -1,4 +1,5 @@
 # Copyright (C) 2015 Brent Baude <bbaude@redhat.com>
+# Copyright (C) 2015 Red Hat Inc., Durham, North Carolina.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -19,8 +20,8 @@
 
 # TODO: Integrate this to openscap_daemon.config package
 
+from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 import docker
-from scanner_error import ImageScannerClientError
 
 
 class Singleton(object):

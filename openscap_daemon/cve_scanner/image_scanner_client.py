@@ -1,4 +1,5 @@
 # Copyright (C) 2015 Brent Baude <bbaude@redhat.com>
+# Copyright (C) 2015 Red Hat Inc., Durham, North Carolina.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -18,7 +19,6 @@
 
 ''' Image scanner API '''
 
-import requests
 import urlparse
 import json
 import xml.etree.ElementTree as ET
@@ -26,6 +26,9 @@ import ConfigParser
 import collections
 import os
 from multiprocessing.dummy import Pool as ThreadPool
+
+# TODO: External dep, verify that we really need it!
+import requests
 
 
 class ImageScannerClientError(Exception):
