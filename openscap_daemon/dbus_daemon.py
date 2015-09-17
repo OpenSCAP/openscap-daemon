@@ -19,6 +19,7 @@
 
 from openscap_daemon import System
 from openscap_daemon import EvaluationSpec
+from openscap_daemon import dbus_utils
 from openscap_daemon.cve_scanner.cve_scanner import Worker
 
 import dbus
@@ -32,17 +33,6 @@ from datetime import datetime
 import docker
 import json
 
-OBJECT_PATH = "/OpenSCAP/daemon"
-DBUS_INTERFACE = "org.OpenSCAP.daemon.Interface"
-BUS_NAME = "org.OpenSCAP.daemon"
-
-
-def get_dbus():
-    var_name = "OSCAPD_SESSION_BUS"
-    if var_name in os.environ and os.environ[var_name] == "1":
-        return dbus.SessionBus()
-
-    return dbus.SystemBus()
 
 # Internal note: Python does not support unsigned long integer while dbus does,
 # to avoid weird issues I just use 64bit integer in the interface signatures.
@@ -51,7 +41,7 @@ def get_dbus():
 
 class OpenSCAPDaemonDbus(dbus.service.Object):
     def __init__(self, bus, config_file):
-        super(OpenSCAPDaemonDbus, self).__init__(bus, OBJECT_PATH)
+        super(OpenSCAPDaemonDbus, self).__init__(bus, dbus_utils.OBJECT_PATH)
 
         self.system = System(config_file)
         self.system.load_tasks()
@@ -65,7 +55,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         # TODO: Move to System
         self.docker_conn = docker.Client()
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="", out_signature="as")
     def GetSSGChoices(self):
         """Retrieves absolute paths of SSG source datastreams that are
@@ -73,7 +63,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.get_ssg_choices()
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="ss", out_signature="a{ss}")
     def GetProfileChoicesForInput(self, input_file, tailoring_file):
         """Figures out profile ID -> profile title mappings of all available
@@ -83,12 +73,12 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             input_file, tailoring_file
         )
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="", out_signature="a(xsi)")
     def GetAsyncActionsStatus(self):
         return self.system.async.get_status()
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="s", out_signature="(sssn)")
     def EvaluateSpecXML(self, xml_source):
         spec = EvaluationSpec()
@@ -96,7 +86,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         arf, stdout, stderr, exit_code = spec.evaluate(self.system.config)
         return (arf, stdout, stderr, exit_code)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="", out_signature="ax")
     def ListTaskIDs(self):
         """Returns a list of IDs of tasks that System has loaded from config
@@ -104,7 +94,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.list_task_ids()
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
     def SetTaskTitle(self, task_id, title):
         """Set title of existing task with given ID.
@@ -113,21 +103,21 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.set_task_title(task_id, title)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="x", out_signature="s")
     def GetTaskTitle(self, task_id):
         """Retrieves title of task with given ID.
         """
         return self.system.get_task_title(task_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="x", out_signature="s")
     def GenerateGuideForTask(self, task_id):
         """Generates and returns HTML guide for a task with given ID.
         """
         return self.system.generate_guide_for_task(task_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="x", out_signature="")
     def RunTaskOutsideSchedule(self, task_id):
         """Given task will be run as soon as possible without affecting its
@@ -135,7 +125,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.run_task_outside_schedule(task_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="", out_signature="x")
     def CreateTask(self):
         """Creates a new task with empty contents, the task is created
@@ -147,7 +137,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.create_task()
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="x", out_signature="")
     def RemoveTask(self, task_id):
         """Removes task with given ID and deletes its config file. The task has
@@ -157,7 +147,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.remove_task(task_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xb", out_signature="")
     def SetTaskEnabled(self, task_id, enabled):
         """Sets enabled flag of an existing task with given ID.
@@ -166,14 +156,14 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.set_task_enabled(task_id, enabled)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="x", out_signature="b")
     def GetTaskEnabled(self, task_id):
         """Retrieves the enabled flag of an existing task with given ID.
         """
         return self.system.get_task_enabled(task_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
     def SetTaskTarget(self, task_id, target):
         """Set target of existing task with given ID.
@@ -182,14 +172,14 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.set_task_target(task_id, target)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="x", out_signature="s")
     def GetTaskTarget(self, task_id):
         """Retrieves target of existing task with given ID.
         """
         return self.system.get_task_target(task_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
     def SetTaskInput(self, task_id, input_):
         """Set input of existing task with given ID.
@@ -203,7 +193,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             task_id, input_ if input_ != "" else None
         )
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
     def SetTaskTailoring(self, task_id, tailoring):
         """Set tailoring of existing task with given ID.
@@ -217,7 +207,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             task_id, tailoring if tailoring != "" else None
         )
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
     def SetTaskProfileID(self, task_id, profile_id):
         """Set profile ID of existing task with given ID.
@@ -226,10 +216,10 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.set_task_profile_id(task_id, profile_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xb", out_signature="")
     def SetTaskOnlineRemediation(self, task_id, online_remediation):
-        """Sets whether online remedation of existing task with given ID
+        """Sets whether online remediation of existing task with given ID
         is enabled.
 
         The change is persistent after the function returns.
@@ -238,7 +228,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             task_id, online_remediation
         )
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
     def SetTaskScheduleNotBefore(self, task_id, schedule_not_before_str):
         """Sets time when the task is next scheduled to run. The time is passed
@@ -256,7 +246,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             task_id, schedule_not_before
         )
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xx", out_signature="")
     def SetTaskScheduleRepeatAfter(self, task_id, schedule_repeat_after):
         """Sets number of hours after which the task should be repeated.
@@ -270,75 +260,75 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             task_id, schedule_repeat_after
         )
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="x", out_signature="ax")
     def GetTaskResultIDs(self, task_id):
         """Retrieves list of available task result IDs.
         """
         return self.system.get_task_result_ids(task_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")
     def GetARFOfTaskResult(self, task_id, result_id):
         """Retrieves full ARF of result of given task.
         """
         return self.system.get_arf_of_task_result(task_id, result_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")
     def GetStdOutOfTaskResult(self, task_id, result_id):
         """Retrieves full stdout of result of given task.
         """
         return self.system.get_stdout_of_task_result(task_id, result_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")
     def GetStdErrOfTaskResult(self, task_id, result_id):
         """Retrieves full stderr of result of given task.
         """
         return self.system.get_stderr_of_task_result(task_id, result_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xx", out_signature="i")
     def GetExitCodeOfTaskResult(self, task_id, result_id):
         """Retrieves exit code of result of given task.
         """
         return self.system.get_exit_code_of_task_result(task_id, result_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")
     def GenerateReportForTaskResult(self, task_id, result_id):
         """Generates and returns HTML report for report of given task.
         """
         return self.system.generate_report_for_task_result(task_id, result_id)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE, in_signature='s',
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='s',
                          out_signature='s')
     def inspect_container(self, cid):
         ''' Returns inspect data of a container'''
         inspect_data = self.docker_conn.inspect_container(cid)
         return json.dumps(inspect_data)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE, in_signature='s',
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='s',
                          out_signature='s')
     def inspect_image(self, iid):
         ''' Returns inspect data of an image'''
         inspect_data = self.docker_conn.inspect_image(iid)
         return json.dumps(inspect_data)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE, out_signature='s')
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, out_signature='s')
     def images(self):
         ''''''
         images = self.docker_conn.images(all=True)
         return json.dumps(images)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE, out_signature='s')
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, out_signature='s')
     def containers(self):
         ''''''
         cons = self.docker_conn.containers(all=True)
         return json.dumps(cons)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature='bbi', out_signature='s')
     def scan_containers(self, onlyactive, allcontainers, number):
         worker = Worker(onlyactive=onlyactive, allcontainers=allcontainers,
@@ -346,14 +336,14 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return_json = worker.start_application()
         return json.dumps(return_json)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE, in_signature='bbi',
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='bbi',
                          out_signature='s')
     def scan_images(self, allimages, images, number):
         worker = Worker(allimages=allimages, images=images, number=number)
         return_json = worker.start_application()
         return json.dumps(return_json)
 
-    @dbus.service.method(dbus_interface=DBUS_INTERFACE,
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature='asi', out_signature='s')
     def scan_list(self, scan_list, number):
         worker = Worker(scan=scan_list, number=number)
@@ -371,8 +361,8 @@ def main():
     dbus.mainloop.glib.threads_init()
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-    bus = get_dbus()
-    name = dbus.service.BusName(BUS_NAME, bus)
+    bus = dbus_utils.get_dbus()
+    name = dbus.service.BusName(dbus_utils.BUS_NAME, bus)
 
     config_file = os.path.join("/", "etc", "oscapd", "config.ini")
     if "OSCAPD_CONFIG_FILE" in os.environ:

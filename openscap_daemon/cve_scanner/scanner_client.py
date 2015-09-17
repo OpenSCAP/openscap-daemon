@@ -17,7 +17,7 @@
 # Boston, MA 02111-1307, USA.
 
 
-from openscap_daemon import dbus_daemon
+from openscap_daemon import dbus_utils
 from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 
 import os
@@ -55,8 +55,8 @@ class Client(object):
         self._docker_ping()
         self.num_threads = number
         self.bus = dbus.SessionBus()
-        self.dbus_object = self.bus.get_object(dbus_daemon.BUS_NAME,
-                                               dbus_daemon.OBJECT_PATH)
+        self.dbus_object = self.bus.get_object(dbus_utils.BUS_NAME,
+                                               dbus_utils.OBJECT_PATH)
         self.logfile = logfile
         self.nocache = nocache
         self.reportdir = reportdir
@@ -79,7 +79,7 @@ class Client(object):
     def inspect_container(self, cid):
         foo = self.dbus_object.inspect_container(
             cid,
-            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
         return json.loads(foo)
@@ -87,7 +87,7 @@ class Client(object):
     @polkit.enable_proxy
     def get_images_info(self):
         foo = self.dbus_object.images(
-            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
         return json.loads(foo)
@@ -95,7 +95,7 @@ class Client(object):
     @polkit.enable_proxy
     def get_containers_info(self):
         foo = self.dbus_object.containers(
-            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
         return json.loads(foo)
@@ -104,7 +104,7 @@ class Client(object):
     def inspect_image(self, iid):
         foo = self.dbus_object.inspect_image(
             iid,
-            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
         return json.loads(foo)
@@ -124,7 +124,7 @@ class Client(object):
             self.onlyactive,
             self.allcontainers,
             self.num_threads,
-            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
         return json.loads(foo)
@@ -138,7 +138,7 @@ class Client(object):
         foo = self.dbus_object.scan_images(
             self.allimages, self.images,
             self.num_threads,
-            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
         return json.loads(foo)
@@ -151,6 +151,6 @@ class Client(object):
         return json.loads(
             self.dbus_object.scan_list(
                 scan_list, self.num_threads,
-                dbus_interface=dbus_daemon.DBUS_INTERFACE,
+                dbus_interface=dbus_utils.DBUS_INTERFACE,
                 timeout=self.db_timeout)
         )
