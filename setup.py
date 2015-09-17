@@ -44,9 +44,15 @@ setup(
     name="openscap_daemon",
     version=version.VERSION_STRING,
     description="...",
-    author="Martin Preisler and others (see AUTHORS)",
+    author="Martin Preisler, Brent Baude and others",
     author_email="mpreisle@redhat.com",
     url="http://www.open-scap.org/",
     packages=get_packages(),
-    scripts=["bin/oscapd", "bin/oscapd-cli"]
+    scripts=[
+        os.path.join("bin", "oscapd"),
+        os.path.join("bin", "oscapd-cli")
+    ],
+    data_files=[
+        (os.path.join("/", "etc", "dbus-1", "system.d"), ["org.openscapd.conf"])
+    ]
 )
