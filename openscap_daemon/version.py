@@ -17,7 +17,7 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-VERSION_MAJOR = 1
+VERSION_MAJOR = 0
 VERSION_MINOR = 0
 VERSION_PATCH = 1
 
