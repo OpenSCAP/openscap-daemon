@@ -38,7 +38,7 @@ BUS_NAME = "org.OpenSCAP.daemon"
 
 def get_dbus():
     var_name = "OSCAPD_SESSION_BUS"
-    if os.environ.has_key(var_name) and os.environ[var_name] == "1":
+    if var_name in os.environ and os.environ[var_name] == "1":
         return dbus.SessionBus()
 
     return dbus.SystemBus()
