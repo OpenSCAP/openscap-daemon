@@ -39,9 +39,6 @@ import json
 import platform
 import collections
 
-# TODO: This doesn't come with Python! It's a stealthy external dependency!
-import psutil
-
 
 class ContainerSearch(object):
     ''' Does a series of docker queries to setup variables '''
@@ -143,8 +140,15 @@ class Worker(object):
         self.rpms = {}
 
     def set_procs(self, number):
+        if number is None:
+            try:
+                import multiprocessing
+                numThreads = multiprocessing.cpu_count()
 
-        numThreads = psutil.NUM_CPUS if number is None else number
+            except NotImplementedError:
+                numThreads = 4
+        else:
+            numThreads = number
 
         if numThreads < self.min_procs:
             if self.ac.number is not None:
