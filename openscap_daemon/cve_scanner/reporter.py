@@ -67,7 +67,7 @@ class Reporter(object):
                 out = open(os.path.join(self.report_dir, short_image), 'wb')
                 report_files.append(short_image)
                 out.write(image.log)
-                out.close
+                out.close()
         for report in report_files:
             os.path.join(self.report_dir, report)
 
