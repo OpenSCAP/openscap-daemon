@@ -24,11 +24,7 @@ import collections
 from scanner_error import ImageScannerClientError
 import docker
 from slip.dbus import polkit
-
-
-OBJECT_PATH = "/OpenSCAP/daemon"
-DBUS_INTERFACE = "org.OpenSCAP.daemon.Interface"
-BUS_NAME = "org.OpenSCAP.daemon"
+from openscap_daemon import dbus_daemon
 
 
 class Client(object):
@@ -55,8 +51,8 @@ class Client(object):
         self._docker_ping()
         self.num_threads = number
         self.bus = dbus.SessionBus()
-        self.dbus_object = self.bus.get_object(BUS_NAME,
-                                               OBJECT_PATH)
+        self.dbus_object = self.bus.get_object(dbus_daemon.BUS_NAME,
+                                               dbus_daemon.OBJECT_PATH)
         self.logfile = logfile
         self.nocache = nocache
         self.reportdir = reportdir
@@ -77,28 +73,36 @@ class Client(object):
 
     @polkit.enable_proxy
     def inspect_container(self, cid):
-        foo = self.dbus_object.inspect_container(cid,
-                                                 dbus_interface=DBUS_INTERFACE,
-                                                 timeout=self.db_timeout)
+        foo = self.dbus_object.inspect_container(
+            cid,
+            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            timeout=self.db_timeout
+        )
         return json.loads(foo)
 
     @polkit.enable_proxy
     def get_images_info(self):
-        foo = self.dbus_object.images(dbus_interface=DBUS_INTERFACE,
-                                      timeout=self.db_timeout)
+        foo = self.dbus_object.images(
+            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            timeout=self.db_timeout
+        )
         return json.loads(foo)
 
     @polkit.enable_proxy
     def get_containers_info(self):
-        foo = self.dbus_object.containers(dbus_interface=DBUS_INTERFACE,
-                                          timeout=self.db_timeout)
+        foo = self.dbus_object.containers(
+            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            timeout=self.db_timeout
+        )
         return json.loads(foo)
 
     @polkit.enable_proxy
     def inspect_image(self, iid):
-        foo = self.dbus_object.inspect_image(iid,
-                                             dbus_interface=DBUS_INTERFACE,
-                                             timeout=self.db_timeout)
+        foo = self.dbus_object.inspect_image(
+            iid,
+            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            timeout=self.db_timeout
+        )
         return json.loads(foo)
 
     def debug_json(self, json_data):
@@ -111,11 +115,14 @@ class Client(object):
             self.onlyactive = True
         else:
             self.allcontainers = True
-        foo = self.dbus_object.scan_containers(self.onlyactive,
-                                               self.allcontainers,
-                                               self.num_threads,
-                                               dbus_interface=DBUS_INTERFACE,
-                                               timeout=self.db_timeout)
+
+        foo = self.dbus_object.scan_containers(
+            self.onlyactive,
+            self.allcontainers,
+            self.num_threads,
+            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            timeout=self.db_timeout
+        )
         return json.loads(foo)
 
     @polkit.enable_proxy
@@ -124,10 +131,12 @@ class Client(object):
             self.allimages = True
         else:
             self.images = True
-        foo = self.dbus_object.scan_images(self.allimages, self.images,
-                                           self.num_threads,
-                                           dbus_interface=DBUS_INTERFACE,
-                                           timeout=self.db_timeout)
+        foo = self.dbus_object.scan_images(
+            self.allimages, self.images,
+            self.num_threads,
+            dbus_interface=dbus_daemon.DBUS_INTERFACE,
+            timeout=self.db_timeout
+        )
         return json.loads(foo)
 
     @polkit.enable_proxy
@@ -136,6 +145,8 @@ class Client(object):
             raise ImageScannerClientError("Input to scan_list must be in"
                                           "the form of a list")
         return json.loads(
-            self.dbus_object.scan_list(scan_list, self.num_threads,
-                                       dbus_interface=DBUS_INTERFACE,
-                                       timeout=self.db_timeout))
+            self.dbus_object.scan_list(
+                scan_list, self.num_threads,
+                dbus_interface=dbus_daemon.DBUS_INTERFACE,
+                timeout=self.db_timeout)
+        )
