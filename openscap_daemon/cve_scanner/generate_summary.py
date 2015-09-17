@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (C) 2015 Brent Baude <bbaude@redhat.com>
 #
 # This library is free software; you can redistribute it and/or

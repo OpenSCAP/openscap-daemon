@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (C) 2015 Brent Baude <bbaude@redhat.com>
 #
 # This library is free software; you can redistribute it and/or
@@ -17,6 +16,8 @@
 # Boston, MA 02111-1307, USA.
 
 ''' Class to handle references '''
+
+# TODO: Integrate this to openscap_daemon.config package
 
 import docker
 from scanner_error import ImageScannerClientError
