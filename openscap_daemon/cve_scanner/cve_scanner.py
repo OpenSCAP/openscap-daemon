@@ -226,11 +226,7 @@ class Worker(object):
         self.scan_list = image_list
         cve_get = getInputCVE(self.image_tmp)
 
-        # If we find a tarball of the dist break outs and
-        # it is less than 12 hours old, use it to speed things
-        # up
-
-        cve_get.fetch_dist_data(12)
+        cve_get.fetch_dist_data()
 
         threads = []
 
