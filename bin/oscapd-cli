@@ -19,7 +19,7 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-from openscap_daemon import dbus_daemon
+from openscap_daemon import dbus_utils
 from openscap_daemon import oscap_helpers
 from openscap_daemon import cli_helpers
 
@@ -32,20 +32,20 @@ import os.path
 
 
 def get_dbus_interface():
-    bus = dbus_daemon.get_dbus()
+    bus = dbus_utils.get_dbus()
 
     if bus is None:
         return None
 
     obj = bus.get_object(
-        dbus_daemon.BUS_NAME,
-        dbus_daemon.OBJECT_PATH
+        dbus_utils.BUS_NAME,
+        dbus_utils.OBJECT_PATH
     )
 
     if obj is None:
         return None
 
-    return dbus.Interface(obj, dbus_daemon.DBUS_INTERFACE)
+    return dbus.Interface(obj, dbus_utils.DBUS_INTERFACE)
 
 def cli_status(dbus_iface, args):
     async_status = dbus_iface.GetAsyncActionsStatus()

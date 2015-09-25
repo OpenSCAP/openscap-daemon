@@ -414,6 +414,7 @@ class System(object):
                 task = self.system.tasks[self.task_id]
 
             task.update(self.reference_datetime, self.system.config)
+
             with self.system.tasks_lock:
                 self.system.tasks_scheduled.remove(task.id_)
 
