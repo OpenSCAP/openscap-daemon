@@ -35,7 +35,7 @@ class Client(object):
     ''' The image-scanner client API '''
 
     image_tmp = "/var/tmp/image-scanner"
-    db_timeout = 99
+    db_timeout = 99999
     tup_names = ['number', 'workdir', 'logfile', 'nocache',
                  'reportdir']
     tup = collections.namedtuple('args', tup_names)

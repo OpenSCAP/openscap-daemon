@@ -244,19 +244,16 @@ class Worker(object):
         if isinstance(threading.current_thread(), threading._MainThread):
             signal.signal(signal.SIGINT, self.signal_handler)
         self.threads_complete = 0
+        self.cur_scan_threads = 0
         while len(threads) > 0:
-            if len(threading.enumerate()) - 1 < self.procs:
+            if self.cur_scan_threads < self.procs:
                 new_thread = threads.pop()
                 new_thread.start()
+                self.cur_scan_threads += 1
 
-        # Seeing some weirdness with the exit thread count
-        # when using the API, depends on how it is called
-
-        exit_thread_count = 2
-        while len(threading.enumerate()) > exit_thread_count:
+        while self.cur_scan_threads > 0:
             time.sleep(1)
             pass
-
         self.output.report_summary()
 
     def signal_handler(self, signal, frame):
@@ -286,6 +283,7 @@ class Worker(object):
         f.DM._clean_temp_container_by_path(f.dest)
 
         self.threads_complete += 1
+        self.cur_scan_threads -= 1
 
     def _check_input(self, image_list):
         '''
