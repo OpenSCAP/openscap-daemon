@@ -20,6 +20,33 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 from openscap_daemon import dbus_daemon
+from openscap_daemon import dbus_utils
+
+import os
+import logging
+import gobject
+
+def main():
+    # TODO: Temporary, this will be configurable in the future
+    logging.basicConfig(format='%(levelname)s:%(message)s',
+                        level=logging.DEBUG)
+
+    import dbus.mainloop.glib
+    gobject.threads_init()
+    dbus.mainloop.glib.threads_init()
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+    bus = dbus_utils.get_dbus()
+    name = dbus.service.BusName(dbus_utils.BUS_NAME, bus)
+
+    config_file = os.path.join("/", "etc", "oscapd", "config.ini")
+    if "OSCAPD_CONFIG_FILE" in os.environ:
+        config_file = os.environ["OSCAPD_CONFIG_FILE"]
+
+    obj = dbus_daemon.OpenSCAPDaemonDbus(bus, config_file)
+
+    loop = gobject.MainLoop()
+    loop.run()
 
 if __name__ == "__main__":
-    dbus_daemon.main()
+    main()

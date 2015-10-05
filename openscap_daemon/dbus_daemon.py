@@ -24,10 +24,7 @@ from openscap_daemon.cve_scanner.cve_scanner import Worker
 
 import dbus
 import dbus.service
-import gobject
 import threading
-import logging
-import os
 from datetime import datetime
 # TODO: Do we want to depend on docker for *ALL* functionality?
 import docker
@@ -349,30 +346,3 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         worker = Worker(scan=scan_list, number=number)
         return_json = worker.start_application()
         return json.dumps(return_json)
-
-
-def main():
-    # TODO: Temporary, this will be configurable in the future
-    logging.basicConfig(format='%(levelname)s:%(message)s',
-                        level=logging.DEBUG)
-
-    import dbus.mainloop.glib
-    gobject.threads_init()
-    dbus.mainloop.glib.threads_init()
-    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-
-    bus = dbus_utils.get_dbus()
-    name = dbus.service.BusName(dbus_utils.BUS_NAME, bus)
-
-    config_file = os.path.join("/", "etc", "oscapd", "config.ini")
-    if "OSCAPD_CONFIG_FILE" in os.environ:
-        config_file = os.environ["OSCAPD_CONFIG_FILE"]
-
-    obj = OpenSCAPDaemonDbus(bus, config_file)
-
-    loop = gobject.MainLoop()
-    loop.run()
-
-
-if __name__ == "__main__":
-    main()
