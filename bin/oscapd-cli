@@ -313,7 +313,7 @@ def cli_result(dbus_iface, args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="SCAP Client command line interface."
+        description="OpenSCAP-Daemon command line interface."
     )
     subparsers = parser.add_subparsers()
 
