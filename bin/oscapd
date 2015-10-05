@@ -25,11 +25,19 @@ from openscap_daemon import dbus_utils
 import os
 import logging
 import gobject
+import argparse
 
 def main():
-    # TODO: Temporary, this will be configurable in the future
+    parser = argparse.ArgumentParser(
+        description="OpenSCAP-Daemon executable."
+    )
+    parser.add_argument("-v", "--verbose",
+                        help="be verbose, useful for debugging",
+                        action="store_true")
+    args = parser.parse_args()
+
     logging.basicConfig(format='%(levelname)s:%(message)s',
-                        level=logging.DEBUG)
+                        level=logging.DEBUG if args.verbose else logging.INFO)
 
     import dbus.mainloop.glib
     gobject.threads_init()
