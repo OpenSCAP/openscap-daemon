@@ -60,7 +60,8 @@ def cli_eval(dbus_iface, args):
             timeout=30*60*1000 # in msec
         )
 
-def cli_print_results_table(dbus_iface, task_id, result_ids, max_items=-1):
+def cli_print_results_table(dbus_iface, task_id, result_ids,
+                            max_items=sys.maxsize):
     table = [["ID", "Timestamp", "Status"]]
 
     for result_id in result_ids[:max_items]:
@@ -72,7 +73,7 @@ def cli_print_results_table(dbus_iface, task_id, result_ids, max_items=-1):
 
     cli_helpers.print_table(table)
 
-    if max_items != -1 and max_items < len(result_ids):
+    if max_items < len(result_ids):
         print("... and %i more" % (len(result_ids) - max_items))
 
 
