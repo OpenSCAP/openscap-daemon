@@ -55,6 +55,9 @@ class System(object):
 
     def get_ssg_choices(self):
         ret = []
+        if self.config.ssg_path == "":
+            return ret
+
         for ssg_file in os.listdir(self.config.ssg_path):
             full_path = os.path.join(self.config.ssg_path, ssg_file)
 
