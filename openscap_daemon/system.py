@@ -38,6 +38,7 @@ class System(object):
     def __init__(self, config_file):
         self.async = async.AsyncManager()
 
+        logging.info("Loading configuration from '%s'." % (config_file))
         self.config = Configuration()
         self.config.load(config_file)
         self.config.autodetect_tool_paths()
