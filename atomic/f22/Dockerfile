@@ -17,13 +17,13 @@ RUN dnf -y install autoconf automake libtool curl-devel libxml2-devel \
 
 # TODO: Change to Atomic package once 1.4 is everywhere
 # PYLINT=/bin/true skips pylint checks
-RUN dnf -y install dbus-python docker pygobject2 python-docker-py make pylint \
-    golang-github-cpuguy83-go-md2man python-psutil && dnf clean all && \
+RUN dnf -y install python-setuptools dbus-python docker pygobject2 \
+    python-docker-py golang-github-cpuguy83-go-md2man && dnf clean all && \
     git clone https://github.com/projectatomic/atomic.git && \
     pushd /atomic && PREFIX=/usr PYLINT=/bin/true make install && popd
 
 # TODO: Don't clone from scratch, instead add local working copy there
-RUN dnf -y install dbus-python && dnf clean all && \
+RUN dnf -y install python-setuptools dbus-python && dnf clean all && \
     git clone https://github.com/OpenSCAP/openscap-daemon && \
     pushd /openscap-daemon && python setup.py install && popd
 
