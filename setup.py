@@ -54,7 +54,7 @@ setup(
     ],
     data_files=[
         (os.path.join("/", "etc", "dbus-1", "system.d"),
-         ["org.openscapd.conf"]),
+         ["org.oscapd.conf"]),
         (os.path.join("/", "usr", "lib", "systemd", "system"),
          ["oscapd.service"]),
     ]
