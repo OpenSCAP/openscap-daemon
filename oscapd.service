@@ -1,0 +1,12 @@
+[Unit]
+Description=OpenSCAP Daemon
+Documentation=http://open-scap.org/tools/openscap-daemon
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStart=/usr/bin/oscapd
+
+[Install]
+WantedBy=multi-user.target
