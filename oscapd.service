@@ -5,7 +5,8 @@ After=docker.service
 Requires=docker.service
 
 [Service]
-TimeoutStartSec=0
+Type=dbus
+BusName=org.OpenSCAP.daemon
 ExecStart=/usr/bin/oscapd
 
 [Install]
