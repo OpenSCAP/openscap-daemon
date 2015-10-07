@@ -157,9 +157,9 @@ this is done automatically.
 ## Requirements
 * [*python2*](http://python.org) >= 2.6
   * we strive for source compatibility with *python3* but consider that *best-effort*
-* [*OpenSCAP*](http://open-scap.org) >= 1.0.8
-  * *1.0.x*, *1.1.x* and *1.2.x* fully supported
+* [*OpenSCAP*](http://open-scap.org) >= 1.2.6
 * [*dbus-python*](http://www.freedesktop.org/wiki/Software/DBusBindings/)
+* [*Atomic*](http://www.projectatomic.io) >= 1.4
 
 ## Running the test-suite
 The test-suite can be run without installing the software.
