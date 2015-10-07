@@ -1,4 +1,7 @@
-# use-case 1: Run OpenSCAP-daemon in SPC, use it on host
+# Run OpenSCAP-daemon in SPC, use it on host
+
+The daemon is containerized but has access to host resources. It can
+scan other containers, container images or even machines.
 
 ## Fedora 22 in SPC
 ```bash
@@ -12,7 +15,7 @@ atomic run $ID
 # and the SPC does the work
 ```
 
-# RHEL7 in SPC
+## RHEL7 in SPC
 Make sure the host machine is registered using subscription-manager
 before you start. Otherwise you won't be able to install packages
 in the container.
