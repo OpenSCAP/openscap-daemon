@@ -170,11 +170,15 @@ cd tests
 ./make_check
 ```
 
-## Installation on Linux
+## Installation on Linux (standalone on host)
 ```bash
 cd openscap-daemon
 sudo python2 setup.py install
 ```
+
+## Installation on Linux (super privileged container)
+OpenSCAP-daemon can be used as a containerized application.
+See the [*atomic directory*](atomic) for more information.
 
 ## API Consumers
 > Please do not rely on the API just yet, we reserve the right to make breaking
@@ -182,6 +186,11 @@ sudo python2 setup.py install
 
 OpenSCAP-daemon provides a stable dbus API that is designed to be used by
 other projects.
+
+### Atomic Integration
+OpenSCAP-daemon is used to implement the `atomic scan` functionality.
+`atomic scan` allows users to scan containers and container images for
+vulnerabilities.
 
 ### Cockpit Integration
 Features:
