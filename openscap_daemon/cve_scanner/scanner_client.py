@@ -36,21 +36,21 @@ class Client(object):
 
     image_tmp = "/var/tmp/image-scanner"
     db_timeout = 99999
-    tup_names = ['number', 'workdir', 'logfile', 'nocache',
+    tup_names = ['number', 'workdir', 'logfile', 'onlycache',
                  'reportdir']
     tup = collections.namedtuple('args', tup_names)
 
     def __init__(self, number=2,
                  logfile=os.path.join(image_tmp, "openscap.log"),
-                 nocache=False,
+                 onlycache=False,
                  reportdir=image_tmp, workdir=image_tmp):
 
         self.arg_tup = self.tup(number=number, logfile=logfile,
-                                nocache=nocache, reportdir=reportdir,
+                                onlycache=onlycache, reportdir=reportdir,
                                 workdir=workdir)
 
         self.arg_dict = {'number': number, 'logfile': logfile,
-                         'nocache': nocache, 'reportdir': reportdir,
+                         'onlycache': onlycache, 'reportdir': reportdir,
                          'workdir': workdir}
         self._docker_ping()
         self.num_threads = number
@@ -58,7 +58,7 @@ class Client(object):
         self.dbus_object = self.bus.get_object(dbus_utils.BUS_NAME,
                                                dbus_utils.OBJECT_PATH)
         self.logfile = logfile
-        self.nocache = nocache
+        self.onlycache = onlycache
         self.reportdir = reportdir
         self.workdir = workdir
         self.onlyactive = False

@@ -22,6 +22,7 @@ from openscap_daemon.cve_scanner.reporter import Reporter
 from openscap_daemon.cve_scanner.scan import Scan
 from openscap_daemon.cve_scanner.generate_summary import Create_Summary
 from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
+import dbus
 
 # TODO: verify that this is correct
 from oscap_docker_python.get_cve_input import getInputCVE
@@ -104,8 +105,8 @@ class Worker(object):
     min_procs = 2
     max_procs = 4
     image_tmp = "/var/tmp/image-scanner"
-    scan_args = ['allcontainers', 'allimages', 'images', 'logfile', 'nocache',
-                 'number', 'onlyactive', 'reportdir',
+    scan_args = ['allcontainers', 'allimages', 'images', 'logfile',
+                 'onlycache', 'number', 'onlyactive', 'reportdir',
                  'workdir', 'url_root', 'host', 'rest_host',
                  'rest_port', 'scan']
 
@@ -113,13 +114,13 @@ class Worker(object):
 
     def __init__(self, number=2,
                  logfile=os.path.join(image_tmp, "openscap.log"),
-                 nocache=False, reportdir=image_tmp, workdir=image_tmp,
+                 onlycache=False, reportdir=image_tmp, workdir=image_tmp,
                  host='unix://var/run/docker.sock',
                  allcontainers=False, onlyactive=False, allimages=False,
                  images=False, scan=[]):
         self.args =\
             self.scan_tuple(number=number, logfile=logfile,
-                            nocache=nocache, reportdir=reportdir,
+                            onlycache=onlycache, reportdir=reportdir,
                             workdir=workdir, host=host,
                             allcontainers=allcontainers, allimages=allimages,
                             onlyactive=onlyactive, images=images, url_root='',
@@ -137,6 +138,7 @@ class Worker(object):
                                         "com.redhat.rhsa-all.xml.bz2")
 
         self.scan_list = None
+        self.failed_scan = None
         self.rpms = {}
 
     def set_procs(self, number):
@@ -198,19 +200,31 @@ class Worker(object):
             error = "There are no active containers on this system"
             raise ImageScannerClientError(error)
         else:
-            self._do_work(con_list)
+            try:
+                self._do_work(con_list)
+            except Exception as error:
+                raise ImageScannerClientError(str(error))
 
     def allimages(self):
         if len(self.cs.imagelist) == 0:
             error = "There are no images on this system"
             raise ImageScannerClientError(error)
         if self.args.allimages:
-            self._do_work(self.cs.allimagelist)
+            try:
+                self._do_work(self.cs.allimagelist)
+            except Exception as error:
+                raise ImageScannerClientError(str(error))
         else:
-            self._do_work(self.cs.imagelist)
+            try:
+                self._do_work(self.cs.imagelist)
+            except Exception as error:
+                raise ImageScannerClientError(str(error))
 
     def list_of_images(self, image_list):
-        self._do_work(image_list)
+        try:
+            self._do_work(image_list)
+        except Exception as error:
+            raise ImageScannerClientError(str(error))
 
     def allcontainers(self):
         if len(self.cs.cons) == 0:
@@ -220,14 +234,16 @@ class Worker(object):
             con_list = []
             for con in self.cs.cons:
                 con_list.append(con['Id'])
-            self._do_work(con_list)
+            try:
+                self._do_work(con_list)
+            except Exception as error:
+                raise ImageScannerClientError(str(error))
 
     def _do_work(self, image_list):
         self.scan_list = image_list
         cve_get = getInputCVE(self.image_tmp)
-
-        cve_get.fetch_dist_data()
-
+        if not self.ac.onlycache:
+            cve_get.fetch_dist_data()
         threads = []
 
         for image in image_list:
@@ -254,6 +270,8 @@ class Worker(object):
         while self.cur_scan_threads > 0:
             time.sleep(1)
             pass
+        if self.failed_scan is not None:
+            raise ImageScannerClientError(self.failed_scan)
         self.output.report_summary()
 
     def signal_handler(self, signal, frame):
@@ -269,9 +287,12 @@ class Worker(object):
                 logging.debug("Scanned chroot for image {0}"
                               " completed in {1} seconds"
                               .format(image, t))
-                timeit.Timer(f.report_results).timeit(number=1)
-                image_rpms = f._get_rpms()
-                self.rpms[image] = image_rpms
+                try:
+                    timeit.Timer(f.report_results).timeit(number=1)
+                    image_rpms = f._get_rpms()
+                    self.rpms[image] = image_rpms
+                except Exception, error:
+                    self.failed_scan = str(error)
             else:
                 # This is not a RHEL image or container
                 f._report_not_rhel(image)
@@ -408,7 +429,11 @@ class Worker(object):
         else:
             # Check to make sure we have valid input
             image_list = self._check_input(self.args.scan)
-            self.list_of_images(image_list)
+
+            try:
+                self.list_of_images(image_list)
+            except ImageScannerClientError, error:
+                raise dbus.exceptions.DBusException(str(error))
 
         end_time = time.time()
         duration = (end_time - start_time)
