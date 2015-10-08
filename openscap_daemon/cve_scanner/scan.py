@@ -28,6 +28,7 @@ import xml.etree.ElementTree as ET
 import platform
 import StringIO
 from Atomic.mount import DockerMount
+from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 
 # TODO: External dep!
 import rpm
@@ -103,9 +104,10 @@ class Scan(object):
                '--results',
                os.path.join(self.report_dir,
                             self.image_name + '.xml'), self.chroot_cve_file]
-
-        self.result = subprocess.check_output(cmd)
-
+        try:
+            self.result = subprocess.check_output(cmd)
+        except Exception:
+            pass
     # def capture_run(self, cmd):
     #     '''
     #     Subprocess command that captures and returns the output and
@@ -125,6 +127,10 @@ class Scan(object):
         return cons
 
     def report_results(self):
+        if not os.path.exists(self.chroot_cve_file):
+            raise ImageScannerClientError("Unable to find {0}"
+                                          .format(self.chroot_cve_file))
+            return False
         cve_tree = ET.parse(self.chroot_cve_file)
         self.cve_root = cve_tree.getroot()
 
