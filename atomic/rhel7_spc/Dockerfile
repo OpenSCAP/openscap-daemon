@@ -19,7 +19,7 @@ RUN yum -y install autoconf automake libtool curl-devel libxml2-devel \
 # PYLINT=/bin/true skips pylint checks
 RUN yum -y install python-setuptools dbus-python docker pygobject2 \
     python-docker-py libselinux-python && yum clean all && \
-    git clone -b go_md2man_configurable https://github.com/mpreisler/atomic.git && \
+    git clone https://github.com/projectatomic/atomic.git && \
     pushd /atomic && PREFIX=/usr PYLINT=/bin/true GO_MD2MAN=/bin/true \
     make install && popd
 
