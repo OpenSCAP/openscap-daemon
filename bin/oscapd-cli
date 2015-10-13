@@ -305,7 +305,10 @@ def cli_result(dbus_iface, args):
                 args.task_id, args.result_id, utf8_strings=True
             )
             print(report)
-
+        elif args.result_action == "remove":
+            dbus_iface.RemoveTaskResult(
+                args.task_id, args.result_id
+            )
         else:
             raise RuntimeError(
                 "Unknown result action '%s'." % (args.result_action)
@@ -382,7 +385,7 @@ def main():
         )
         result_parser.add_argument(
             "result_action", metavar="ACTION", type=str,
-            choices=["arf", "stdout", "stderr", "exit_code", "report"],
+            choices=["arf", "stdout", "stderr", "exit_code", "report", "remove"],
             default="arf", nargs="?"
         )
         result_parser.set_defaults(action="result")

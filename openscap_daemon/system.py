@@ -191,6 +191,15 @@ class System(object):
         os.remove(os.path.join(self.config.tasks_dir, "%i.xml" % (task_id)))
         logging.info("Removed task '%i'." % (task_id))
 
+    def remove_task_result(self, task_id, result_id):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            task.remove_result(result_id, self.config)
+
     def set_task_enabled(self, task_id, enabled):
         task = None
 
