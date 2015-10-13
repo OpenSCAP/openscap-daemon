@@ -275,6 +275,8 @@ def cli_result(dbus_iface, args):
         result_ids = dbus_iface.GetTaskResultIDs(args.task_id)
         cli_print_results_table(dbus_iface, args.task_id, result_ids)
 
+    elif args.result_id == "remove":
+        dbus_iface.RemoveTaskResults(args.task_id)
     else:
         if args.result_action == "arf":
             arf = dbus_iface.GetARFOfTaskResult(
@@ -370,6 +372,16 @@ def main():
         status_parser.set_defaults(action="status")
     add_status_parser(subparsers)
 
+    def result_id_or_action(val):
+        if val == "remove":
+            return "remove"
+
+        try:
+           return int(val)
+        except ValueError:
+            raise argparse.ArgumentTypeError("'%s' is not \"remove\" or integer" %
+                                             val)
+
     def add_result_parser(subparsers):
         result_parser = subparsers.add_parser(
             "result",
@@ -378,16 +390,21 @@ def main():
         result_parser.add_argument(
             "task_id", metavar="TASK_ID", type=int
         )
+
+
         result_parser.add_argument(
-            "result_id", metavar="RESULT_ID", type=int, nargs="?",
+            "result_id", metavar="RESULT_ID", type=result_id_or_action, nargs="?",
             help="ID of the result we want to display, if none is provided "
             "a summary of all results of given task is displayed."
         )
+
         result_parser.add_argument(
             "result_action", metavar="ACTION", type=str,
             choices=["arf", "stdout", "stderr", "exit_code", "report", "remove"],
             default="arf", nargs="?"
         )
+
+
         result_parser.set_defaults(action="result")
     add_result_parser(subparsers)
 

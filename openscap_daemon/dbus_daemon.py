@@ -272,6 +272,13 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return self.system.get_arf_of_task_result(task_id, result_id)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="x", out_signature="")
+    def RemoveTaskResults(self, task_id):
+        """Remove all results of given task.
+        """
+        return self.system.remove_task_results(task_id)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xx", out_signature="")
     def RemoveTaskResult(self, task_id, result_id):
         """Remove result of given task.

@@ -330,6 +330,14 @@ class Task(object):
         assert(not os.path.exists(ret))
         return ret
 
+    def remove_results(self, config):
+        logging.debug(
+            "Removing all results of task '%s'." % (self.id_)
+        )
+
+        task_results_dir = self._get_task_results_dir(config.results_dir)
+        shutil.rmtree(task_results_dir, False)
+
     def remove_result(self, result_id, config):
         # todo needs refactoring - the path is used from many places
         result_path = os.path.join(
