@@ -276,7 +276,9 @@ def cli_result(dbus_iface, args):
         cli_print_results_table(dbus_iface, args.task_id, result_ids)
 
     elif args.result_id == "remove":
-        dbus_iface.RemoveTaskResults(args.task_id)
+        if args.force or confirm("Do you really want to remove all results of task %d"
+                                      % args.task_id):
+            dbus_iface.RemoveTaskResults(args.task_id)
     else:
         if args.result_action == "arf":
             arf = dbus_iface.GetARFOfTaskResult(
@@ -308,13 +310,28 @@ def cli_result(dbus_iface, args):
             )
             print(report)
         elif args.result_action == "remove":
-            dbus_iface.RemoveTaskResult(
-                args.task_id, args.result_id
-            )
+            if args.force or confirm("Do you really want to remove result %d from task %d"
+                                      % (args.result_id, args.task_id)):
+                dbus_iface.RemoveTaskResult(args.task_id, args.result_id)
         else:
             raise RuntimeError(
                 "Unknown result action '%s'." % (args.result_action)
             )
+
+def confirm(prompt):
+    while True:
+        try:
+            res = raw_input("%s [y/N]: " % prompt)
+        except EOFError:
+            break
+        if not res or res in ['n', 'N']:
+            break
+        if res in ['y', 'Y']:
+           return True
+
+    sys.stderr.write("Operation aborted.\n")
+    return False
+
 
 
 def main():
@@ -404,6 +421,10 @@ def main():
             default="arf", nargs="?"
         )
 
+        result_parser.add_argument(
+              "-f", "--force", help="remove results without confirmation",
+              action="store_true"
+        )
 
         result_parser.set_defaults(action="result")
     add_result_parser(subparsers)
