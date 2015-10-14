@@ -131,10 +131,6 @@ class Worker(object):
             os.makedirs(self.ac.workdir)
         self.cs = ContainerSearch()
         self.output = Reporter()
-        self.cve_file = os.path.join(self.ac.workdir,
-                                     "com.redhat.rhsa-all.xml")
-        self.cve_file_bz = os.path.join(self.ac.workdir,
-                                        "com.redhat.rhsa-all.xml.bz2")
 
         self.scan_list = None
         self.rpms = {}
