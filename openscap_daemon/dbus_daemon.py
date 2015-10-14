@@ -346,7 +346,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature='asib', out_signature='s')
     def scan_list(self, scan_list, number, onlycache=False):
-        worker = Worker(scan=scan_list, number=number,
+        worker = Worker(scan=scan_list, number=number, onlycache=onlycache,
                         fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)
