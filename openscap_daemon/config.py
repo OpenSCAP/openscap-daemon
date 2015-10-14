@@ -28,6 +28,7 @@ import os.path
 import logging
 import shutil
 
+
 class Configuration(object):
     def __init__(self):
         self.config_file = None
@@ -177,7 +178,7 @@ class Configuration(object):
         config.add_section("General")
         config.set("General", "tasks-dir", str(self.tasks_dir))
         config.set("General", "results-dir", str(self.results_dir))
-        config.set("General", "work-in-progress_dir", str(self.work_in_progress_dir))
+        config.set("General", "work-in-progress-dir", str(self.work_in_progress_dir))
         config.set("General", "jobs", str(self.jobs))
 
         config.add_section("Tools")
