@@ -18,20 +18,17 @@
 
 '''Reporter Class'''
 
-from openscap_daemon.cve_scanner.applicationconfiguration \
-    import ApplicationConfiguration
-
 import collections
 import os
 
 
 class Reporter(object):
     ''' Does stdout reporting '''
-    def __init__(self):
+    def __init__(self, appc):
         self.output = collections.namedtuple('Summary', 'iid, cid, os, sevs,'
                                              'log, msg',)
         self.list_of_outputs = []
-        self.appc = ApplicationConfiguration()
+        self.appc = appc
         self.report_dir = os.path.join(self.appc.reportdir, "reports")
         self.appc.docker_state = os.path.join(self.report_dir,
                                               "docker_state.json")

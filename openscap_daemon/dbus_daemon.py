@@ -325,6 +325,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         cons = self.docker_conn.containers(all=True)
         return json.dumps(cons)
 
+    @staticmethod
     def _parse_only_cache(config, onlycache):
         if onlycache == 2:
             return not config.fetch_cve
@@ -346,7 +347,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         worker = Worker(onlyactive=onlyactive, allcontainers=allcontainers,
                         number=number,
-                        onlycache=self._parse_only_cache(self.system.config, onlycache),
+                        onlycache=self._parse_only_cache(self.system.config, int(onlycache)),
                         fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)
@@ -361,7 +362,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         worker = Worker(allimages=allimages, images=images,
                         number=number,
-                        onlycache=self._parse_only_cache(self.system.config, onlycache),
+                        onlycache=self._parse_only_cache(self.system.config, int(onlycache)),
                         fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)
@@ -375,7 +376,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             2 to use defaults from oscapd config file
         """
         worker = Worker(scan=scan_list, number=number,
-                        onlycache=self._parse_only_cache(self.system.config, onlycache),
+                        onlycache=self._parse_only_cache(self.system.config, int(onlycache)),
                         fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)
