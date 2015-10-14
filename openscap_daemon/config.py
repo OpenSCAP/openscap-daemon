@@ -33,19 +33,25 @@ class Configuration(object):
     def __init__(self):
         self.config_file = None
 
+        # General section
         self.tasks_dir = os.path.join("/", "var", "lib", "oscapd", "tasks")
         self.results_dir = os.path.join("/", "var", "lib", "oscapd", "results")
         self.work_in_progress_dir = \
             os.path.join("/", "var", "lib", "oscapd", "work_in_progress")
         self.jobs = 4
 
+        # Tools section
         self.oscap_path = ""
         self.oscap_ssh_path = ""
         # TODO: oscap-vm doesn't even exist yet
         self.oscap_vm_path = ""
         self.oscap_docker_path = ""
 
+        # Content section
         self.ssg_path = ""
+
+        # CVEScanner section
+        self.fetch_cve_url = ""
 
     def autodetect_tool_paths(self):
         """This will try a few well-known public paths and change the paths
@@ -170,6 +176,12 @@ class Configuration(object):
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
+        # CVEScanner section
+        try:
+            self.fetch_cve_url = config.get("CVEScanner", "fetch-cve-url")
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
         self.config_file = config_file
 
     def save_as(self, config_file):
@@ -189,6 +201,9 @@ class Configuration(object):
 
         config.add_section("Content")
         config.set("Content", "ssg", str(self.ssg_path))
+
+        config.add_section("CVEScanner")
+        config.set("CVEScanner", "fetch-cve-url", str(self.fetch_cve_url))
 
         with open(config_file, "w") as f:
             config.write(f)

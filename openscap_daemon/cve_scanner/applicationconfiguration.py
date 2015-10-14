@@ -62,6 +62,9 @@ class ApplicationConfiguration(Singleton):
         self.parserargs = parserargs
         self.json_url = None
         self.os_release = None
+        # "" means we will use oscap-docker defaults, else a string with URL
+        # is expected. example: "https://www.redhat.com/security/data/oval/"
+        self.fetch_cve_url = parserargs.fetch_cve_url
 
     def ValidateHost(self, host):
         ''' Validates if the defined docker host is running'''

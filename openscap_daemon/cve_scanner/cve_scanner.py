@@ -23,7 +23,6 @@ from openscap_daemon.cve_scanner.scan import Scan
 from openscap_daemon.cve_scanner.generate_summary import Create_Summary
 from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 
-# TODO: verify that this is correct
 from oscap_docker_python.get_cve_input import getInputCVE
 
 import os
@@ -107,7 +106,7 @@ class Worker(object):
     scan_args = ['allcontainers', 'allimages', 'images', 'logfile', 'nocache',
                  'number', 'onlyactive', 'reportdir',
                  'workdir', 'url_root', 'host', 'rest_host',
-                 'rest_port', 'scan']
+                 'rest_port', 'scan', 'fetch_cve_url']
 
     scan_tuple = collections.namedtuple('Namespace', scan_args)
 
@@ -116,14 +115,15 @@ class Worker(object):
                  nocache=False, reportdir=image_tmp, workdir=image_tmp,
                  host='unix://var/run/docker.sock',
                  allcontainers=False, onlyactive=False, allimages=False,
-                 images=False, scan=[]):
+                 images=False, scan=[], fetch_cve_url=""):
         self.args =\
             self.scan_tuple(number=number, logfile=logfile,
                             nocache=nocache, reportdir=reportdir,
                             workdir=workdir, host=host,
                             allcontainers=allcontainers, allimages=allimages,
                             onlyactive=onlyactive, images=images, url_root='',
-                            rest_host='', rest_port='', scan=scan)
+                            rest_host='', rest_port='', scan=scan,
+                            fetch_cve_url=fetch_cve_url)
 
         self.ac = ApplicationConfiguration(parserargs=self.args)
         self.procs = self.set_procs(self.args.number)
@@ -221,7 +221,8 @@ class Worker(object):
     def _do_work(self, image_list):
         self.scan_list = image_list
         cve_get = getInputCVE(self.image_tmp)
-
+        if self.ac.fetch_cve_url != "":
+            cve_get.url = self.ac.fetch_cve_url
         cve_get.fetch_dist_data()
 
         threads = []
@@ -441,7 +442,7 @@ class Worker(object):
         tuple_keys = ['rest_host', 'rest_port', 'allcontainers',
                       'allimages', 'images', 'logfile', 'number',
                       'reportdir', 'workdir', 'url_root',
-                      'host']
+                      'host', 'fetch_cve_url']
         for tuple_key in tuple_keys:
             tuple_val = None if not hasattr(self.ac.parserargs, tuple_key) \
                 else getattr(self.ac.parserargs, tuple_key)

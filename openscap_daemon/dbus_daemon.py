@@ -329,20 +329,23 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
                          in_signature='bbi', out_signature='s')
     def scan_containers(self, onlyactive, allcontainers, number):
         worker = Worker(onlyactive=onlyactive, allcontainers=allcontainers,
-                        number=number)
+                        number=number,
+                        fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='bbi',
                          out_signature='s')
     def scan_images(self, allimages, images, number):
-        worker = Worker(allimages=allimages, images=images, number=number)
+        worker = Worker(allimages=allimages, images=images, number=number,
+                        fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature='asi', out_signature='s')
     def scan_list(self, scan_list, number):
-        worker = Worker(scan=scan_list, number=number)
+        worker = Worker(scan=scan_list, number=number,
+                        fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)

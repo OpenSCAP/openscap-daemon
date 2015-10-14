@@ -50,6 +50,8 @@ class ConfigTest(tests.harness.APITest):
 
         assert(config.ssg_path == "/g/h/i/ssg/content")
 
+        assert(config.fetch_cve_url == "http://a.b.com/some/folder/")
+
         saved_full_path = os.path.join(self.data_dir_path, "config_test_s.ini")
         config.save_as(saved_full_path)
         assert(config.config_file == saved_full_path)
@@ -66,6 +68,8 @@ class ConfigTest(tests.harness.APITest):
         assert(config2.oscap_docker_path == "/g/h/i/j/oscap-docker")
 
         assert(config2.ssg_path == "/g/h/i/ssg/content")
+
+        assert(config2.fetch_cve_url == "http://a.b.com/some/folder/")
 
 
 if __name__ == "__main__":
