@@ -325,28 +325,57 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         cons = self.docker_conn.containers(all=True)
         return json.dumps(cons)
 
+    def _parse_only_cache(config, onlycache):
+        if onlycache == 2:
+            return not config.fetch_cve
+        elif onlycache == 1:
+            return True
+        elif onlycache == 0:
+            return False
+
+        else:
+            raise RuntimeError("Invalid value %i for onlycache" % (onlycache))
+
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
-                         in_signature='bbib', out_signature='s')
-    def scan_containers(self, onlyactive, allcontainers, number, onlycache=False):
+                         in_signature='bbiy', out_signature='s')
+    def scan_containers(self, onlyactive, allcontainers, number, onlycache=2):
+        """onlycache -
+            0 to enable CVE fetch
+            1 to disable CVE fetch
+            2 to use defaults from oscapd config file
+        """
         worker = Worker(onlyactive=onlyactive, allcontainers=allcontainers,
-                        number=number, onlycache=onlycache,
+                        number=number,
+                        onlycache=self._parse_only_cache(self.system.config, onlycache),
                         fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)
 
-    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='bbib',
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='bbiy',
                          out_signature='s')
-    def scan_images(self, allimages, images, number, onlycache=False):
+    def scan_images(self, allimages, images, number, onlycache=2):
+        """onlycache -
+            0 to enable CVE fetch
+            1 to disable CVE fetch
+            2 to use defaults from oscapd config file
+        """
         worker = Worker(allimages=allimages, images=images,
-                        number=number, onlycache=onlycache,
+                        number=number,
+                        onlycache=self._parse_only_cache(self.system.config, onlycache),
                         fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
-                         in_signature='asib', out_signature='s')
-    def scan_list(self, scan_list, number, onlycache=False):
-        worker = Worker(scan=scan_list, number=number, onlycache=onlycache,
+                         in_signature='asiy', out_signature='s')
+    def scan_list(self, scan_list, number, onlycache=2):
+        """onlycache -
+            0 to enable CVE fetch
+            1 to disable CVE fetch
+            2 to use defaults from oscapd config file
+        """
+        worker = Worker(scan=scan_list, number=number,
+                        onlycache=self._parse_only_cache(self.system.config, onlycache),
                         fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)

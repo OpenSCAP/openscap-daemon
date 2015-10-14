@@ -51,6 +51,7 @@ class Configuration(object):
         self.ssg_path = ""
 
         # CVEScanner section
+        self.fetch_cve = True
         self.fetch_cve_url = ""
 
     def autodetect_tool_paths(self):
@@ -178,6 +179,12 @@ class Configuration(object):
 
         # CVEScanner section
         try:
+            self.fetch_cve = config.get("CVEScanner", "fetch-cve") not in \
+                ["no", "0", "false", "False"]
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
             self.fetch_cve_url = config.get("CVEScanner", "fetch-cve-url")
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
@@ -203,6 +210,7 @@ class Configuration(object):
         config.set("Content", "ssg", str(self.ssg_path))
 
         config.add_section("CVEScanner")
+        config.set("CVEScanner", "fetch-cve", "yes" if self.fetch_cve else "no")
         config.set("CVEScanner", "fetch-cve-url", str(self.fetch_cve_url))
 
         with open(config_file, "w") as f:
