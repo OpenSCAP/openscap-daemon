@@ -52,7 +52,7 @@ class ApplicationConfiguration(Singleton):
         self.logfile = parserargs.logfile
         self.number = parserargs.number
         self.reportdir = parserargs.reportdir
-        self.nocache = parserargs.nocache
+        self.onlycache = parserargs.onlycache
         self.fcons = None
         self.cons = None
         self.images = None

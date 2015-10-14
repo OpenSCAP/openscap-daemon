@@ -326,23 +326,23 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return json.dumps(cons)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
-                         in_signature='bbi', out_signature='s')
-    def scan_containers(self, onlyactive, allcontainers, number):
+                         in_signature='bbib', out_signature='s')
+    def scan_containers(self, onlyactive, allcontainers, number, onlycache=False):
         worker = Worker(onlyactive=onlyactive, allcontainers=allcontainers,
-                        number=number)
+                        number=number, onlycache=onlycache)
         return_json = worker.start_application()
         return json.dumps(return_json)
 
-    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='bbi',
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='bbib',
                          out_signature='s')
-    def scan_images(self, allimages, images, number):
-        worker = Worker(allimages=allimages, images=images, number=number)
+    def scan_images(self, allimages, images, number, onlycache=False):
+        worker = Worker(allimages=allimages, images=images, number=number, onlycache=onlycache)
         return_json = worker.start_application()
         return json.dumps(return_json)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
-                         in_signature='asi', out_signature='s')
-    def scan_list(self, scan_list, number):
-        worker = Worker(scan=scan_list, number=number)
+                         in_signature='asib', out_signature='s')
+    def scan_list(self, scan_list, number, onlycache=False):
+        worker = Worker(scan=scan_list, number=number, onlycache=onlycache)
         return_json = worker.start_application()
         return json.dumps(return_json)
