@@ -32,7 +32,7 @@ ADD install.sh /root/
 
 LABEL INSTALL="docker run -t --rm --privileged -v /:/host/ IMAGE sh /root/install.sh"
 
-LABEL RUN="docker run -dt --privileged --pid=host -v /proc/:/hostproc/ -v /sys/fs/cgroup:/sys/fs/cgroup  -v /var/log:/var/log -v /run:/run -v /var/lib/docker/devicemapper/metadata/:/var/lib/docker/devicemapper/metadata/ -v /dev/:/dev/ -v /var/tmp/image-scanner:/var/tmp/image-scanner --env container=docker --net=host --cap-add=SYS_ADMIN --ipc=host IMAGE"
+LABEL RUN="docker run -dt --privileged --pid=host -v /etc/oscapd:/etc/oscapd -v /proc/:/hostproc/ -v /sys/fs/cgroup:/sys/fs/cgroup  -v /var/log:/var/log -v /run:/run -v /var/lib/docker/devicemapper/metadata/:/var/lib/docker/devicemapper/metadata/ -v /dev/:/dev/ -v /var/tmp/image-scanner:/var/tmp/image-scanner --env container=docker --net=host --cap-add=SYS_ADMIN --ipc=host IMAGE"
 
 # Dockerfile reference discourages "ADD" with remote source
 # I would love to tag this with NOCACHE but Dockerfile doesn't have an
