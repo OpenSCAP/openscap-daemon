@@ -106,7 +106,7 @@ day and store all the results. To finish this use-case, lets see how we can
 query the results after a week of evaluations.
 ```bash
 # list all available results of task 1
-$ oscapd-cli results 1
+$ oscapd-cli result 1
 7
 6
 5
