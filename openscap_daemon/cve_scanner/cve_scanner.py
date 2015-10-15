@@ -42,9 +42,9 @@ import collections
 
 class ContainerSearch(object):
     ''' Does a series of docker queries to setup variables '''
-    def __init__(self):
+    def __init__(self, appc):
         self.dead_cids = []
-        self.ac = ApplicationConfiguration()
+        self.ac = appc
         self.cons = self.ac.conn.containers(all=True)
         self.active_containers = self.ac.conn.containers(all=False)
         self.allimages = self.ac.conn.images(name=None, quiet=False,
@@ -130,8 +130,8 @@ class Worker(object):
         self.procs = self.set_procs(self.args.number)
         if not os.path.exists(self.ac.workdir):
             os.makedirs(self.ac.workdir)
-        self.cs = ContainerSearch()
-        self.output = Reporter()
+        self.cs = ContainerSearch(self.ac)
+        self.output = Reporter(self.ac)
 
         self.scan_list = None
         self.failed_scan = None
@@ -240,7 +240,7 @@ class Worker(object):
         cve_get = getInputCVE(self.image_tmp)
         if self.ac.fetch_cve_url != "":
             cve_get.url = self.ac.fetch_cve_url
-        if not self.ac.onlycache:
+        if self.ac.onlycache:
             cve_get.fetch_dist_data()
         threads = []
 
@@ -277,7 +277,7 @@ class Worker(object):
         sys.exit(0)
 
     def search_containers(self, image, cids, output):
-        f = Scan(image, cids, output)
+        f = Scan(image, cids, output, self.ac)
         try:
             if f.get_release():
 

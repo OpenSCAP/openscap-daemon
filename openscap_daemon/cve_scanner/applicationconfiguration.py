@@ -24,30 +24,10 @@ from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 import docker
 
 
-class Singleton(object):
-    ''' Singleton class to pass references'''
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            instance = super(Singleton, cls).__new__(cls)
-            instance._singleton_init(*args, **kwargs)
-            cls._instance = instance
-        return cls._instance
-
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def _singleton_init(self, *args, **kwargs):
-        """Initialize a singleton instance before it is registered."""
-        pass
-
-
-class ApplicationConfiguration(Singleton):
+class ApplicationConfiguration(object):
     '''Application Configuration'''
-    def _singleton_init(self, parserargs=None):
+    def __init__(self, parserargs=None):
         ''' Init for Application Configuration '''
-        super(ApplicationConfiguration, self)._singleton_init()
         self.workdir = parserargs.workdir
         self.logfile = parserargs.logfile
         self.number = parserargs.number
@@ -78,7 +58,3 @@ class ApplicationConfiguration(Singleton):
             client = None
             raise ImageScannerClientError(error)
         return client
-
-    def __init__(self, parserargs=None):
-        ''' init '''
-        pass

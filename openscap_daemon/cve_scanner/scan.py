@@ -16,9 +16,6 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-from openscap_daemon.cve_scanner.applicationconfiguration \
-    import ApplicationConfiguration
-
 import os
 import collections
 import time
@@ -35,9 +32,9 @@ import rpm
 
 
 class Scan(object):
-    def __init__(self, image_uuid, con_uuids, output):
+    def __init__(self, image_uuid, con_uuids, output, appc):
         self.image_name = image_uuid
-        self.ac = ApplicationConfiguration()
+        self.ac = appc
         self.CVEs = collections.namedtuple('CVEs', 'title, severity,'
                                            'cve_ref_id, cve_ref_url,'
                                            'rhsa_ref_id, rhsa_ref_url')
