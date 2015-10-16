@@ -22,7 +22,6 @@ import os.path
 from datetime import datetime
 import threading
 import logging
-import Queue
 
 from openscap_daemon.task import Task
 from openscap_daemon.config import Configuration
@@ -38,7 +37,7 @@ class System(object):
     def __init__(self, config_file):
         self.async = async.AsyncManager()
 
-        logging.info("Loading configuration from '%s'." % (config_file))
+        logging.info("Loading configuration from '%s'.", config_file)
         self.config = Configuration()
         self.config.load(config_file)
         self.config.autodetect_tool_paths()
@@ -77,8 +76,8 @@ class System(object):
         )
 
     def load_tasks(self):
-        logging.info("Loading task definitions from '%s'..." %
-                     (self.config.tasks_dir))
+        logging.info("Loading task definitions from '%s'...",
+                     self.config.tasks_dir)
         task_files = os.listdir(self.config.tasks_dir)
 
         task_count = 0
@@ -87,7 +86,7 @@ class System(object):
                 logging.warning(
                     "Found '%s' in task definitions directory '%s'. Paths "
                     "not ending with '.xml' are unexpected in the task "
-                    "definitions directory " % (task_file, self.config.tasks_dir)
+                    "definitions directory ", task_file, self.config.tasks_dir
                 )
                 continue
 
@@ -97,7 +96,7 @@ class System(object):
                 logging.warning(
                     "Found '%s' in task definitions directory '%s'. This path "
                     "is not a file. Only files are expected in the task "
-                    "definitions directory " % (full_path, self.config.tasks_dir)
+                    "definitions directory ", full_path, self.config.tasks_dir
                 )
                 continue
 
@@ -114,12 +113,12 @@ class System(object):
             self.update_wait_cond.notify_all()
 
         logging.info(
-            "Successfully loaded %i task definitions." % (task_count)
+            "Successfully loaded %i task definitions.", task_count
         )
 
     def save_tasks(self):
-        logging.info("Saving task definitions to '%s'..." %
-                     (self.config.tasks_dir))
+        logging.info("Saving task definitions to '%s'...",
+                     self.config.tasks_dir)
         task_count = 0
         with self.tasks_lock:
             for _, task in self.tasks.iteritems():
@@ -127,7 +126,7 @@ class System(object):
                 task_count += 1
 
         logging.info(
-            "Successfully saved %i task definitions." % (task_count)
+            "Successfully saved %i task definitions.", task_count
         )
 
     def list_task_ids(self):
@@ -157,7 +156,7 @@ class System(object):
             # set.
             # task.save()
 
-            logging.info("Created new empty task with ID '%i'." % (task_id))
+            logging.info("Created a new empty task with ID '%i'.", task_id)
 
             # Do not notify the update_wait_cond, the task is disabled so it
             # doesn't affect the schedule in any way
@@ -191,7 +190,7 @@ class System(object):
             del self.tasks[task_id]
 
         os.remove(os.path.join(self.config.tasks_dir, "%i.xml" % (task_id)))
-        logging.info("Removed task '%i'." % (task_id))
+        logging.info("Removed task '%i'.", task_id)
 
     def remove_task_results(self, task_id):
         task = None
@@ -222,8 +221,8 @@ class System(object):
             task.save()
 
         logging.info(
-            "%s task with ID %i." %
-            ("Enabled" if enabled else "Disabled", task_id)
+            "%s task with ID %i.",
+            "Enabled" if enabled else "Disabled", task_id
         )
 
         if task.enabled:
@@ -246,10 +245,7 @@ class System(object):
             task.title = title
             task.save()
 
-        logging.info(
-            "Set title of task with ID %i to '%s'." %
-            (task_id, title)
-        )
+        logging.info("Set title of task with ID %i to '%s'.", task_id, title)
 
     def get_task_title(self, task_id):
         task = None
@@ -267,10 +263,7 @@ class System(object):
             task.evaluation_spec.target = target
             task.save()
 
-        logging.info(
-            "Set target of task with ID %i to '%s'." %
-            (task_id, target)
-        )
+        logging.info("Set target of task with ID %i to '%s'.", task_id, target)
 
     def get_task_target(self, task_id):
         task = None
@@ -294,16 +287,16 @@ class System(object):
                 task.evaluation_spec.input_.set_file_path(input_)
 
                 logging.info(
-                    "Set input content of task with ID %i to file '%s'." %
-                    (task_id, input_)
+                    "Set input content of task with ID %i to file '%s'.",
+                    task_id, input_
                 )
 
             else:
                 task.evaluation_spec.input_.set_contents(input_)
 
                 logging.info(
-                    "Set input content of task with ID %i to custom XML." %
-                    (task_id)
+                    "Set input content of task with ID %i to custom XML.",
+                    task_id
                 )
 
             task.save()
@@ -323,16 +316,16 @@ class System(object):
                 task.evaluation_spec.tailoring.set_file_path(tailoring)
 
                 logging.info(
-                    "Set tailoring content of task with ID %i to file '%s'." %
-                    (task_id, tailoring)
+                    "Set tailoring content of task with ID %i to file '%s'.",
+                    task_id, tailoring
                 )
 
             else:
                 task.evaluation_spec.tailoring.set_contents(tailoring)
 
                 logging.info(
-                    "Set tailoring content of task with ID %i to custom XML." %
-                    (task_id)
+                    "Set tailoring content of task with ID %i to custom XML.",
+                    task_id
                 )
 
             task.save()
@@ -348,8 +341,7 @@ class System(object):
             task.save()
 
         logging.info(
-            "Set profile ID of task with ID %i to '%s'." %
-            (task_id, profile_id)
+            "Set profile ID of task with ID %i to '%s'.", task_id, profile_id
         )
 
     def set_task_online_remediation(self, task_id, remediation_enabled):
@@ -363,8 +355,8 @@ class System(object):
             task.save()
 
         logging.info(
-            "%s online remedition of task with ID %i." %
-            ("Enabled" if remediation_enabled else "Disabled", task_id)
+            "%s online remediation of task with ID %i.",
+            "Enabled" if remediation_enabled else "Disabled", task_id
         )
 
     def set_task_schedule_not_before(self, task_id, schedule_not_before):
@@ -378,8 +370,8 @@ class System(object):
             task.save()
 
         logging.info(
-            "Set schedule not before of task with ID %i to %s." %
-            (task_id, schedule_not_before)
+            "Set schedule not before of task with ID %i to %s.",
+            task_id, schedule_not_before
         )
 
         # This changes the schedule which potentially obsoletes the precomputed
@@ -399,8 +391,8 @@ class System(object):
             task.save()
 
         logging.info(
-            "Set schedule repeat after of task with ID %i to %s." %
-            (task_id, schedule_repeat_after)
+            "Set schedule repeat after of task with ID %i to %s.",
+            task_id, schedule_repeat_after
         )
 
         # This changes the schedule which potentially obsoletes the precomputed
@@ -428,6 +420,8 @@ class System(object):
 
     class AsyncUpdateTaskAction(async.AsyncAction):
         def __init__(self, system, task_id, reference_datetime):
+            super(System.AsyncUpdateTaskAction, self).__init__()
+
             self.system = system
             self.task_id = task_id
             self.reference_datetime = reference_datetime
@@ -461,8 +455,8 @@ class System(object):
             reference_datetime = datetime.utcnow()
 
         logging.debug(
-            "Scheduling task updates, reference_datetime='%s'." %
-            (str(reference_datetime))
+            "Scheduling task updates, reference_datetime='%s'.",
+            str(reference_datetime)
         )
 
         with self.tasks_lock:
@@ -504,8 +498,7 @@ class System(object):
                     with self.update_wait_cond:
                         logging.debug(
                             "Closest task action in %s. Sleeping until then. "
-                            "Interruptible if task specs change." %
-                            (time_to_wait)
+                            "Interruptible if task specs change.", time_to_wait
                         )
                         self.update_wait_cond.wait(seconds_to_wait)
 

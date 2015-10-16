@@ -85,8 +85,8 @@ class AsyncManager(object):
 
             logging.debug(
                 "Worker %i starting action from the priority queue. "
-                "priority=%i, token=%i, action='%s'" %
-                (worker_id, priority, token, action)
+                "priority=%i, token=%i, action='%s'",
+                worker_id, priority, token, action
             )
 
             action.status = Status.PROCESSING
@@ -128,7 +128,8 @@ class AsyncManager(object):
         self.actions = {}
         self.actions_lock = threading.Lock()
 
-        logging.debug("Initialized AsyncManager, %i workers" % (len(self.workers)))
+        logging.debug("Initialized AsyncManager, %i workers",
+                      len(self.workers))
 
     def _allocate_token(self):
         with self.actions_lock:
@@ -147,8 +148,8 @@ class AsyncManager(object):
             self.actions[token] = action
             self.queue.put((priority, token, action))
 
-        logging.debug("AsyncManager enqueued action '%s' with token %i" %
-                      (action, token))
+        logging.debug("AsyncManager enqueued action '%s' with token %i",
+                      action, token)
         return token
 
     def get_status(self):

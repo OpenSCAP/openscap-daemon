@@ -76,13 +76,13 @@ class Configuration(object):
                     full_path = os.path.join(prefix, name)
                     if os.path.isfile(full_path) and \
                        os.access(full_path, os.X_OK):
-                        logging.debug("Autodetected \"%s\" in path \"%s\"." %
-                                      (name, full_path))
+                        logging.debug("Autodetected \"%s\" in path \"%s\".",
+                                      name, full_path)
                         return full_path
 
             logging.debug(
-                "Failed to autodetect tool with name %s in prefixes %s." %
-                (" or ".join(possible_names), ", ".join(possible_prefixes))
+                "Failed to autodetect tool with name %s in prefixes %s.",
+                " or ".join(possible_names), ", ".join(possible_prefixes)
             )
             return ""
 
@@ -99,13 +99,13 @@ class Configuration(object):
         def autodetect_content_path(possible_paths):
             for path in possible_paths:
                 if os.path.isdir(path):
-                    logging.debug("Autodetected SCAP content in path \"%s\"." %
-                                  (path))
+                    logging.debug("Autodetected SCAP content in path \"%s\".",
+                                  path)
                     return path
 
             logging.debug(
-                "Failed to autodetect SCAP content in paths %s." %
-                (", ".join(possible_paths))
+                "Failed to autodetect SCAP content in paths %s.",
+                ", ".join(possible_paths)
             )
             return ""
 
@@ -224,23 +224,22 @@ class Configuration(object):
     def prepare_dirs(self):
         if not os.path.exists(self.tasks_dir):
             logging.info(
-                "Creating tasks directory at '%s' because it didn't exist." %
-                (self.tasks_dir)
+                "Creating tasks directory at '%s' because it didn't exist.",
+                self.tasks_dir
             )
             os.makedirs(self.tasks_dir, 0750)
 
         if not os.path.exists(self.results_dir):
             logging.info(
-                "Creating results directory at '%s' because it didn't exist." %
-                (self.results_dir)
+                "Creating results directory at '%s' because it didn't exist.",
+                self.results_dir
             )
             os.makedirs(self.results_dir)
 
         if not os.path.exists(self.work_in_progress_dir):
             logging.info(
                 "Creating results work in progress directory at '%s' because "
-                "it didn't exist." %
-                (self.work_in_progress_dir)
+                "it didn't exist.", self.work_in_progress_dir
             )
             os.makedirs(self.work_in_progress_dir)
 
@@ -250,8 +249,7 @@ class Configuration(object):
             logging.info(
                 "Found '%s' in work_in_progress results directory, full path "
                 "is '%s'. This is most likely a left-over from an earlier "
-                "crash. Deleting..." %
-                (dir_, full_path)
+                "crash. Deleting...", dir_, full_path
             )
 
             shutil.rmtree(full_path)

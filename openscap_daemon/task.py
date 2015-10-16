@@ -28,7 +28,6 @@ import os.path
 import shutil
 import threading
 import logging
-import tempfile
 
 
 class SlipMode(object):
@@ -331,9 +330,7 @@ class Task(object):
         return ret
 
     def remove_results(self, config):
-        logging.debug(
-            "Removing all results of task '%s'." % (self.id_)
-        )
+        logging.debug("Removing all results of task '%s'.", self.id_)
 
         task_results_dir = self._get_task_results_dir(config.results_dir)
         shutil.rmtree(task_results_dir, False)
@@ -346,19 +343,18 @@ class Task(object):
         )
 
         logging.debug(
-            "Removing ARF of result '%i' of task '%i', expected path '%s'." %
-            (result_id, self.id_, result_path)
+            "Removing ARF of result '%i' of task '%i', expected path '%s'.",
+            result_id, self.id_, result_path
         )
 
         shutil.rmtree(result_path, False)
-        logging.info("Removed result '%i' of task '%i'." % (result_id, self.id_))
+        logging.info("Removed result '%i' of task '%i'.", result_id, self.id_)
 
     def get_next_update_time(self, reference_datetime, log=False):
         if not self.enabled:
             if log:
                 logging.debug(
-                    "Task '%i' is disabled, not updating it." %
-                    (self.id_)
+                    "Task '%i' is disabled, not updating it.", self.id_
                 )
             return None
 
@@ -366,8 +362,7 @@ class Task(object):
             if log:
                 logging.debug(
                     "Evaluating task '%i'. It was set to be run once outside "
-                    "its schedule." %
-                    (self.id_)
+                    "its schedule.", self.id_
                 )
             return reference_datetime
 
@@ -375,8 +370,7 @@ class Task(object):
             if log:
                 logging.debug(
                     "Task '%i' is enabled but schedule.not_before is None. "
-                    "It won't be run automatically." %
-                    (self.id_)
+                    "It won't be run automatically.", self.id_
                 )
 
         return self.schedule.not_before
@@ -389,8 +383,8 @@ class Task(object):
                 logging.debug(
                     "Evaluating task '%i'. It was scheduled to be "
                     "evaluated later than %s, reference_datetime %s is "
-                    "higher than or equal." %
-                    (self.id_, next_update_time, reference_datetime)
+                    "higher than or equal.",
+                    self.id_, next_update_time, reference_datetime
                 )
 
             return True
@@ -421,14 +415,14 @@ class Task(object):
                 # there.
                 target_dir = self._get_next_target_dir(config.results_dir)
                 logging.debug(
-                    "Moving results of task '%s' from '%s' to '%s'." %
-                    (self.id_, wip_result, target_dir)
+                    "Moving results of task '%s' from '%s' to '%s'.",
+                    self.id_, wip_result, target_dir
                 )
 
                 shutil.move(wip_result, target_dir)
                 logging.info(
-                    "Evaluated task '%s', new result in '%s'." %
-                    (self.id_, target_dir)
+                    "Evaluated task '%s', new result in '%s'.",
+                    self.id_, target_dir
                 )
 
                 if not self.run_outside_schedule_once:
@@ -459,8 +453,7 @@ class Task(object):
         self.run_outside_schedule_once = True
 
         logging.info(
-            "Set task '%i' to be run once outside the schedule." %
-            (self.id_)
+            "Set task '%i' to be run once outside the schedule.", self.id_
         )
 
     def get_arf_of_result(self, result_id, config):
@@ -473,8 +466,8 @@ class Task(object):
         )
 
         logging.debug(
-            "Retrieving ARF of result '%i' of task '%i', expected path '%s'." %
-            (result_id, self.id_, path)
+            "Retrieving ARF of result '%i' of task '%i', expected path '%s'.",
+            result_id, self.id_, path
         )
 
         ret = ""
@@ -482,8 +475,8 @@ class Task(object):
             ret = f.read().decode("utf-8")
 
         logging.info(
-            "Retrieved ARF of result '%i' of task '%i'." %
-            (result_id, self.id_)
+            "Retrieved ARF of result '%i' of task '%i'.",
+            result_id, self.id_
         )
 
         return ret

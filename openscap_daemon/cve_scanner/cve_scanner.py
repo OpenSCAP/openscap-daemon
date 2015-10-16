@@ -409,10 +409,10 @@ class Worker(object):
                                       .format(input_name))
 
     def start_application(self):
-
-        if not self.args.onlyactive and not self.args.allcontainers and not self.allimages and\
-                not self.args.images and not self.args.scan:
-                    return {'Error': 'No scan type was selected'}
+        if not self.args.onlyactive and not self.args.allcontainers and \
+                not self.allimages and not self.args.images and \
+                not self.args.scan:
+            return {'Error': 'No scan type was selected'}
 
         start_time = time.time()
         logging.basicConfig(filename=self.ac.logfile,

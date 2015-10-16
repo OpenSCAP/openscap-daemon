@@ -77,37 +77,37 @@ class Client(object):
 
     @polkit.enable_proxy
     def inspect_container(self, cid):
-        foo = self.dbus_object.inspect_container(
+        ret = self.dbus_object.inspect_container(
             cid,
             dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
-        return json.loads(foo)
+        return json.loads(ret)
 
     @polkit.enable_proxy
     def get_images_info(self):
-        foo = self.dbus_object.images(
+        ret = self.dbus_object.images(
             dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
-        return json.loads(foo)
+        return json.loads(ret)
 
     @polkit.enable_proxy
     def get_containers_info(self):
-        foo = self.dbus_object.containers(
+        ret = self.dbus_object.containers(
             dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
-        return json.loads(foo)
+        return json.loads(ret)
 
     @polkit.enable_proxy
     def inspect_image(self, iid):
-        foo = self.dbus_object.inspect_image(
+        ret = self.dbus_object.inspect_image(
             iid,
             dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
-        return json.loads(foo)
+        return json.loads(ret)
 
     def debug_json(self, json_data):
         ''' Debug function that pretty prints json objects'''
@@ -120,14 +120,14 @@ class Client(object):
         else:
             self.allcontainers = True
 
-        foo = self.dbus_object.scan_containers(
+        ret = self.dbus_object.scan_containers(
             self.onlyactive,
             self.allcontainers,
             self.num_threads,
             dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
-        return json.loads(foo)
+        return json.loads(ret)
 
     @polkit.enable_proxy
     def scan_images(self, all_images=False):
@@ -135,22 +135,23 @@ class Client(object):
             self.allimages = True
         else:
             self.images = True
-        foo = self.dbus_object.scan_images(
+
+        ret = self.dbus_object.scan_images(
             self.allimages, self.images,
             self.num_threads,
             dbus_interface=dbus_utils.DBUS_INTERFACE,
             timeout=self.db_timeout
         )
-        return json.loads(foo)
+        return json.loads(ret)
 
     @polkit.enable_proxy
     def scan_list(self, scan_list):
         if not isinstance(scan_list, list):
             raise ImageScannerClientError("Input to scan_list must be in"
                                           "the form of a list")
-        return json.loads(
-            self.dbus_object.scan_list(
-                scan_list, self.num_threads,
-                dbus_interface=dbus_utils.DBUS_INTERFACE,
-                timeout=self.db_timeout)
+        ret = self.dbus_object.scan_list(
+            scan_list, self.num_threads,
+            dbus_interface=dbus_utils.DBUS_INTERFACE,
+            timeout=self.db_timeout
         )
+        return json.loads(ret)

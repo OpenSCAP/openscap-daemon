@@ -35,7 +35,7 @@ class Create_Summary(object):
 
     _cve_tuple = namedtuple('oval_cve', ['title', 'severity', 'cve_ref_id',
                             'cve_ref_url', 'rhsa_ref_id', 'rhsa_ref_url',
-                                         'cve', 'description'])
+                            'cve', 'description'])
 
     def __init__(self):
         self.containers = None

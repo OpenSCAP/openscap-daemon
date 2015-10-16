@@ -34,8 +34,8 @@ def get_profile_choices_for_input(input_file, tailoring_file):
     # bindings is nasty and overkill for this.
 
     logging.debug(
-        "Looking for profile choices in '%s' with tailoring file '%s'." %
-        (input_file, tailoring_file)
+        "Looking for profile choices in '%s' with tailoring file '%s'.",
+        input_file, tailoring_file
     )
 
     ret = {}
@@ -72,8 +72,8 @@ def get_profile_choices_for_input(input_file, tailoring_file):
         )
 
     logging.info(
-        "Found %i profile choices in '%s' with tailoring file '%s'." %
-        (len(ret), input_file, tailoring_file)
+        "Found %i profile choices in '%s' with tailoring file '%s'.",
+        len(ret), input_file, tailoring_file
     )
 
     return ret
@@ -111,8 +111,8 @@ def generate_guide(spec, config):
     args = get_generate_guide_args(spec, config)
 
     logging.debug(
-        "Generating guide for evaluation spec with command '%s'." %
-        (" ".join(args))
+        "Generating guide for evaluation spec with command '%s'.",
+        " ".join(args)
     )
 
     ret = subprocess_check_output(
@@ -209,8 +209,8 @@ def evaluate(spec, config):
     args = get_evaluation_args(spec, config)
 
     logging.debug(
-        "Starting evaluation with command '%s'." %
-        (" ".join(args))
+        "Starting evaluation with command '%s'.",
+        " ".join(args)
     )
 
     exit_code = 1
@@ -241,15 +241,15 @@ def evaluate(spec, config):
 
     if exit_code == 0:
         logging.info(
-            "Evaluated EvaluationSpec, exit code %i means the target evaluated "
-            "as compliant." % (exit_code)
+            "Evaluated EvaluationSpec, exit code 0 means the target evaluated "
+            "as compliant."
         )
         # TODO: Assert that arf was generated
 
     elif exit_code == 2:
         logging.warning(
-            "Evaluated EvaluationSpec, exit code %i means the target evaluated "
-            "as non-compliant!" % (exit_code)
+            "Evaluated EvaluationSpec, exit code 2 means the target evaluated "
+            "as non-compliant!"
         )
         # TODO: Assert that arf was generated
 
@@ -263,8 +263,7 @@ def evaluate(spec, config):
 
     else:
         logging.error(
-            "Evaluated EvaluationSpec, unknown exit code %i!." %
-            (exit_code)
+            "Evaluated EvaluationSpec, unknown exit code %i!.", exit_code
         )
 
     return working_directory
@@ -295,8 +294,8 @@ def generate_report_for_result(spec, results_dir, result_id, config):
     args = get_generate_report_args_for_arf(spec, arf_path, config)
 
     logging.debug(
-        "Generating report for result %i of EvaluationSpec with command '%s'." %
-        (result_id, " ".join(args))
+        "Generating report for result %i of EvaluationSpec with command '%s'.",
+        result_id, " ".join(args)
     )
 
     ret = subprocess_check_output(
@@ -305,8 +304,7 @@ def generate_report_for_result(spec, results_dir, result_id, config):
     ).decode("utf-8")
 
     logging.info(
-        "Generated report for result %i of EvaluationSpec." %
-        (result_id)
+        "Generated report for result %i of EvaluationSpec.", result_id
     )
 
     return ret
@@ -328,8 +326,9 @@ def get_status_from_exit_code(exit_code):
 
 
 __all__ = [
+    "get_profile_choices_for_input",
     "generate_guide",
     "evaluate",
-    "generate_report_for_arf",
+    "generate_report_for_result",
     "get_status_from_exit_code"
 ]
