@@ -24,8 +24,8 @@ generate the results dict from the oscap results.xml files
 
 import xml.etree.ElementTree as ET
 from collections import namedtuple
-from image_scanner_client import Client
-from scanner_error import ImageScannerClientError
+from openscap_daemon.cve_scanner.image_scanner_client import Client
+from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 import urlparse
 import json
 

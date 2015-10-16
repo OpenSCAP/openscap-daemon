@@ -18,9 +18,9 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 
-from evaluation_spec import EvaluationSpec
-from system import System
-from task import Task
+from openscap_daemon.evaluation_spec import EvaluationSpec
+from openscap_daemon.system import System
+from openscap_daemon.task import Task
 
 
 __all__ = ["EvaluationSpec", "System", "Task"]
