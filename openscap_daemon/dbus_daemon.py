@@ -135,14 +135,14 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return self.system.create_task()
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
-                         in_signature="x", out_signature="")
-    def RemoveTask(self, task_id):
+                         in_signature="xb", out_signature="")
+    def RemoveTask(self, task_id, remove_results):
         """Removes task with given ID and deletes its config file. The task has
         to be disabled, else the operation fails.
 
         The change is persistent after the function returns.
         """
-        return self.system.remove_task(task_id)
+        return self.system.remove_task(task_id, remove_results)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xb", out_signature="")
