@@ -62,3 +62,5 @@ target/
 
 # IntelliJ IDEA
 .idea/
+
+/static-analysis-output
