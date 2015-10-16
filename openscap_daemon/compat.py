@@ -45,4 +45,4 @@ if hasattr(subprocess, "check_output"):
     # if available we just use the real function
     subprocess_check_output = subprocess.check_output
 
-all = ["subprocess_check_output"]
+__all__ = ["subprocess_check_output"]
