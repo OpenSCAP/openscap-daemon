@@ -149,10 +149,10 @@ def cli_task(dbus_iface, args):
                 args.task_id, False, utf8_strings=True
             )
         elif args.task_action == "remove":
-            dbus_iface.RemoveTask(
-                args.task_id, args.remove_results, utf8_strings=True
-            )
-
+            if args.force or confirm("Do you really want to delete task with ID %i?" % args.task_id):
+                dbus_iface.RemoveTask(
+                    args.task_id, args.remove_results, utf8_strings=True
+                )
         else:
             raise RuntimeError("Unknown action '%s'." % (args.task_action))
 
@@ -366,6 +366,10 @@ def main():
             "task_action", metavar="ACTION", type=str,
             choices=["info", "guide", "run", "enable", "disable", "remove"],
             default="info", nargs="?"
+        )
+        task_parser.add_argument(
+              "-f", "--force", help="remove task without confirmation",
+              action="store_true"
         )
         task_parser.add_argument(
               "-r", "--remove-results", help="remove with results",
