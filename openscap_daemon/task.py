@@ -330,6 +330,29 @@ class Task(object):
         assert(not os.path.exists(ret))
         return ret
 
+    def remove_results(self, config):
+        logging.debug(
+            "Removing all results of task '%s'." % (self.id_)
+        )
+
+        task_results_dir = self._get_task_results_dir(config.results_dir)
+        shutil.rmtree(task_results_dir, False)
+
+    def remove_result(self, result_id, config):
+        # todo needs refactoring - the path is used from many places
+        result_path = os.path.join(
+            self._get_task_results_dir(config.results_dir),
+            str(result_id),
+        )
+
+        logging.debug(
+            "Removing ARF of result '%i' of task '%i', expected path '%s'." %
+            (result_id, self.id_, result_path)
+        )
+
+        shutil.rmtree(result_path, False)
+        logging.info("Removed result '%i' of task '%i'." % (result_id, self.id_))
+
     def get_next_update_time(self, reference_datetime, log=False):
         if not self.enabled:
             if log:

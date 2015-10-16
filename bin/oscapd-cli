@@ -149,10 +149,10 @@ def cli_task(dbus_iface, args):
                 args.task_id, False, utf8_strings=True
             )
         elif args.task_action == "remove":
-            dbus_iface.RemoveTask(
-                args.task_id, utf8_strings=True
-            )
-
+            if args.force or confirm("Do you really want to delete task with ID %i?" % args.task_id):
+                dbus_iface.RemoveTask(
+                    args.task_id, args.remove_results, utf8_strings=True
+                )
         else:
             raise RuntimeError("Unknown action '%s'." % (args.task_action))
 
@@ -275,6 +275,10 @@ def cli_result(dbus_iface, args):
         result_ids = dbus_iface.GetTaskResultIDs(args.task_id)
         cli_print_results_table(dbus_iface, args.task_id, result_ids)
 
+    elif args.result_id == "remove":
+        if args.force or confirm("Do you really want to remove all results of task %d"
+                                      % args.task_id):
+            dbus_iface.RemoveTaskResults(args.task_id)
     else:
         if args.result_action == "arf":
             arf = dbus_iface.GetARFOfTaskResult(
@@ -305,11 +309,29 @@ def cli_result(dbus_iface, args):
                 args.task_id, args.result_id, utf8_strings=True
             )
             print(report)
-
+        elif args.result_action == "remove":
+            if args.force or confirm("Do you really want to remove result %d from task %d"
+                                      % (args.result_id, args.task_id)):
+                dbus_iface.RemoveTaskResult(args.task_id, args.result_id)
         else:
             raise RuntimeError(
                 "Unknown result action '%s'." % (args.result_action)
             )
+
+def confirm(prompt):
+    while True:
+        try:
+            res = raw_input("%s [y/N]: " % prompt)
+        except EOFError:
+            break
+        if not res or res in ['n', 'N']:
+            break
+        if res in ['y', 'Y']:
+           return True
+
+    sys.stderr.write("Operation aborted.\n")
+    return False
+
 
 
 def main():
@@ -345,6 +367,14 @@ def main():
             choices=["info", "guide", "run", "enable", "disable", "remove"],
             default="info", nargs="?"
         )
+        task_parser.add_argument(
+              "-f", "--force", help="remove task without confirmation",
+              action="store_true"
+        )
+        task_parser.add_argument(
+              "-r", "--remove-results", help="remove with results",
+              action="store_true"
+        )
     add_task_parser(subparsers)
 
     def add_task_create_parser(subparsers):
@@ -367,6 +397,16 @@ def main():
         status_parser.set_defaults(action="status")
     add_status_parser(subparsers)
 
+    def result_id_or_action(val):
+        if val == "remove":
+            return "remove"
+
+        try:
+           return int(val)
+        except ValueError:
+            raise argparse.ArgumentTypeError("'%s' is not \"remove\" or integer" %
+                                             val)
+
     def add_result_parser(subparsers):
         result_parser = subparsers.add_parser(
             "result",
@@ -375,16 +415,25 @@ def main():
         result_parser.add_argument(
             "task_id", metavar="TASK_ID", type=int
         )
+
+
         result_parser.add_argument(
-            "result_id", metavar="RESULT_ID", type=int, nargs="?",
+            "result_id", metavar="RESULT_ID", type=result_id_or_action, nargs="?",
             help="ID of the result we want to display, if none is provided "
             "a summary of all results of given task is displayed."
         )
+
         result_parser.add_argument(
             "result_action", metavar="ACTION", type=str,
-            choices=["arf", "stdout", "stderr", "exit_code", "report"],
+            choices=["arf", "stdout", "stderr", "exit_code", "report", "remove"],
             default="arf", nargs="?"
         )
+
+        result_parser.add_argument(
+              "-f", "--force", help="remove results without confirmation",
+              action="store_true"
+        )
+
         result_parser.set_defaults(action="result")
     add_result_parser(subparsers)
 

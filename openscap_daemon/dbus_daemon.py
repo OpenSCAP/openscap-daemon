@@ -135,14 +135,14 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return self.system.create_task()
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
-                         in_signature="x", out_signature="")
-    def RemoveTask(self, task_id):
+                         in_signature="xb", out_signature="")
+    def RemoveTask(self, task_id, remove_results):
         """Removes task with given ID and deletes its config file. The task has
         to be disabled, else the operation fails.
 
         The change is persistent after the function returns.
         """
-        return self.system.remove_task(task_id)
+        return self.system.remove_task(task_id, remove_results)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xb", out_signature="")
@@ -270,6 +270,20 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """Retrieves full ARF of result of given task.
         """
         return self.system.get_arf_of_task_result(task_id, result_id)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="x", out_signature="")
+    def RemoveTaskResults(self, task_id):
+        """Remove all results of given task.
+        """
+        return self.system.remove_task_results(task_id)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="xx", out_signature="")
+    def RemoveTaskResult(self, task_id, result_id):
+        """Remove result of given task.
+        """
+        return self.system.remove_task_result(task_id, result_id)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")

@@ -167,9 +167,8 @@ class System(object):
 
         return task_id
 
-    def remove_task(self, task_id):
+    def remove_task(self, task_id, remove_results):
         task = None
-
         with self.tasks_lock:
             task = self.tasks[task_id]
             if task.enabled:
@@ -178,18 +177,39 @@ class System(object):
                     (task_id)
                 )
 
-            result_ids = task.list_result_ids(self.config.results_dir)
-            if len(result_ids) > 0:
-                raise RuntimeError(
-                    "Can't remove task '%i', in has %i results stored. "
-                    "Please remove all the results first." %
-                    (task_id, len(result_ids))
-                )
-
+            if not remove_results:
+                result_ids = task.list_result_ids(self.config.results_dir)
+                if len(result_ids) > 0:
+                    raise RuntimeError(
+                        "Can't remove task '%i', in has %i results stored. "
+                        "Please remove all the results first." %
+                        (task_id, len(result_ids))
+                    )
+            else:
+                logging.debug("Remove task results before.")
+                task.remove_results(self.config)
             del self.tasks[task_id]
 
         os.remove(os.path.join(self.config.tasks_dir, "%i.xml" % (task_id)))
         logging.info("Removed task '%i'." % (task_id))
+
+    def remove_task_results(self, task_id):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            task.remove_results(self.config)
+
+    def remove_task_result(self, task_id, result_id):
+        task = None
+
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        with task.update_lock:
+            task.remove_result(result_id, self.config)
 
     def set_task_enabled(self, task_id, enabled):
         task = None
