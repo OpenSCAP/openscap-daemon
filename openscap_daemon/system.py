@@ -189,8 +189,11 @@ class System(object):
                 task.remove_results(self.config)
             del self.tasks[task_id]
 
-        os.remove(os.path.join(self.config.tasks_dir, "%i.xml" % (task_id)))
+        os.remove(self._get_task_file_path(task_id))
         logging.info("Removed task '%i'.", task_id)
+
+    def _get_task_file_path(self, task_id):
+        return os.path.join(self.config.tasks_dir, "%i.xml" % (task_id))
 
     def remove_task_results(self, task_id):
         task = None
@@ -271,6 +274,14 @@ class System(object):
             task = self.tasks[task_id]
 
         return task.evaluation_spec.target
+
+    def get_task_created_timestamp(self, task_id):
+        task_path = self._get_task_file_path(task_id)
+        return os.path.getctime(task_path)
+
+    def get_task_modified_timestamp(self, task_id):
+        task_path = self._get_task_file_path(task_id)
+        return os.path.getmtime(task_path)
 
     def set_task_input(self, task_id, input_):
         """input can be an absolute file path or the XML source itself. This is
@@ -528,6 +539,13 @@ class System(object):
 
         # TODO: Is this a race condition? look into task.update
         return task.list_result_ids(self.config.results_dir)
+
+    def get_task_result_created_timestamp(self, task_id, result_id):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.get_result_created_timestamp(result_id, self.config)
 
     def get_arf_of_task_result(self, task_id, result_id):
         task = None
