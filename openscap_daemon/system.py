@@ -189,7 +189,7 @@ class System(object):
                 task.remove_results(self.config)
             del self.tasks[task_id]
 
-        os.remove(os.path.join(self.config.tasks_dir, "%i.xml" % (task_id)))
+        os.remove(self._get_task_file_path(task_id))
         logging.info("Removed task '%i'.", task_id)
 
     def _get_task_file_path(self, task_id):
