@@ -192,6 +192,9 @@ class System(object):
         os.remove(os.path.join(self.config.tasks_dir, "%i.xml" % (task_id)))
         logging.info("Removed task '%i'.", task_id)
 
+    def _get_task_file_path(self, task_id):
+        return os.path.join(self.config.tasks_dir, "%i.xml" % (task_id))
+
     def remove_task_results(self, task_id):
         task = None
 
