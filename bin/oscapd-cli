@@ -83,13 +83,20 @@ def cli_task(dbus_iface, args):
     if args.task_id is None:
         # args.task_action is ignored in this scope
 
-        table = [["ID", "Title", "Target", "Enabled"]]
+        table = [["ID", "Title", "Target", "Created", "Modified", "Enabled"]]
         task_ids = dbus_iface.ListTaskIDs()
 
         enabled_count = 0
         for task_id in task_ids:
             title = dbus_iface.GetTaskTitle(task_id, utf8_strings=True)
             target = dbus_iface.GetTaskTarget(task_id, utf8_strings=True)
+
+            created_timestamp = dbus_iface.GetTaskCreatedTimestamp(task_id)
+            created = datetime.fromtimestamp(created_timestamp)
+
+            modified_timestamp = dbus_iface.GetTaskModifiedTimestamp(task_id)
+            modified = datetime.fromtimestamp(modified_timestamp)
+
             enabled = dbus_iface.GetTaskEnabled(task_id)
             if enabled:
                 enabled_count += 1
@@ -98,6 +105,8 @@ def cli_task(dbus_iface, args):
                 str(task_id),
                 title,
                 target,
+                created,
+                modified,
                 # TODO: Maybe we can show the disabled state in a better way?
                 "enabled" if enabled else "disabled"
             ])
@@ -112,10 +121,18 @@ def cli_task(dbus_iface, args):
             title = dbus_iface.GetTaskTitle(args.task_id, utf8_strings=True)
             target = dbus_iface.GetTaskTarget(args.task_id, utf8_strings=True)
 
+            created_timestamp = dbus_iface.GetTaskCreatedTimestamp(args.task_id)
+            created = datetime.fromtimestamp(created_timestamp)
+
+            modified_timestamp = dbus_iface.GetTaskModifiedTimestamp(args.task_id)
+            modified = datetime.fromtimestamp(modified_timestamp)
+
             table = []
             table.append(["Title", title])
             table.append(["ID", str(args.task_id)])
             table.append(["Target", target])
+            table.append(["Created", created])
+            table.append(["Modified", modified])
             cli_helpers.print_table(table, first_row_header=False)
             print("")
 
