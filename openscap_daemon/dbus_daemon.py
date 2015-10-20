@@ -177,6 +177,20 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return self.system.get_task_target(task_id)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="x", out_signature="x")
+    def GetTaskCreatedTimestamp(self, task_id):
+        """Get timestamp of task creation
+        """
+        return self.system.get_task_created_timestamp(task_id)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="x", out_signature="x")
+    def GetTaskModifiedTimestamp(self, task_id):
+        """Get timestamp of task modification
+        """
+        return self.system.get_task_modified_timestamp(task_id)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xs", out_signature="")
     def SetTaskInput(self, task_id, input_):
         """Set input of existing task with given ID.

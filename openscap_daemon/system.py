@@ -275,6 +275,14 @@ class System(object):
 
         return task.evaluation_spec.target
 
+    def get_task_created_timestamp(self, task_id):
+        task_path = self._get_task_file_path(task_id)
+        return os.path.getctime(task_path)
+
+    def get_task_modified_timestamp(self, task_id):
+        task_path = self._get_task_file_path(task_id)
+        return os.path.getmtime(task_path)
+
     def set_task_input(self, task_id, input_):
         """input can be an absolute file path or the XML source itself. This is
         autodetected.
