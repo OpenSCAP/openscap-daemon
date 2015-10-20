@@ -303,6 +303,18 @@ class Task(object):
             key=lambda s: (len(s), s)
         )
 
+    def get_result_created_timestamp(self, result_id, config):
+        """Return timestamp of result creation.
+        """
+        # todo refactor - the path is used from many places
+        file_path = os.path.join(
+            self._get_task_results_dir(config.results_dir),
+            str(result_id),
+            "exit_code"
+        )
+        timestamp = os.path.getctime(file_path)
+        return timestamp
+
     def _get_next_target_dir(self, results_dir):
         # We may consider having a file that contains the last ID in the
         # future. I considered that but right now I think a result with more

@@ -529,6 +529,13 @@ class System(object):
         # TODO: Is this a race condition? look into task.update
         return task.list_result_ids(self.config.results_dir)
 
+    def get_task_result_created_timestamp(self, task_id, result_id):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.get_result_created_timestamp(result_id, self.config)
+
     def get_arf_of_task_result(self, task_id, result_id):
         task = None
         with self.tasks_lock:

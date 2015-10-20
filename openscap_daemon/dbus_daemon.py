@@ -265,6 +265,13 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return self.system.get_task_result_ids(task_id)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="xx", out_signature="x")
+    def GetResultCreatedTimestamp(self, task_id, result_id):
+        """Return timestamp of result creation
+        """
+        return self.system.get_task_result_created_timestamp(task_id, result_id)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")
     def GetARFOfTaskResult(self, task_id, result_id):
         """Retrieves full ARF of result of given task.
