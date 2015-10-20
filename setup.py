@@ -43,9 +43,10 @@ def get_packages():
 setup(
     name="openscap_daemon",
     version=version.VERSION_STRING,
-    description="...",
     author="Martin Preisler, Brent Baude and others",
     author_email="mpreisle@redhat.com",
+    description="...",
+    license="LGPL2.1+",
     url="http://www.open-scap.org/",
     packages=get_packages(),
     scripts=[
@@ -57,5 +58,7 @@ setup(
          ["org.oscapd.conf"]),
         (os.path.join("/", "usr", "lib", "systemd", "system"),
          ["oscapd.service"]),
-    ]
+        (os.path.join("/", "usr", "share", "doc", "openscap-daemon"),
+         ["README.md", "LICENSE"]),
+    ],
 )
