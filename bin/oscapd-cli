@@ -69,7 +69,9 @@ def cli_print_results_table(dbus_iface, task_id, result_ids,
             task_id, result_id
         )
         status = oscap_helpers.get_status_from_exit_code(exit_code)
-        table.append([str(result_id), "TODO", status])
+        timestamp = dbus_iface.GetResultCreatedTimestamp(task_id, result_id)
+
+        table.append([str(result_id), datetime.fromtimestamp(timestamp), status])
 
     cli_helpers.print_table(table)
 
