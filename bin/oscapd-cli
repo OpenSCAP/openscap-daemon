@@ -47,9 +47,11 @@ def get_dbus_interface():
 
     return dbus.Interface(obj, dbus_utils.DBUS_INTERFACE)
 
+
 def cli_status(dbus_iface, args):
     async_status = dbus_iface.GetAsyncActionsStatus()
     print(async_status)
+
 
 def cli_eval(dbus_iface, args):
     eval_spec = cli_helpers.cli_create_evaluation_spec(dbus_iface)
@@ -59,6 +61,7 @@ def cli_eval(dbus_iface, args):
             utf8_strings=True,
             timeout=30*60*1000 # in msec
         )
+
 
 def cli_print_results_table(dbus_iface, task_id, result_ids,
                             max_items=sys.maxsize):
@@ -83,16 +86,13 @@ def cli_task(dbus_iface, args):
     if args.task_id is None:
         # args.task_action is ignored in this scope
 
-        table = [["ID", "Title", "Target", "Created", "Modified", "Enabled"]]
+        table = [["ID", "Title", "Target", "Modified", "Enabled"]]
         task_ids = dbus_iface.ListTaskIDs()
 
         enabled_count = 0
         for task_id in task_ids:
             title = dbus_iface.GetTaskTitle(task_id, utf8_strings=True)
             target = dbus_iface.GetTaskTarget(task_id, utf8_strings=True)
-
-            created_timestamp = dbus_iface.GetTaskCreatedTimestamp(task_id)
-            created = datetime.fromtimestamp(created_timestamp)
 
             modified_timestamp = dbus_iface.GetTaskModifiedTimestamp(task_id)
             modified = datetime.fromtimestamp(modified_timestamp)
@@ -105,7 +105,6 @@ def cli_task(dbus_iface, args):
                 str(task_id),
                 title,
                 target,
-                created,
                 modified,
                 # TODO: Maybe we can show the disabled state in a better way?
                 "enabled" if enabled else "disabled"
