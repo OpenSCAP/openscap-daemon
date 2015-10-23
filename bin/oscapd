@@ -21,6 +21,7 @@
 
 from openscap_daemon import dbus_daemon
 from openscap_daemon import dbus_utils
+from openscap_daemon import version
 
 import os
 import logging
@@ -38,6 +39,7 @@ def main():
 
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         level=logging.DEBUG if args.verbose else logging.INFO)
+    logging.info("OpenSCAP Daemon %s", version.VERSION_STRING)
 
     import dbus.mainloop.glib
     gobject.threads_init()
