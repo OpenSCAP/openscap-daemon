@@ -156,6 +156,14 @@ def get_evaluation_args(spec, config):
         container_name = spec.target[len("docker-container://"):]
         ret.extend([config.oscap_docker_path, "container", container_name])
 
+    elif spec.target.startswith("vm-domain://"):
+        domain_name = spec.target[len("vm-domain://"):]
+        ret.extend([config.oscap_vm_path, "domain", domain_name])
+
+    elif spec.target.startswith("vm-image://"):
+        storage_name = spec.target[len("vm-image://"):]
+        ret.extend([config.oscap_vm_path, "image", storage_name])
+
     else:
         raise RuntimeError(
             "Unrecognized target '%s' in evaluation spec." % (spec.target)
