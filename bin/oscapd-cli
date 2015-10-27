@@ -392,6 +392,20 @@ def cli_result(dbus_iface, args):
                 "Unknown result action '%s'." % (args.result_action)
             )
 
+def get_bool(val, default = False):
+    val = val.lower()
+    
+    if not val:
+        return default
+
+    if val in ['n', '0', 'false', 'no']:
+        return False
+
+    if val in ['y', '1', 'true', 'yes']:
+        return True
+
+    raise ValueError("'%s' is not valid value, use y/n instead." %val)
+
 def confirm(prompt):
     while True:
         try:
