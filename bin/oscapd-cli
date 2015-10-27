@@ -38,18 +38,8 @@ class TaskAccessor(object):
     @staticmethod
     def get_bool(values):
         TaskAccessor._expect_param_len(values, 1)
-        bool_val = TaskAccessor._parse_bool(values[0])
+        bool_val = get_bool(values[0])
         return [bool_val,]
-
-    @staticmethod
-    def _parse_bool(val):
-        val = val.lower()
-        if val in ["1", "true", "yes"]:
-            return True
-        if val in ["0", "false", "no"]:
-            return False
-
-        raise ValueError("'%s' is not valid value, use true/false instead." %val)
 
     @staticmethod
     def get_int(values):
@@ -417,7 +407,6 @@ def confirm(prompt, default = False):
         except EOFError:
             sys.stderr.write("Operation aborted.\n")
             return default
-
 
 def main():
     parser = argparse.ArgumentParser(
