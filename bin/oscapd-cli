@@ -481,10 +481,10 @@ def main():
 
     def add_task_create_parser(subparsers):
         task_create_parser = subparsers.add_parser(
-            "task_create",
+            "task-create",
             help="Create new task."
         )
-        task_create_parser.set_defaults(action="task_create")
+        task_create_parser.set_defaults(action="task-create")
         task_create_parser.add_argument(
             "-i", "--interactive", action="store_true", dest="interactive"
         )
@@ -560,7 +560,7 @@ def main():
         cli_eval(dbus_iface, args)
     elif args.action == "task":
         cli_task(dbus_iface, task_accessor, args)
-    elif args.action == "task_create":
+    elif args.action == "task-create":
         cli_task_create(dbus_iface, args)
     elif args.action == "status":
         cli_status(dbus_iface, args)
