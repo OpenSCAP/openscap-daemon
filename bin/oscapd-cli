@@ -267,10 +267,12 @@ def cli_task_create(dbus_iface, args):
             "Choose profile by number (empty for (default) profile): ")
         profile = profile_choices.keys()[int(profile_choice) - 1]
 
-        online_remediation = False
-        if raw_input("Online remediation (1, y or Y for yes, else no): ") in \
-                ["1", "y", "Y"]:
-            online_remediation = True
+
+        online_remediation_raw = raw_input("Online remediation (1, y or Y for yes, else no): ")
+        try:
+            online_remediation = get_bool(online_remediation_raw, default=False)
+        except ValueError:
+            pass
 
         print("Schedule: ")
         schedule_not_before = None
