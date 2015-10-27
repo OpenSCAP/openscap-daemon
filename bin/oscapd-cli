@@ -406,20 +406,17 @@ def get_bool(val, default = False):
 
     raise ValueError("'%s' is not valid value, use y/n instead." %val)
 
-def confirm(prompt):
+def confirm(prompt, default = False):
+    options = "Y/n" if default else "y/N"
     while True:
         try:
-            res = raw_input("%s [y/N]: " % prompt)
+            res = raw_input("%s [%s]: " % (prompt, options))
+            return get_bool(res, default)
+        except ValueError:
+            continue
         except EOFError:
-            break
-        if not res or res in ['n', 'N']:
-            break
-        if res in ['y', 'Y']:
-           return True
-
-    sys.stderr.write("Operation aborted.\n")
-    return False
-
+            sys.stderr.write("Operation aborted.\n")
+            return default
 
 
 def main():
