@@ -30,6 +30,68 @@ import sys
 from datetime import datetime
 import os.path
 
+class TaskAccessor(object):
+
+    def __init__(self):
+        self._attributes = dict()
+
+    @staticmethod
+    def get_bool(values):
+        TaskAccessor._expect_param_len(values, 1)
+        bool_val = get_bool(values[0])
+        return [bool_val,]
+
+    @staticmethod
+    def get_int(values):
+        TaskAccessor._expect_param_len(values, 1)
+        return [int(values[0])]
+
+    @staticmethod
+    def _expect_param_len(values, expected):
+        length = len(values)
+        if length != expected:
+            raise ValueError("Expected %d parameters, but %d given." % (expected, length))
+
+    @staticmethod
+    def get_string(values):
+        if len(values) != 1:
+            raise ValueError("Not expected parameters")
+        return [values[0]]
+
+    def add_accessor(self, key, dbus_getter, dbus_setter, check=None, result_processor=None):
+        self.add_getter(key, dbus_getter,  result_processor )
+        self.add_setter(key, dbus_setter, check)
+
+    def add_getter(self, key, dbus_getter, result_processor=None):
+        self._attributes["get-%s" % key] = (dbus_getter, None, result_processor)
+
+    def add_setter(self, key, dbus_setter, check = None):
+        self._attributes["set-%s" % key] = (dbus_setter, check, None)
+
+    def eval(self, dbus_iface, key, task_id, args):
+        record = self._attributes[key]
+        method_name = record[0]
+        cast_func = record[1]
+        result_func = record[2]
+        if cast_func:
+            casted_args = cast_func(args)
+        else:
+            casted_args = TaskAccessor.get_string(args)
+
+        casted_args.insert(0, task_id)
+
+        dbus_method = getattr(dbus_iface, method_name)
+        res = dbus_method(*casted_args, utf8_strings=True)
+        if result_func:
+             result_func(res)
+
+    def __contains__(self, key):
+        return key in self._attributes
+
+    def get_allowed(self):
+        return self._attributes.keys()
+
+
 
 def get_dbus_interface():
     bus = dbus_utils.get_dbus()
@@ -82,7 +144,7 @@ def cli_print_results_table(dbus_iface, task_id, result_ids,
         print("... and %i more" % (len(result_ids) - max_items))
 
 
-def cli_task(dbus_iface, args):
+def cli_task(dbus_iface, task_accessor, args):
     if args.task_id is None:
         # args.task_action is ignored in this scope
 
@@ -171,6 +233,8 @@ def cli_task(dbus_iface, args):
                 dbus_iface.RemoveTask(
                     args.task_id, args.remove_results, utf8_strings=True
                 )
+        elif args.task_action in task_accessor:
+            task_accessor.eval(dbus_iface, args.task_action, args.task_id, args.parameters[0])
         else:
             raise RuntimeError("Unknown action '%s'." % (args.task_action))
 
@@ -221,10 +285,12 @@ def cli_task_create(dbus_iface, args):
             "Choose profile by number (empty for (default) profile): ")
         profile = profile_choices.keys()[int(profile_choice) - 1]
 
-        online_remediation = False
-        if raw_input("Online remediation (1, y or Y for yes, else no): ") in \
-                ["1", "y", "Y"]:
-            online_remediation = True
+
+        online_remediation_raw = raw_input("Online remediation (1, y or Y for yes, else no): ")
+        try:
+            online_remediation = get_bool(online_remediation_raw, default=False)
+        except ValueError:
+            pass
 
         print("Schedule: ")
         schedule_not_before = None
@@ -336,27 +402,54 @@ def cli_result(dbus_iface, args):
                 "Unknown result action '%s'." % (args.result_action)
             )
 
-def confirm(prompt):
+def get_bool(val, default = False):
+    val = val.lower()
+    
+    if not val:
+        return default
+
+    if val in ['n', '0', 'false', 'no']:
+        return False
+
+    if val in ['y', '1', 'true', 'yes']:
+        return True
+
+    raise ValueError("'%s' is not valid value, use y/n instead." %val)
+
+def confirm(prompt, default = False):
+    options = "Y/n" if default else "y/N"
     while True:
         try:
-            res = raw_input("%s [y/N]: " % prompt)
+            res = raw_input("%s [%s]: " % (prompt, options))
+            return get_bool(res, default)
+        except ValueError:
+            continue
         except EOFError:
-            break
-        if not res or res in ['n', 'N']:
-            break
-        if res in ['y', 'Y']:
-           return True
-
-    sys.stderr.write("Operation aborted.\n")
-    return False
-
-
+            sys.stderr.write("Operation aborted.\n")
+            return default
 
 def main():
     parser = argparse.ArgumentParser(
         description="OpenSCAP-Daemon command line interface."
     )
     subparsers = parser.add_subparsers()
+    task_accessor = TaskAccessor()
+
+    task_accessor.add_setter("enabled",
+                             "SetTaskEnabled",
+                             TaskAccessor.get_bool)
+    task_accessor.add_setter("title", "SetTaskTitle")
+    task_accessor.add_setter("target", "SetTaskTarget")
+    task_accessor.add_setter("input", "SetTaskInput")
+    task_accessor.add_setter("tailoring", "SetTaskTailoring")
+    task_accessor.add_setter("profile-id", "SetTaskProfileID")
+    task_accessor.add_setter("online-remediation",
+                             "SetTaskOnlineRemediation",
+                             TaskAccessor.get_bool)
+    task_accessor.add_setter("schedule-not-before", "SetTaskScheduleNotBefore")
+    task_accessor.add_setter("schedule-repeat-after",
+                             "SetTaskScheduleRepeatAfter",
+                             TaskAccessor.get_int)
 
     def add_eval_parser(subparsers):
         eval_parser = subparsers.add_parser(
@@ -368,7 +461,7 @@ def main():
         # todo non-interactive
     add_eval_parser(subparsers)
 
-    def add_task_parser(subparsers):
+    def add_task_parser(subparsers, task_accessor):
         task_parser = subparsers.add_parser(
             "task",
             help="Show info about tasks that have already been defined. "
@@ -380,11 +473,20 @@ def main():
             help="ID of the task to display, if none is provided a summary of "
             "all tasks is displayed"
         )
+
+        task_actions=["info", "guide", "run", "enable", "disable", "remove"]
+
+        task_actions+=task_accessor.get_allowed()
         task_parser.add_argument(
             "task_action", metavar="ACTION", type=str,
-            choices=["info", "guide", "run", "enable", "disable", "remove"],
+            choices=task_actions,
             default="info", nargs="?"
         )
+
+        task_parser.add_argument(
+            "parameters", help="parameters", metavar="actions", action="append", nargs="*"
+        )
+
         task_parser.add_argument(
               "-f", "--force", help="remove task without confirmation",
               action="store_true"
@@ -393,14 +495,14 @@ def main():
               "-r", "--remove-results", help="remove with results",
               action="store_true"
         )
-    add_task_parser(subparsers)
+    add_task_parser(subparsers, task_accessor)
 
     def add_task_create_parser(subparsers):
         task_create_parser = subparsers.add_parser(
-            "task_create",
+            "task-create",
             help="Create new task."
         )
-        task_create_parser.set_defaults(action="task_create")
+        task_create_parser.set_defaults(action="task-create")
         task_create_parser.add_argument(
             "-i", "--interactive", action="store_true", dest="interactive"
         )
@@ -475,8 +577,8 @@ def main():
     elif args.action == "eval":
         cli_eval(dbus_iface, args)
     elif args.action == "task":
-        cli_task(dbus_iface, args)
-    elif args.action == "task_create":
+        cli_task(dbus_iface, task_accessor, args)
+    elif args.action == "task-create":
         cli_task_create(dbus_iface, args)
     elif args.action == "status":
         cli_status(dbus_iface, args)
