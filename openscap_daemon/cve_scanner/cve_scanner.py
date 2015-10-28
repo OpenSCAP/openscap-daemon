@@ -105,7 +105,7 @@ class Worker(object):
     max_procs = 4
     image_tmp = "/var/tmp/image-scanner"
     scan_args = ['allcontainers', 'allimages', 'images', 'logfile',
-                 'onlycache', 'number', 'onlyactive', 'reportdir',
+                 'fetch_cve', 'number', 'onlyactive', 'reportdir',
                  'workdir', 'url_root', 'host', 'rest_host',
                  'rest_port', 'scan', 'fetch_cve_url']
 
@@ -113,13 +113,13 @@ class Worker(object):
 
     def __init__(self, number=2,
                  logfile=os.path.join(image_tmp, "openscap.log"),
-                 onlycache=False, reportdir=image_tmp, workdir=image_tmp,
+                 fetch_cve=False, reportdir=image_tmp, workdir=image_tmp,
                  host='unix://var/run/docker.sock',
                  allcontainers=False, onlyactive=False, allimages=False,
                  images=False, scan=[], fetch_cve_url=""):
         self.args =\
             self.scan_tuple(number=number, logfile=logfile,
-                            onlycache=onlycache, reportdir=reportdir,
+                            fetch_cve=fetch_cve, reportdir=reportdir,
                             workdir=workdir, host=host,
                             allcontainers=allcontainers, allimages=allimages,
                             onlyactive=onlyactive, images=images, url_root='',
@@ -240,7 +240,7 @@ class Worker(object):
         cve_get = getInputCVE(self.image_tmp)
         if self.ac.fetch_cve_url != "":
             cve_get.url = self.ac.fetch_cve_url
-        if self.ac.onlycache:
+        if self.ac.fetch_cve:
             cve_get.fetch_dist_data()
         threads = []
 

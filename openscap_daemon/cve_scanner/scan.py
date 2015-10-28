@@ -26,6 +26,8 @@ import platform
 import StringIO
 from Atomic.mount import DockerMount
 from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
+from oscap_docker_python.get_cve_input import getInputCVE
+import bz2
 
 # TODO: External dep!
 import rpm
@@ -87,14 +89,14 @@ class Scan(object):
                                                            self.image_name)
 
         # We only support RHEL 6|7 in containers right now
-
+        osc = getInputCVE("/tmp")
         if "Red Hat Enterprise Linux" in self.os_release:
             if "7." in self.os_release:
                 self.chroot_cve_file = os.path.join(
-                    self.ac.workdir, "Red_Hat_Enterprise_Linux_7.xml")
+                    self.ac.workdir, osc.dist_cve_name.format("7"))
             if "6." in self.os_release:
                 self.chroot_cve_file = os.path.join(
-                    self.ac.workdir, "Red_Hat_Enterprise_Linux_6.xml")
+                    self.ac.workdir, osc.dist_cve_name.format("6"))
         cmd = ['oscap', 'oval', 'eval', '--report',
                os.path.join(self.report_dir,
                             self.image_name + '.html'),
@@ -128,7 +130,7 @@ class Scan(object):
             raise ImageScannerClientError("Unable to find {0}"
                                           .format(self.chroot_cve_file))
             return False
-        cve_tree = ET.parse(self.chroot_cve_file)
+        cve_tree = ET.parse(bz2.BZ2File(self.chroot_cve_file))
         self.cve_root = cve_tree.getroot()
 
         for line in self.result.splitlines():
