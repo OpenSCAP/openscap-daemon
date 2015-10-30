@@ -32,7 +32,7 @@ class ApplicationConfiguration(object):
         self.logfile = parserargs.logfile
         self.number = parserargs.number
         self.reportdir = parserargs.reportdir
-        self.onlycache = parserargs.onlycache
+        self.fetch_cve = parserargs.fetch_cve
         self.fcons = None
         self.cons = None
         self.images = None
