@@ -38,6 +38,6 @@ LABEL RUN="docker run -dt --privileged --pid=host -v /etc/oscapd:/etc/oscapd -v 
 # I would love to tag this with NOCACHE but Dockerfile doesn't have an
 # instruction for that. Instead the person building it has to use --no-cache
 RUN wget --no-verbose -P /var/tmp/image-scanner/ \
-    https://www.redhat.com/security/data/oval/Red_Hat_Enterprise_Linux_{5,6,7}.xml
+    https://www.redhat.com/security/data/oval/com.redhat.rhsa-RHEL{5,6,7}.xml.bz2
 
 CMD oscapd
