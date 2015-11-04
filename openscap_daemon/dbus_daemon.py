@@ -337,26 +337,36 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='s',
                          out_signature='s')
     def inspect_container(self, cid):
-        ''' Returns inspect data of a container'''
+        """Returns inspect data of a container.
+
+        Used by `atomic scan`. Do not break this interface!
+        """
         inspect_data = self.docker_conn.inspect_container(cid)
         return json.dumps(inspect_data)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='s',
                          out_signature='s')
     def inspect_image(self, iid):
-        ''' Returns inspect data of an image'''
+        """Returns inspect data of an image.
+
+        Used by `atomic scan`. Do not break this interface!
+        """
         inspect_data = self.docker_conn.inspect_image(iid)
         return json.dumps(inspect_data)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, out_signature='s')
     def images(self):
-        ''''''
+        """Used by `atomic scan`. Do not break this interface!
+        """
+
         images = self.docker_conn.images(all=True)
         return json.dumps(images)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, out_signature='s')
     def containers(self):
-        ''''''
+        """Used by `atomic scan`. Do not break this interface!
+        """
+
         cons = self.docker_conn.containers(all=True)
         return json.dumps(cons)
 
@@ -379,6 +389,8 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             0 to enable CVE fetch
             1 to disable CVE fetch
             2 to use defaults from oscapd config file
+
+        Used by `atomic scan`. Do not break this interface!
         """
         worker = Worker(onlyactive=onlyactive, allcontainers=allcontainers,
                         number=number,
@@ -394,6 +406,8 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             0 to enable CVE fetch
             1 to disable CVE fetch
             2 to use defaults from oscapd config file
+
+        Used by `atomic scan`. Do not break this interface!
         """
         worker = Worker(allimages=allimages, images=images,
                         number=number,
@@ -409,6 +423,8 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             0 to enable CVE fetch
             1 to disable CVE fetch
             2 to use defaults from oscapd config file
+
+        Used by `atomic scan`. Do not break this interface!
         """
         worker = Worker(scan=scan_list, number=number,
                         fetch_cve=self._parse_only_cache(self.system.config, int(fetch_cve)),
