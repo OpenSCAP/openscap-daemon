@@ -29,6 +29,13 @@ import argparse
 import sys
 from datetime import datetime
 import os.path
+import json
+
+try:
+    import Atomic.util
+    atomic_support = True
+except:
+    atomic_support = False
 
 class TaskAccessor(object):
 
@@ -402,6 +409,65 @@ def cli_result(dbus_iface, args):
                 "Unknown result action '%s'." % (args.result_action)
             )
 
+def cli_scan(dbus_iface, args):
+    if args.fetch_cves is None:
+        fetch_cve = 2 # use defaults
+    elif args.fetch_cves:
+        fetch_cve = 1 # disable
+    else:
+        fetch_cve = 0 # enable
+
+    threads_count = 4
+
+    scan_targets = []
+
+    any_target_specified = False
+    if args.all or args.images:
+        images = json.loads(dbus_iface.images())
+        images_ids = [image["Id"].encode('ascii') for image in images]
+        scan_targets.extend(images_ids)
+        any_target_specified = True
+
+    if args.all or args.containers:
+        containers = json.loads(dbus_iface.containers())
+        container_ids = [container["Id"].encode('ascii') for container in containers]
+        scan_targets.extend(container_ids)
+        any_target_specified = True
+
+    if args.scan_targets:
+        scan_targets.extend(args.scan_targets) # todo do check if targets are valid
+        any_target_specified = True
+
+    if not any_target_specified:
+         raise RuntimeError(
+            "No scan target"
+        )
+
+    scan_results = dbus_iface.scan_list(
+        scan_targets, threads_count, fetch_cve, timeout=99999
+    )
+
+    if args.json:
+        print(scan_results)
+    else:
+        json_parsed = json.loads(scan_results)
+        if args.detail:
+
+            clean = Atomic.util.print_detail_scan_summary(
+                json_parsed
+            )
+        else:
+            if args.scan_targets:
+                raise NotImplemented("This type of output is not implemented"
+                                     "for specified targets.\n"
+                )
+            clean = Atomic.util.print_scan_summary(
+                json_parsed, scan_targets
+            )
+
+        if not clean:
+            sys.exit(1)
+
 def get_bool(val, default = False):
     val = val.lower()
     
@@ -557,6 +623,50 @@ def main():
         result_parser.set_defaults(action="result")
     add_result_parser(subparsers)
 
+    def add_scan_parser(subparsers):
+        scan_parser = subparsers.add_parser(
+            "scan", help="scan an image or container for CVEs",
+            epilog="atomic scan <input> scans a container or image for CVEs"
+        )
+
+        scan_parser.add_argument(
+            "scan_targets", nargs='*', help="container image"
+
+        )
+        scan_parser.add_argument(
+            "--fetch_cves", type=get_bool, default=None
+        )
+
+        scan_out = scan_parser.add_mutually_exclusive_group()
+
+        scan_out.add_argument(
+            "--json", default=False, action='store_true',
+            help="output json"
+        )
+        scan_out.add_argument(
+            "--detail", default=False, action='store_true',
+            help="output more detail"
+        )
+
+        scan_group = scan_parser.add_mutually_exclusive_group()
+        scan_group.add_argument(
+            "--all", default=False, action='store_true',
+            help="scan all images (excluding intermediate layers) and containers"
+        )
+        scan_group.add_argument(
+            "--images", default=False, action='store_true',
+            help="scan all images (excluding intermediate layers"
+        )
+        scan_group.add_argument(
+            "--containers", default=False, action='store_true',
+            help="scan all containers"
+        )
+
+        scan_parser.set_defaults(action="scan")
+
+    if atomic_support:
+        add_scan_parser(subparsers)
+
     args = parser.parse_args()
 
     gobject.threads_init()
@@ -584,6 +694,8 @@ def main():
         cli_status(dbus_iface, args)
     elif args.action == "result":
         cli_result(dbus_iface, args)
+    elif atomic_support and args.action == "scan":
+        cli_scan(dbus_iface, args)
     else:
         raise RuntimeError("Unknown action '%s'." % (args.action))
 
