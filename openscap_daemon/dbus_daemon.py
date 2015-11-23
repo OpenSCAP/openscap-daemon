@@ -389,8 +389,6 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             0 to enable CVE fetch
             1 to disable CVE fetch
             2 to use defaults from oscapd config file
-
-        Used by `atomic scan`. Do not break this interface!
         """
         worker = Worker(onlyactive=onlyactive, allcontainers=allcontainers,
                         number=number,
