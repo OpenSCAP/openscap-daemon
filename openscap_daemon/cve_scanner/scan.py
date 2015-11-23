@@ -103,6 +103,11 @@ class Scan(object):
                '--results',
                os.path.join(self.report_dir,
                             self.image_name + '.xml'), self.chroot_cve_file]
+
+        logging.debug(
+            "Starting evaluation with command '%s'.",
+        " ".join(cmd))
+
         try:
             self.result = subprocess.check_output(cmd)
         except Exception:
