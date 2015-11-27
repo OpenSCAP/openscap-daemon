@@ -111,7 +111,7 @@ class Client(object):
 
     def debug_json(self, json_data):
         ''' Debug function that pretty prints json objects'''
-        print json.dumps(json_data, indent=4, separators=(',', ': '))
+        print(json.dumps(json_data, indent=4, separators=(',', ': ')))
 
     @polkit.enable_proxy
     def scan_containers(self, only_active=False):

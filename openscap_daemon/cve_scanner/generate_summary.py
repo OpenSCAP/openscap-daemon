@@ -233,4 +233,4 @@ class Create_Summary(object):
 
     def debug_json(self, json_data):
         ''' Pretty prints a json object for debug purposes '''
-        print json.dumps(json_data, indent=4, separators=(',', ': '))
+        print(json.dumps(json_data, indent=4, separators=(',', ': ')))

@@ -150,17 +150,17 @@ class Worker(object):
 
         if numThreads < self.min_procs:
             if self.ac.number is not None:
-                print "The image-scanner requires --number to be a minimum " \
+                print("The image-scanner requires --number to be a minimum " \
                       "of {0}. Setting --number to {1}".format(self.min_procs,
-                                                               self.min_procs)
+                                                               self.min_procs))
             return self.min_procs
         elif numThreads <= self.max_procs:
             return numThreads
         else:
             if self.ac.number is not None:
-                print "Due to docker issues, we limit the max number "\
+                print("Due to docker issues, we limit the max number "\
                       "of threads to {0}. Setting --number to "\
-                      "{1}".format(self.max_procs, self.max_procs)
+                      "{1}".format(self.max_procs, self.max_procs))
             return self.max_procs
 
     def _get_cids_for_image(self, cs, image):
@@ -273,7 +273,7 @@ class Worker(object):
         self.output.report_summary()
 
     def signal_handler(self, signal, frame):
-        print "\n\nExiting..."
+        print("\n\nExiting...")
         sys.exit(0)
 
     def search_containers(self, image, cids, output):
@@ -498,7 +498,7 @@ class Worker(object):
         json_log['results_summary'] = self.ac.return_json
 
         # DEBUG
-        # print  json.dumps(json_log, indent=4, separators=(',', ': '))
+        # print(json.dumps(json_log, indent=4, separators=(',', ': ')))
         with open(self.ac.docker_state, 'w') as state_file:
             json.dump(json_log, state_file)
 
