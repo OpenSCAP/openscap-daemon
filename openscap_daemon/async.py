@@ -19,8 +19,12 @@
 
 import threading
 import logging
-import Queue
 import time
+import sys
+if sys.version_info < (3,):
+    import Queue as queue
+else:
+    import queue
 
 
 class Status(object):
@@ -100,7 +104,7 @@ class AsyncManager(object):
             time.sleep(self.sleep_time)
 
     def __init__(self, workers=0):
-        self.queue = Queue.PriorityQueue()
+        self.queue = queue.PriorityQueue()
 
         self.sleep_time = 1
 
