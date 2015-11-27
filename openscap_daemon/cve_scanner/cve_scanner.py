@@ -289,7 +289,7 @@ class Worker(object):
                     timeit.Timer(f.report_results).timeit(number=1)
                     image_rpms = f._get_rpms()
                     self.rpms[image] = image_rpms
-                except Exception, error:
+                except Exception as error:
                     self.failed_scan = str(error)
             else:
                 # This is not a RHEL image or container
@@ -430,7 +430,7 @@ class Worker(object):
 
             try:
                 self.list_of_images(image_list)
-            except ImageScannerClientError, error:
+            except ImageScannerClientError as error:
                 raise dbus.exceptions.DBusException(str(error))
 
         end_time = time.time()
