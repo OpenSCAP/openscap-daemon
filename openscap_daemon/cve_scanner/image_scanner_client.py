@@ -203,7 +203,7 @@ class ClientCommon(object):
     @staticmethod
     def debug_json(json_data):
         ''' Debug function that pretty prints json objects'''
-        print json.dumps(json_data, indent=4, separators=(',', ': '))
+        print(json.dumps(json_data, indent=4, separators=(',', ': ')))
 
     def get_profile_info(self, profile):
         ''' Looks for host and port based on the profile provided '''
@@ -222,10 +222,10 @@ class ClientCommon(object):
                                           "in {1}".format(profile,
                                                           self.config_file))
         except ConfigParser.NoOptionError as no_option:
-            print "No option {0} found in profile "\
+            print("No option {0} found in profile "\
                   "{1} in {2}".format(no_option.option,
                                       profile,
-                                      self.config_file)
+                                      self.config_file))
         return host, port, number, cert
 
     def _make_profile_tuple(self, host, port, number, cert, section):
@@ -374,15 +374,15 @@ class ClientCommon(object):
 
     def mult_host_mini_pprint(self, uber_obj):
         ''' Pretty print the results of a multi host scan'''
-        print "\n"
-        print "{0:16} {1:15} {2:12}".format("Host", "Docker ID", "Results")
-        print "-" * 50
+        print("\n")
+        print("{0:16} {1:15} {2:12}".format("Host", "Docker ID", "Results"))
+        print("-" * 50)
         prev_host = None
         for host in uber_obj.keys():
             if 'error' in uber_obj[host]:
-                print "{0:16} {1:15} {2:12}"\
-                    .format(host, "", json.loads(uber_obj[host])['error'])
-                print ""
+                print("{0:16} {1:15} {2:12}"\
+                    .format(host, "", json.loads(uber_obj[host])['error']))
+                print("")
                 continue
             for scan_obj in uber_obj[host]['scanned_content']:
                 tmp_obj = uber_obj[host]['host_results'][scan_obj]
@@ -401,6 +401,6 @@ class ClientCommon(object):
                     prev_host = host
                 else:
                     out_host = ""
-                print "{0:16} {1:15} {2:12}".format(out_host, scan_obj[:12],
-                                                    result)
-            print ""
+                print("{0:16} {1:15} {2:12}".format(out_host, scan_obj[:12],
+                                                    result))
+            print("")
