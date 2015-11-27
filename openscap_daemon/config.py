@@ -227,7 +227,7 @@ class Configuration(object):
                 "Creating tasks directory at '%s' because it didn't exist.",
                 self.tasks_dir
             )
-            os.makedirs(self.tasks_dir, 0750)
+            os.makedirs(self.tasks_dir, 0o750)
 
         if not os.path.exists(self.results_dir):
             logging.info(
