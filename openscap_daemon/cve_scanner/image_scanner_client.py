@@ -19,12 +19,18 @@
 
 ''' Image scanner API '''
 
-import urlparse
 import json
 import xml.etree.ElementTree as ET
-import ConfigParser
 import collections
 import os
+import sys
+if sys.version_info < (3,):
+    import urlparse
+    import ConfigParser
+else:
+    import urllib.parse as urlparse
+    import configparser as ConfigParser
+    
 from multiprocessing.dummy import Pool as ThreadPool
 
 # TODO: External dep, verify that we really need it!
