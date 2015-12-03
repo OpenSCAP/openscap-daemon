@@ -28,6 +28,7 @@ import os.path
 import shutil
 import threading
 import logging
+import codecs
 
 
 class SlipMode(object):
@@ -483,8 +484,8 @@ class Task(object):
         )
 
         ret = ""
-        with open(path, "r") as f:
-            ret = f.read().decode("utf-8")
+        with codecs.open(path, "r", encoding="utf-8") as f:
+            ret = f.read()
 
         logging.info(
             "Retrieved ARF of result '%i' of task '%i'.",
