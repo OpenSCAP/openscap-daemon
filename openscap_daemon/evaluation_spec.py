@@ -25,7 +25,7 @@ from xml.etree import cElementTree as ElementTree
 import os.path
 import tempfile
 import shutil
-
+import codecs
 
 class SCAPInput(object):
     """Encapsulates all sorts of SCAP input, either embedded in the spec
@@ -48,8 +48,8 @@ class SCAPInput(object):
         if self.file_path is None:
             return None
 
-        with open(self.file_path, "r") as f:
-            return f.read().decode("utf-8")
+        with codecs.open(self.file_path, "r", encoding="utf-8") as f:
+            return f.read()
 
     def is_equivalent_to(self, other):
         return \
@@ -107,8 +107,8 @@ class SCAPInput(object):
         if self.temp_file is None:
             ret.set("href", self.file_path)
         else:
-            with open(self.temp_file.name, "r") as f:
-                ret.text = f.read().decode("utf-8")
+            with codecs.open(self.temp_file.name, "r", encoding="utf-8") as f:
+                ret.text = f.read()
 
         if self.datastream_id is not None:
             ret.set("datastream_id", self.datastream_id)
@@ -132,8 +132,8 @@ class SCAPTailoring(object):
         if self.file_path is None:
             return None
 
-        with open(self.file_path, "r") as f:
-            return f.read().decode("utf-8")
+        with codecs.open(self.file_path, "r", encoding="utf-8") as f:
+            return f.read()
 
     def is_equivalent_to(self, other):
         return \
@@ -186,8 +186,8 @@ class SCAPTailoring(object):
         if self.temp_file is None:
             ret.set("href", self.file_path)
         else:
-            with open(self.temp_file.name, "r") as f:
-                ret.text = f.read().decode("utf-8")
+            with codecs.open(self.temp_file.name, "r", encoding="utf-8") as f:
+                ret.text = f.read()
 
         return ret
 
