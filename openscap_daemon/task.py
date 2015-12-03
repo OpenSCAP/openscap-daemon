@@ -269,9 +269,9 @@ class Task(object):
         et_helpers.indent(root)
 
         xml_source = ElementTree.tostring(root, encoding="utf-8")
-        with open(config_file, "w") as f:
+        with codecs.open(config_file, "w", encoding="utf-8") as f:
             f.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-            f.write(xml_source)
+            f.write(xml_source.decode("utf-8"))
 
     def save(self):
         assert(self.config_file is not None)
