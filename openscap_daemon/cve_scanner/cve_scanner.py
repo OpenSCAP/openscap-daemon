@@ -298,8 +298,15 @@ class Worker(object):
             pass
 
         # umount and clean up temporary container
-        f.DM.unmount_path(f.dest)
-        f.DM._clean_temp_container_by_path(f.dest)
+        try:
+            f.DM.unmount_path(f.dest)
+            f.DM._clean_temp_container_by_path(f.dest)
+        except ValueError as e:
+            logging.error("Unmount error: {}".format(e.msg))
+        except Exception as e:
+            # We don't know all types of docker/atomic exception, so we catch
+            # all these exceptions to avoid daemon freezing
+            logging.error("Docker: {}".format(e.msg()))
 
         self.threads_complete += 1
         self.cur_scan_threads -= 1
