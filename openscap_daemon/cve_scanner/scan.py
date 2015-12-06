@@ -113,7 +113,7 @@ class Scan(object):
         " ".join(cmd))
 
         try:
-            self.result = subprocess.check_output(cmd)
+            self.result = subprocess.check_output(cmd).decode("utf-8")
         except Exception:
             pass
     # def capture_run(self, cmd):
