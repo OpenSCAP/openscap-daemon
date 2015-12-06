@@ -492,7 +492,7 @@ class Worker(object):
         # Pulling out good stuff from summary by docker object
         for docker_obj in self.ac.return_json.keys():
             if 'msg' not in self.ac.return_json[docker_obj].keys():
-                for key, value in self.ac.return_json[docker_obj].iteritems():
+                for key, value in self.ac.return_json[docker_obj].items():
                     json_log['host_results'][docker_obj][key] = value
 
         json_log['results_summary'] = self.ac.return_json
