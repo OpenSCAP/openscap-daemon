@@ -64,7 +64,7 @@ class Reporter(object):
         for image in self.list_of_outputs:
             if image.msg is None:
                 short_image = image.iid[:12] + ".scap"
-                out = open(os.path.join(self.report_dir, short_image), 'wb')
+                out = open(os.path.join(self.report_dir, short_image), 'w')
                 report_files.append(short_image)
                 out.write(image.log)
                 out.close()
