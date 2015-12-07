@@ -26,8 +26,6 @@ import dbus
 import dbus.service
 import threading
 from datetime import datetime
-# TODO: Do we want to depend on docker for *ALL* functionality?
-import docker
 import json
 
 
@@ -48,9 +46,6 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         )
         self.system_worker_thread.daemon = True
         self.system_worker_thread.start()
-
-        # TODO: Move to System
-        self.docker_conn = docker.Client()
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="", out_signature="as")
@@ -341,7 +336,9 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
 
         Used by `atomic scan`. Do not break this interface!
         """
-        inspect_data = self.docker_conn.inspect_container(cid)
+        import docker
+        docker_conn = docker.Client()
+        inspect_data = docker_conn.inspect_container(cid)
         return json.dumps(inspect_data)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='s',
@@ -351,23 +348,27 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
 
         Used by `atomic scan`. Do not break this interface!
         """
-        inspect_data = self.docker_conn.inspect_image(iid)
+        import docker
+        docker_conn = docker.Client()
+        inspect_data = docker_conn.inspect_image(iid)
         return json.dumps(inspect_data)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, out_signature='s')
     def images(self):
         """Used by `atomic scan`. Do not break this interface!
         """
-
-        images = self.docker_conn.images(all=True)
+        import docker
+        docker_conn = docker.Client()
+        images = docker_conn.images(all=True)
         return json.dumps(images)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, out_signature='s')
     def containers(self):
         """Used by `atomic scan`. Do not break this interface!
         """
-
-        cons = self.docker_conn.containers(all=True)
+        import docker
+        docker_conn = docker.Client()
+        cons = docker_conn.containers(all=True)
         return json.dumps(cons)
 
     @staticmethod
