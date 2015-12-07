@@ -16,12 +16,9 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-''' Class to handle references '''
-
 # TODO: Integrate this to openscap_daemon.config package
 
 from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
-import docker
 
 
 class ApplicationConfiguration(object):
@@ -49,12 +46,14 @@ class ApplicationConfiguration(object):
     def ValidateHost(self, host):
         ''' Validates if the defined docker host is running'''
         try:
-            client = docker.Client(base_url=host, timeout=11)
-            if not client.ping():
-                raise(Exception)
-        except Exception:
-            error = "Cannot connect to the Docker daemon. Is it running on " \
-                    "this host"
-            client = None
+            import docker
+        except ImportError:
+            error = "Can't import 'docker' package. Has docker been installed?"
+            raise ImageScannerClientError(error)
+
+        client = docker.Client(base_url=host, timeout=11)
+        if not client.ping():
+            error = "Cannot connect to the Docker daemon. Is it running " \
+                "on this host?"
             raise ImageScannerClientError(error)
         return client
