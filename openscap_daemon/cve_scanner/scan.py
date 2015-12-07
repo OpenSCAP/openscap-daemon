@@ -24,17 +24,14 @@ import subprocess
 import xml.etree.ElementTree as ET
 import platform
 import sys
-if sys.version_info < (3,):
-    from StringIO import StringIO
-else:
-    from io import StringIO
-from Atomic.mount import DockerMount
 from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 from oscap_docker_python.get_cve_input import getInputCVE
 import bz2
 
-# TODO: External dep!
-import rpm
+if sys.version_info < (3,):
+    from StringIO import StringIO
+else:
+    from io import StringIO
 
 
 class Scan(object):
@@ -53,6 +50,7 @@ class Scan(object):
             os.mkdir(self.report_dir)
 
         start = time.time()
+        from Atomic.mount import DockerMount
         self.DM = DockerMount("/tmp", mnt_mkdir=True)
         self.dm_results = self.DM.mount(image_uuid)
         logging.debug("Created scanning chroot in {0}"
@@ -228,6 +226,9 @@ class Scan(object):
                       rhsa_ref_url=rhsa_ref_url, severity=sev))
 
     def _get_rpms(self):
+        # TODO: External dep!
+        import rpm
+
         chroot_os = os.path.join(self.dest, "rootfs")
         ts = rpm.TransactionSet(chroot_os)
         ts.setVSFlags((rpm._RPMVSF_NOSIGNATURES | rpm._RPMVSF_NODIGESTS))
