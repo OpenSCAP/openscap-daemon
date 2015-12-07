@@ -121,7 +121,7 @@ class System(object):
                      self.config.tasks_dir)
         task_count = 0
         with self.tasks_lock:
-            for _, task in self.tasks.iteritems():
+            for _, task in self.tasks.items():
                 task.save()
                 task_count += 1
 
@@ -416,7 +416,7 @@ class System(object):
         ret = None
 
         with self.tasks_lock:
-            for task in self.tasks.itervalues():
+            for task in self.tasks.values():
                 if task.id_ in self.tasks_scheduled:
                     continue
 
@@ -471,7 +471,7 @@ class System(object):
         )
 
         with self.tasks_lock:
-            for task in self.tasks.itervalues():
+            for task in self.tasks.values():
                 if task.id_ in self.tasks_scheduled:
                     continue
 

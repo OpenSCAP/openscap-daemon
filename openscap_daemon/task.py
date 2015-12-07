@@ -28,6 +28,7 @@ import os.path
 import shutil
 import threading
 import logging
+import codecs
 
 
 class SlipMode(object):
@@ -268,9 +269,9 @@ class Task(object):
         et_helpers.indent(root)
 
         xml_source = ElementTree.tostring(root, encoding="utf-8")
-        with open(config_file, "w") as f:
+        with codecs.open(config_file, "w", encoding="utf-8") as f:
             f.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-            f.write(xml_source)
+            f.write(xml_source.decode("utf-8"))
 
     def save(self):
         assert(self.config_file is not None)
@@ -483,8 +484,8 @@ class Task(object):
         )
 
         ret = ""
-        with open(path, "r") as f:
-            ret = f.read().decode("utf-8")
+        with codecs.open(path, "r", encoding="utf-8") as f:
+            ret = f.read()
 
         logging.info(
             "Retrieved ARF of result '%i' of task '%i'.",

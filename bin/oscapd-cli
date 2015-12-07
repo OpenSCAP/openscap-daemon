@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 # Copyright 2015 Red Hat Inc., Durham, North Carolina.
 # All Rights Reserved.
@@ -24,7 +24,11 @@ from openscap_daemon import oscap_helpers
 from openscap_daemon import cli_helpers
 
 import dbus
-import gobject
+import sys
+if sys.version_info < (3,):
+    import gobject
+else:
+    from gi.repository import GObject as gobject
 import argparse
 import sys
 from datetime import datetime
@@ -424,13 +428,13 @@ def cli_scan(dbus_iface, args):
     any_target_specified = False
     if args.all or args.images:
         images = json.loads(dbus_iface.images())
-        images_ids = [image["Id"].encode('ascii') for image in images]
+        images_ids = [str(image["Id"]) for image in images]
         scan_targets.extend(images_ids)
         any_target_specified = True
 
     if args.all or args.containers:
         containers = json.loads(dbus_iface.containers())
-        container_ids = [container["Id"].encode('ascii') for container in containers]
+        container_ids = [str(container["Id"]) for container in containers]
         scan_targets.extend(container_ids)
         any_target_specified = True
 

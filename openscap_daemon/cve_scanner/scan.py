@@ -23,7 +23,11 @@ import logging
 import subprocess
 import xml.etree.ElementTree as ET
 import platform
-import StringIO
+import sys
+if sys.version_info < (3,):
+    from StringIO import StringIO
+else:
+    from io import StringIO
 from Atomic.mount import DockerMount
 from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 from oscap_docker_python.get_cve_input import getInputCVE
@@ -109,7 +113,7 @@ class Scan(object):
         " ".join(cmd))
 
         try:
-            self.result = subprocess.check_output(cmd)
+            self.result = subprocess.check_output(cmd).decode("utf-8")
         except Exception:
             pass
     # def capture_run(self, cmd):
@@ -147,7 +151,7 @@ class Scan(object):
                 self._return_xml_values(line.split()[1][:-1])
 
         sev_dict = {}
-        sum_log = StringIO.StringIO()
+        sum_log = StringIO()
         sum_log.write("Image: {0} ({1})".format(self.image_name,
                                                 self.os_release))
         cons = self.get_cons(self.ac.fcons, self.image_name)

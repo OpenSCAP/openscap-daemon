@@ -26,8 +26,12 @@ import xml.etree.ElementTree as ET
 from collections import namedtuple
 from openscap_daemon.cve_scanner.image_scanner_client import Client
 from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
-import urlparse
 import json
+import sys
+if sys.version_info < (3,):
+    import urlparse
+else:
+    import urllib.parse as urlparse
 
 
 class Create_Summary(object):

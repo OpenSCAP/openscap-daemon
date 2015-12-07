@@ -118,7 +118,7 @@ class AsyncManager(object):
 
         self.workers = []
 
-        for i in xrange(workers):
+        for i in range(workers):
             worker = threading.Thread(
                 name="AsyncManager worker (%i out of %i)" % (i, workers),
                 target=AsyncManager._worker_main,
