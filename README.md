@@ -155,11 +155,12 @@ to perform any extra manual action to get the content to the scanned machines,
 this is done automatically.
 
 ## Requirements
-* [*python2*](http://python.org) >= 2.6
-  * we strive for source compatibility with *python3* but consider that *best-effort*
+* [*python2*](http://python.org) >= 2.6 OR [*python3*](http://python.org) >= 3.2
+  * full source compatibility with *python2* and *python3*
 * [*OpenSCAP*](http://open-scap.org) >= 1.2.6
 * [*dbus-python*](http://www.freedesktop.org/wiki/Software/DBusBindings/)
-* [*Atomic*](http://www.projectatomic.io) >= 1.4
+* (optional) [*Atomic*](http://www.projectatomic.io) >= 1.4
+* (optional) [*docker*](http://www.docker.com)
 
 ## Running the test-suite
 The test-suite can be run without installing the software.
@@ -173,7 +174,10 @@ cd tests
 ## Installation on Linux (standalone on host)
 ```bash
 cd openscap-daemon
+# as a python2 application
 sudo python2 setup.py install
+# as a python3 application
+sudo python3 setup.py install
 ```
 
 ## Installation on Linux (super privileged container)
