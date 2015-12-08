@@ -27,6 +27,7 @@ import os
 import os.path
 import logging
 import shutil
+import inspect
 
 
 class Configuration(object):
@@ -46,6 +47,7 @@ class Configuration(object):
         # TODO: oscap-vm doesn't even exist yet
         self.oscap_vm_path = ""
         self.oscap_docker_path = ""
+        self.container_support = True
 
         # Content section
         self.ssg_path = ""
@@ -76,11 +78,11 @@ class Configuration(object):
                     full_path = os.path.join(prefix, name)
                     if os.path.isfile(full_path) and \
                        os.access(full_path, os.X_OK):
-                        logging.debug("Autodetected \"%s\" in path \"%s\".",
-                                      name, full_path)
+                        logging.info("Autodetected \"%s\" in path \"%s\".",
+                                     name, full_path)
                         return full_path
 
-            logging.debug(
+            logging.info(
                 "Failed to autodetect tool with name %s in prefixes %s.",
                 " or ".join(possible_names), ", ".join(possible_prefixes)
             )
@@ -95,15 +97,46 @@ class Configuration(object):
         if self.oscap_docker_path == "":
             self.oscap_docker_path = autodetect_tool_path(["oscap-docker"])
 
+        if self.container_support:
+            # let's verify that we really can enable container support
+            self.container_support = False
+
+            try:
+                __import__("docker")
+
+                try:
+                    from Atomic.mount import DockerMount
+                    if "mnt_mkdir" not in \
+                            inspect.getargspec(DockerMount.__init__).args:
+                        logging.error(
+                            "\"Atomic.mount.DockerMount\" has been successfully"
+                            " imported but it doesn't support the mnt_mkdir "
+                            "argument. Please upgrade your Atomic installation "
+                            "to 1.4 or higher. Container scanning functionality"
+                            " will be disabled."
+                        )
+
+                    logging.info("Successfully imported 'docker' and "
+                                 "'Atomic.mount', container scanning enabled.")
+                    self.container_support = True
+
+                except ImportError:
+                    logging.error("Can't import the 'Atomic.mount' package. "
+                                  "Container scanning functionality will be "
+                                  "disabled.")
+            except ImportError:
+                logging.error("Can't import the 'docker' package. Container "
+                              "scanning functionality will be disabled.")
+
     def autodetect_content_paths(self):
         def autodetect_content_path(possible_paths):
             for path in possible_paths:
                 if os.path.isdir(path):
-                    logging.debug("Autodetected SCAP content in path \"%s\".",
-                                  path)
+                    logging.info("Autodetected SCAP content in path \"%s\".",
+                                 path)
                     return path
 
-            logging.debug(
+            logging.error(
                 "Failed to autodetect SCAP content in paths %s.",
                 ", ".join(possible_paths)
             )
@@ -171,6 +204,12 @@ class Configuration(object):
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
+        try:
+            self.container_support = config.get("Tools", "container-support") \
+                not in ["no", "0", "false", "False"]
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
         # Content section
         try:
             self.ssg_path = absolutize(config.get("Content", "ssg"))
@@ -205,6 +244,8 @@ class Configuration(object):
         config.set("Tools", "oscap-ssh", str(self.oscap_ssh_path))
         config.set("Tools", "oscap-vm", str(self.oscap_vm_path))
         config.set("Tools", "oscap-docker", str(self.oscap_docker_path))
+        config.set("Tools", "container-support",
+                   "yes" if self.container_support else "no")
 
         config.add_section("Content")
         config.set("Content", "ssg", str(self.ssg_path))
