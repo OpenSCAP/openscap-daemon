@@ -95,7 +95,13 @@ class AsyncManager(object):
             )
 
             action.status = Status.PROCESSING
-            action.run()
+            try:
+                action.run()
+
+            except BaseException as e:
+                logging.error("Action '%s' threw an exception that hasn't been "
+                              "caught. This is most likely a bug, please"
+                              "report it. %s" % (action, e))
 
             self.queue.task_done()
 
