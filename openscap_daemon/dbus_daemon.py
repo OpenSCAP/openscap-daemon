@@ -73,6 +73,9 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="s", out_signature="(sssn)")
     def EvaluateSpecXML(self, xml_source):
+        """Deprecated, use EvaluateSpecXMLAsync instead
+        """
+
         spec = EvaluationSpec()
         spec.load_from_xml_source(xml_source)
         arf, stdout, stderr, exit_code = spec.evaluate(self.system.config)

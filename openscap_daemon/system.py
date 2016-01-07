@@ -49,8 +49,8 @@ class System(object):
         self.config.autodetect_content_paths()
         self.config.prepare_dirs()
 
-        self.async_eval_results = dict()
-        self.async_eval_results_lock = threading.Lock()
+        self.async_eval_spec_results = dict()
+        self.async_eval_spec_results_lock = threading.Lock()
 
         self.tasks = dict()
         self.tasks_lock = threading.Lock()
@@ -94,8 +94,8 @@ class System(object):
             arf, stdout, stderr, exit_code = \
                 self.spec.evaluate(self.system.config)
 
-            with self.system.async_eval_results_lock:
-                self.system.async_eval_results[self.token] = \
+            with self.system.async_eval_spec_results_lock:
+                self.system.async_eval_spec_results[self.token] = \
                     (arf, stdout, stderr, exit_code)
 
         def __str__(self):
@@ -111,12 +111,12 @@ class System(object):
         )
 
     def get_evaluate_spec_async_results(self, token):
-        with self.async_eval_results_lock:
-            if token not in self.async_eval_results:
+        with self.async_eval_spec_results_lock:
+            if token not in self.async_eval_spec_results:
                 raise ResultsNotAvailable()
 
-            arf, stdout, stderr, exit_code = self.async_eval_results[token]
-            del self.async_eval_results[token]
+            arf, stdout, stderr, exit_code = self.async_eval_spec_results[token]
+            del self.async_eval_spec_results[token]
 
         return arf, stdout, stderr, exit_code
 
