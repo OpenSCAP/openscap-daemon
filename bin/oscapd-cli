@@ -295,7 +295,7 @@ def cli_task_create(dbus_iface, args):
             input_file, tailoring_file, utf8_strings=True
         )
         i = 0
-        for key, value in profile_choices.iteritems():
+        for key, value in profile_choices.items():
             print("\t%i:  %s (id='%s')" % (i + 1, value, key))
             i += 1
 

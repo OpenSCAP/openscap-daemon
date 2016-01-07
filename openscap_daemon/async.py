@@ -164,7 +164,7 @@ class AsyncManager(object):
 
     def get_status(self):
         ret = []
-        for token, action in self.actions.iteritems():
+        for token, action in self.actions.items():
             ret.append((token, str(action), action.status))
 
         return ret

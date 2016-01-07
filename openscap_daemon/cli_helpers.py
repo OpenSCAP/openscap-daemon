@@ -44,7 +44,7 @@ def print_table(table, first_row_header=True):
             i += 1
 
     total_width = len(" | ".join(
-        [" " * max_size for max_size in column_max_sizes.itervalues()]
+        [" " * max_size for max_size in column_max_sizes.values()]
     ))
 
     start_row = 0
@@ -53,14 +53,14 @@ def print_table(table, first_row_header=True):
         assert(len(table) > 0)
 
         print("-+-".join(
-            "-" * max_size for max_size in column_max_sizes.itervalues())
+            "-" * max_size for max_size in column_max_sizes.values())
         )
         print(" | ".join(
             [str(cell).ljust(column_max_sizes[table[start_row].index(cell)])
              for cell in table[start_row]]
         ))
         print("-+-".join(
-            "-" * max_size for max_size in column_max_sizes.itervalues())
+            "-" * max_size for max_size in column_max_sizes.values())
         )
         start_row += 1
 
@@ -112,7 +112,7 @@ def cli_create_evaluation_spec(dbus_iface):
             input_file, tailoring_file, utf8_strings=True
         )
         i = 0
-        for key, value in profile_choices.iteritems():
+        for key, value in profile_choices.items():
             print("\t%i:  %s (id='%s')" % (i + 1, value, key))
             i += 1
 
