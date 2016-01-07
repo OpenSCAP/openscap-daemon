@@ -60,6 +60,9 @@ class System(object):
 
         self.update_wait_cond = threading.Condition()
 
+        self.async_eval_cve_scanner_worker_results = dict()
+        self.async_eval_cve_scanner_worker_results_lock = threading.Lock()
+
     def get_ssg_choices(self):
         ret = []
         if self.config.ssg_path == "":
@@ -629,3 +632,39 @@ class System(object):
             result_id,
             self.config
         )
+
+    class AsyncEvaluateCVEScannerWorkerAction(async.AsyncAction):
+        def __init__(self, system, worker):
+            super(System.AsyncEvaluateCVEScannerWorkerAction, self).__init__()
+
+            self.system = system
+            self.worker = worker
+
+        def run(self):
+            json_result = self.worker.start_application()
+
+            with self.system.async_eval_cve_scanner_worker_results_lock:
+                self.system.async_eval_cve_scanner_worker_results[self.token] = \
+                    json_result
+
+        def __str__(self):
+            return "Evaluate CVE Scanner Worker '%s'" % (self.worker)
+
+    def evaluate_cve_scanner_worker_async(self, worker):
+        return self.async.enqueue(
+            System.AsyncEvaluateCVEScannerWorkerAction(
+                self,
+                worker
+            ),
+            EVALUATION_PRIORITY
+        )
+
+    def get_evaluate_cve_scanner_worker_async_results(self, token):
+        with self.async_eval_cve_scanner_worker_results_lock:
+            if token not in self.async_eval_cve_scanner_worker_results:
+                raise ResultsNotAvailable()
+
+            json_results = self.async_eval_cve_scanner_worker_results[token]
+            del self.async_eval_cve_scanner_worker_results[token]
+
+        return json_results

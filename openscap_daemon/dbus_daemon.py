@@ -444,9 +444,32 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             2 to use defaults from oscapd config file
 
         Used by `atomic scan`. Do not break this interface!
+
+        Deprecated, please use CVEScanListAsync
         """
         worker = Worker(scan=scan_list, number=number,
                         fetch_cve=self._parse_only_cache(self.system.config, int(fetch_cve)),
                         fetch_cve_url=self.system.config.fetch_cve_url)
         return_json = worker.start_application()
         return json.dumps(return_json)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature='asiy', out_signature='n')
+    def CVEScanListAsync(self, scan_list, number, fetch_cve):
+        worker = Worker(
+            scan=scan_list, number=number,
+            fetch_cve=self._parse_only_cache(self.system.config, int(fetch_cve)),
+            fetch_cve_url=self.system.config.fetch_cve_url
+        )
+        return self.system.evaluate_cve_scanner_worker_async(worker)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="n", out_signature="(bs)")
+    def GetCVEScanListAsyncResults(self, token):
+        try:
+            json_results = \
+                self.system.get_evaluate_cve_scanner_worker_async_results(token)
+            return (True, json_results)
+
+        except system.ResultsNotAvailable:
+            return (False, "")
