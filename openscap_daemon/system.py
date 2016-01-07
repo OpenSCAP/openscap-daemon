@@ -29,6 +29,11 @@ from openscap_daemon import oscap_helpers
 from openscap_daemon import async
 
 
+class ResultsNotAvailable(Exception):
+    def __init__(self):
+        super(ResultsNotAvailable, self).__init__()
+
+
 EVALUATION_PRIORITY = 0
 TASK_ACTION_PRIORITY = 10
 
@@ -43,6 +48,9 @@ class System(object):
         self.config.autodetect_tool_paths()
         self.config.autodetect_content_paths()
         self.config.prepare_dirs()
+
+        self.async_eval_results = dict()
+        self.async_eval_results_lock = threading.Lock()
 
         self.tasks = dict()
         self.tasks_lock = threading.Lock()
@@ -74,6 +82,43 @@ class System(object):
         return oscap_helpers.get_profile_choices_for_input(
             input_file, tailoring_file
         )
+
+    class AsyncEvaluateSpecAction(async.AsyncAction):
+        def __init__(self, system, spec):
+            super(System.AsyncEvaluateSpecAction, self).__init__()
+
+            self.system = system
+            self.spec = spec
+
+        def run(self):
+            arf, stdout, stderr, exit_code = \
+                self.spec.evaluate(self.system.config)
+
+            with self.system.async_eval_results_lock:
+                self.system.async_eval_results[self.token] = \
+                    (arf, stdout, stderr, exit_code)
+
+        def __str__(self):
+            return "Evaluate Spec '%s'" % (self.spec)
+
+    def evaluate_spec_async(self, spec):
+        return self.async.enqueue(
+            System.AsyncEvaluateSpecAction(
+                self,
+                spec
+            ),
+            EVALUATION_PRIORITY
+        )
+
+    def get_evaluate_spec_async_results(self, token):
+        with self.async_eval_results_lock:
+            if token not in self.async_eval_results:
+                raise ResultsNotAvailable()
+
+            arf, stdout, stderr, exit_code = self.async_eval_results[token]
+            del self.async_eval_results[token]
+
+        return arf, stdout, stderr, exit_code
 
     def load_tasks(self):
         logging.info("Loading task definitions from '%s'...",

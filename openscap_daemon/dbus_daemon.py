@@ -17,7 +17,7 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-from openscap_daemon import System
+from openscap_daemon import system
 from openscap_daemon import EvaluationSpec
 from openscap_daemon import dbus_utils
 from openscap_daemon.cve_scanner.cve_scanner import Worker
@@ -38,7 +38,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
     def __init__(self, bus, config_file):
         super(OpenSCAPDaemonDbus, self).__init__(bus, dbus_utils.OBJECT_PATH)
 
-        self.system = System(config_file)
+        self.system = system.System(config_file)
         self.system.load_tasks()
 
         self.system_worker_thread = threading.Thread(
@@ -77,6 +77,25 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         spec.load_from_xml_source(xml_source)
         arf, stdout, stderr, exit_code = spec.evaluate(self.system.config)
         return (arf, stdout, stderr, exit_code)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="s", out_signature="n")
+    def EvaluateSpecXMLAsync(self, xml_source):
+        spec = EvaluationSpec()
+        spec.load_from_xml_source(xml_source)
+        token = self.system.evaluate_spec_async(spec)
+        return token
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="n", out_signature="(bsssn)")
+    def GetEvaluateSpecXMLAsyncResults(self, token):
+        try:
+            arf, stdout, stderr, exit_code = \
+                self.system.get_evaluate_spec_async_results(token)
+            return (True, arf, stdout, stderr, exit_code)
+
+        except system.ResultsNotAvailable:
+            return (False, "", "", "", 1)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="", out_signature="ax")

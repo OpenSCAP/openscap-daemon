@@ -63,6 +63,7 @@ class Status(object):
 
 class AsyncAction(object):
     def __init__(self):
+        self.token = -1
         self.status = Status.UNKNOWN
 
     def run(self):
@@ -85,12 +86,12 @@ class AsyncManager(object):
 
     def _worker_main(self, worker_id):
         while True:
-            priority, token, action = self.queue.get(True)
+            priority, action = self.queue.get(True)
 
             logging.debug(
                 "Worker %i starting action from the priority queue. "
                 "priority=%i, token=%i, action='%s'",
-                worker_id, priority, token, action
+                worker_id, priority, action.token, action
             )
 
             action.status = Status.PROCESSING
@@ -99,7 +100,7 @@ class AsyncManager(object):
             self.queue.task_done()
 
             with self.actions_lock:
-                del self.actions[token]
+                del self.actions[action.token]
 
             time.sleep(self.sleep_time)
 
@@ -144,17 +145,16 @@ class AsyncManager(object):
         return ret
 
     def enqueue(self, action, priority=0):
-        token = self._allocate_token()
-
+        action.token = self._allocate_token()
         action.status = Status.PENDING
 
         with self.actions_lock:
-            self.actions[token] = action
-            self.queue.put((priority, token, action))
+            self.actions[action.token] = action
+            self.queue.put((priority, action))
 
         logging.debug("AsyncManager enqueued action '%s' with token %i",
-                      action, token)
-        return token
+                      action, action.token)
+        return action.token
 
     def get_status(self):
         ret = []
@@ -165,6 +165,3 @@ class AsyncManager(object):
 
     def cancel(self, token):
         raise NotImplementedError()
-
-
-
