@@ -701,7 +701,7 @@ def main():
 
     try:
         oscapd_version_major, oscapd_version_minor, oscapd_version_patch = \
-            dbus_iface.GetVearsion()
+            dbus_iface.GetVersion()
 
         if (oscapd_version_major, oscapd_version_minor, oscapd_version_patch) \
                 != (version.VERSION_MAJOR, version.VERSION_MINOR, version.VERSION_PATCH):
