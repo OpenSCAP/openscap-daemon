@@ -114,6 +114,12 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
             return (False, "", "", "", 1)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="n", out_signature="")
+    def CancelEvaluateSpecXMLAsync(self, token):
+        # TODO
+        pass
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="", out_signature="ax")
     def ListTaskIDs(self):
         """Returns a list of IDs of tasks that System has loaded from config

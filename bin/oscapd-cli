@@ -132,16 +132,19 @@ def cli_eval(dbus_iface, args):
     eval_spec = cli_helpers.cli_create_evaluation_spec(dbus_iface)
     if eval_spec is not None:
         token = dbus_iface.EvaluateSpecXMLAsync(eval_spec.to_xml_source())
-        print("Evaluating...")
-        while True:
-            success, arf, stdout, stderr, exit_code = \
-                dbus_iface.GetEvaluateSpecXMLAsyncResults(token)
+        try:
+            print("Evaluating...")
+            while True:
+                success, arf, stdout, stderr, exit_code = \
+                    dbus_iface.GetEvaluateSpecXMLAsyncResults(token)
 
-            if success:
-                # TODO: show the results
-                break
-
-            time.sleep(1)
+                if success:
+                    # TODO: show the results
+                    break
+                time.sleep(1)
+        except:
+            dbus_iface.CancelEvaluateSpecXMLAsync(token)
+            raise
 
 
 def cli_print_results_table(dbus_iface, task_id, result_ids,
