@@ -91,7 +91,7 @@ def cli_create_evaluation_spec(dbus_iface):
             target = "localhost"
 
         print("Found the following SCAP Security Guide content: ")
-        ssg_choices = dbus_iface.GetSSGChoices(utf8_strings=True)
+        ssg_choices = dbus_iface.GetSSGChoices()
         i = 0
         for ssg_choice in ssg_choices:
             print("\t%i:  %s" % (i + 1, ssg_choice))
@@ -116,7 +116,7 @@ def cli_create_evaluation_spec(dbus_iface):
 
         print("Found the following possible profiles: ")
         profile_choices = dbus_iface.GetProfileChoicesForInput(
-            input_file, tailoring_file, utf8_strings=True
+            input_file, tailoring_file
         )
         i = 0
         for key, value in profile_choices.items():
@@ -126,7 +126,7 @@ def cli_create_evaluation_spec(dbus_iface):
         profile_choice = py2_raw_input(
             "Choose profile by number (empty for (default) profile): ")
         if profile_choice is not None:
-            profile = profile_choices.keys()[int(profile_choice) - 1]
+            profile = list(profile_choices.keys())[int(profile_choice) - 1]
         else:
             profile = None
 

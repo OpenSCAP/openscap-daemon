@@ -94,7 +94,7 @@ class TaskAccessor(object):
         casted_args.insert(0, task_id)
 
         dbus_method = getattr(dbus_iface, method_name)
-        res = dbus_method(*casted_args, utf8_strings=True)
+        res = dbus_method(*casted_args)
         if result_func:
              result_func(res)
 
@@ -175,8 +175,8 @@ def cli_task(dbus_iface, task_accessor, args):
 
         enabled_count = 0
         for task_id in task_ids:
-            title = dbus_iface.GetTaskTitle(task_id, utf8_strings=True)
-            target = dbus_iface.GetTaskTarget(task_id, utf8_strings=True)
+            title = dbus_iface.GetTaskTitle(task_id)
+            target = dbus_iface.GetTaskTarget(task_id)
 
             modified_timestamp = dbus_iface.GetTaskModifiedTimestamp(task_id)
             modified = datetime.fromtimestamp(modified_timestamp)
@@ -201,8 +201,8 @@ def cli_task(dbus_iface, task_accessor, args):
 
     else:
         if args.task_action == "info":
-            title = dbus_iface.GetTaskTitle(args.task_id, utf8_strings=True)
-            target = dbus_iface.GetTaskTarget(args.task_id, utf8_strings=True)
+            title = dbus_iface.GetTaskTitle(args.task_id)
+            target = dbus_iface.GetTaskTarget(args.task_id)
 
             created_timestamp = dbus_iface.GetTaskCreatedTimestamp(args.task_id)
             created = datetime.fromtimestamp(created_timestamp)
@@ -231,32 +231,25 @@ def cli_task(dbus_iface, task_accessor, args):
             # TODO
 
         elif args.task_action == "guide":
-            guide = dbus_iface.GenerateGuideForTask(
-                args.task_id, utf8_strings=True
-            )
+            guide = dbus_iface.GenerateGuideForTask(args.task_id)
             print(guide)
 
         elif args.task_action == "run":
-            dbus_iface.RunTaskOutsideSchedule(
-                args.task_id, utf8_strings=True
-            )
+            dbus_iface.RunTaskOutsideSchedule(args.task_id)
 
         elif args.task_action == "enable":
-            dbus_iface.SetTaskEnabled(
-                args.task_id, True, utf8_strings=True
-            )
+            dbus_iface.SetTaskEnabled(args.task_id, True)
 
         elif args.task_action == "disable":
-            dbus_iface.SetTaskEnabled(
-                args.task_id, False, utf8_strings=True
-            )
+            dbus_iface.SetTaskEnabled(args.task_id, False)
+
         elif args.task_action == "remove":
             if args.force or confirm("Do you really want to delete task with ID %i?" % args.task_id):
-                dbus_iface.RemoveTask(
-                    args.task_id, args.remove_results, utf8_strings=True
-                )
+                dbus_iface.RemoveTask(args.task_id, args.remove_results)
         elif args.task_action in task_accessor:
-            task_accessor.eval(dbus_iface, args.task_action, args.task_id, args.parameters[0])
+            task_accessor.eval(
+                dbus_iface, args.task_action, args.task_id, args.parameters[0]
+            )
         else:
             raise RuntimeError("Unknown action '%s'." % (args.task_action))
 
@@ -271,7 +264,7 @@ def cli_task_create(dbus_iface, args):
             target = "localhost"
 
         print("Found the following SCAP Security Guide content: ")
-        ssg_choices = dbus_iface.GetSSGChoices(utf8_strings=True)
+        ssg_choices = dbus_iface.GetSSGChoices()
         i = 0
         for ssg_choice in ssg_choices:
             print("\t%i:  %s" % (i + 1, ssg_choice))
@@ -296,7 +289,7 @@ def cli_task_create(dbus_iface, args):
 
         print("Found the following possible profiles: ")
         profile_choices = dbus_iface.GetProfileChoicesForInput(
-            input_file, tailoring_file, utf8_strings=True
+            input_file, tailoring_file
         )
         i = 0
         for key, value in profile_choices.items():
@@ -305,7 +298,7 @@ def cli_task_create(dbus_iface, args):
 
         profile_choice = cli_helpers.py2_raw_input(
             "Choose profile by number (empty for (default) profile): ")
-        profile = profile_choices.keys()[int(profile_choice) - 1]
+        profile = list(profile_choices.keys())[int(profile_choice) - 1]
 
         online_remediation_raw = cli_helpers.py2_raw_input("Online remediation (1, y or Y for yes, else no): ")
         try:
@@ -388,20 +381,18 @@ def cli_result(dbus_iface, args):
             dbus_iface.RemoveTaskResults(args.task_id)
     else:
         if args.result_action == "arf":
-            arf = dbus_iface.GetARFOfTaskResult(
-                args.task_id, args.result_id, utf8_strings=True
-            )
+            arf = dbus_iface.GetARFOfTaskResult(args.task_id, args.result_id)
             print(arf)
 
         elif args.result_action == "stdout":
             stdout = dbus_iface.GetStdOutOfTaskResult(
-                args.task_id, args.result_id, utf8_strings=True
+                args.task_id, args.result_id
             )
             print(stdout)
 
         elif args.result_action == "stderr":
             stderr = dbus_iface.GetStdErrOfTaskResult(
-                args.task_id, args.result_id, utf8_strings=True
+                args.task_id, args.result_id
             )
             print(stderr)
 
@@ -413,7 +404,7 @@ def cli_result(dbus_iface, args):
 
         elif args.result_action == "report":
             report = dbus_iface.GenerateReportForTaskResult(
-                args.task_id, args.result_id, utf8_strings=True
+                args.task_id, args.result_id
             )
             print(report)
         elif args.result_action == "remove":
