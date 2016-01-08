@@ -17,8 +17,15 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
+import sys
 import os.path
 from openscap_daemon import evaluation_spec
+
+
+if sys.version_info < (3,):
+    py2_raw_input = raw_input
+else:
+    py2_raw_input = input
 
 
 def print_table(table, first_row_header=True):
@@ -79,7 +86,7 @@ def cli_create_evaluation_spec(dbus_iface):
     print("")
 
     try:
-        target = raw_input("Target (empty for localhost): ")
+        target = py2_raw_input("Target (empty for localhost): ")
         if not target:
             target = "localhost"
 
@@ -91,16 +98,16 @@ def cli_create_evaluation_spec(dbus_iface):
             i += 1
 
         input_file = None
-        input_ssg_choice = raw_input(
+        input_ssg_choice = py2_raw_input(
             "Choose SSG content by number (empty for custom content): ")
         if not input_ssg_choice:
-            input_file = raw_input("Input file (absolute path): ")
+            input_file = py2_raw_input("Input file (absolute path): ")
         else:
             input_file = ssg_choices[int(input_ssg_choice) - 1]
 
         input_file = os.path.abspath(input_file)
 
-        tailoring_file = raw_input(
+        tailoring_file = py2_raw_input(
             "Tailoring file (absolute path, empty for no tailoring): ")
         if tailoring_file in [None, ""]:
             tailoring_file = ""
@@ -116,7 +123,7 @@ def cli_create_evaluation_spec(dbus_iface):
             print("\t%i:  %s (id='%s')" % (i + 1, value, key))
             i += 1
 
-        profile_choice = raw_input(
+        profile_choice = py2_raw_input(
             "Choose profile by number (empty for (default) profile): ")
         if profile_choice is not None:
             profile = profile_choices.keys()[int(profile_choice) - 1]
@@ -124,7 +131,7 @@ def cli_create_evaluation_spec(dbus_iface):
             profile = None
 
         online_remediation = False
-        if raw_input("Online remediation (1, y or Y for yes, else no): ") in \
+        if py2_raw_input("Online remediation (1, y or Y for yes, else no): ") in \
                 ["1", "y", "Y"]:
             online_remediation = True
 

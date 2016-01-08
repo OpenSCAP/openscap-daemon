@@ -265,8 +265,8 @@ def cli_task_create(dbus_iface, args):
     if args.interactive:
         print("Creating new task in interactive mode")
 
-        title = raw_input("Title: ")
-        target = raw_input("Target (empty for localhost): ")
+        title = cli_helpers.py2_raw_input("Title: ")
+        target = cli_helpers.py2_raw_input("Target (empty for localhost): ")
         if not target:
             target = "localhost"
 
@@ -278,16 +278,16 @@ def cli_task_create(dbus_iface, args):
             i += 1
 
         input_file = None
-        input_ssg_choice = raw_input(
+        input_ssg_choice = cli_helpers.py2_raw_input(
             "Choose SSG content by number (empty for custom content): ")
         if not input_ssg_choice:
-            input_file = raw_input("Input file (absolute path): ")
+            input_file = cli_helpers.py2_raw_input("Input file (absolute path): ")
         else:
             input_file = ssg_choices[int(input_ssg_choice) - 1]
 
         input_file = os.path.abspath(input_file)
 
-        tailoring_file = raw_input(
+        tailoring_file = cli_helpers.py2_raw_input(
             "Tailoring file (absolute path, empty for no tailoring): ")
         if tailoring_file in [None, ""]:
             tailoring_file = ""
@@ -303,12 +303,11 @@ def cli_task_create(dbus_iface, args):
             print("\t%i:  %s (id='%s')" % (i + 1, value, key))
             i += 1
 
-        profile_choice = raw_input(
+        profile_choice = cli_helpers.py2_raw_input(
             "Choose profile by number (empty for (default) profile): ")
         profile = profile_choices.keys()[int(profile_choice) - 1]
 
-
-        online_remediation_raw = raw_input("Online remediation (1, y or Y for yes, else no): ")
+        online_remediation_raw = cli_helpers.py2_raw_input("Online remediation (1, y or Y for yes, else no): ")
         try:
             online_remediation = get_bool(online_remediation_raw, default=False)
         except ValueError:
@@ -317,7 +316,7 @@ def cli_task_create(dbus_iface, args):
         print("Schedule: ")
         schedule_not_before = None
         schedule_not_before_str = \
-            raw_input(
+            cli_helpers.py2_raw_input(
                 " - not before (YYYY-MM-DD HH:MM in UTC, empty for NOW): "
             )
         if schedule_not_before_str == "":
@@ -329,8 +328,10 @@ def cli_task_create(dbus_iface, args):
 
         schedule_repeat_after = None
         schedule_repeat_after_str = \
-            raw_input(" - repeat after (hours or @daily, @weekly, @monthly, "
-                      "empty or 0 for no repeat): ")
+            cli_helpers.py2_raw_input(
+                " - repeat after (hours or @daily, @weekly, @monthly, "
+                "empty or 0 for no repeat): "
+            )
 
         schedule_repeat_after = 0
         if not schedule_repeat_after_str:
@@ -511,7 +512,7 @@ def confirm(prompt, default = False):
     options = "Y/n" if default else "y/N"
     while True:
         try:
-            res = raw_input("%s [%s]: " % (prompt, options))
+            res = cli_helpers.py2_raw_input("%s [%s]: " % (prompt, options))
             return get_bool(res, default)
         except ValueError:
             continue
