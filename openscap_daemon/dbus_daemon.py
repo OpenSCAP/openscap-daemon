@@ -21,6 +21,7 @@ from openscap_daemon import system
 from openscap_daemon import EvaluationSpec
 from openscap_daemon import dbus_utils
 from openscap_daemon.cve_scanner.cve_scanner import Worker
+from openscap_daemon import version
 
 import dbus
 import dbus.service
@@ -46,6 +47,18 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         )
         self.system_worker_thread.daemon = True
         self.system_worker_thread.start()
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="", out_signature="(nnn)")
+    def GetVersion(self):
+        """Retrieves OpenSCAP-daemon version in a tuple format, suitable
+        for version comparisons.
+        """
+        return (
+            version.VERSION_MAJOR,
+            version.VERSION_MINOR,
+            version.VERSION_PATCH
+        )
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="", out_signature="as")

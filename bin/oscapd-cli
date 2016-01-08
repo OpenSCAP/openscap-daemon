@@ -22,6 +22,7 @@
 from openscap_daemon import dbus_utils
 from openscap_daemon import oscap_helpers
 from openscap_daemon import cli_helpers
+from openscap_daemon import version
 
 import dbus
 import sys
@@ -698,6 +699,22 @@ def main():
             "Is the daemon running?\n\n"
         )
         raise
+
+    try:
+        oscapd_version_major, oscapd_version_minor, oscapd_version_patch = \
+            dbus_iface.GetVersion()
+
+        if (oscapd_version_major, oscapd_version_minor, oscapd_version_patch) \
+                != (version.VERSION_MAJOR, version.VERSION_MINOR, version.VERSION_PATCH):
+            sys.stderr.write(
+                "Warning: Version mismatch between oscapd-cli and oscapd.")
+
+    except dbus.exceptions.DBusException:
+        sys.stderr.write(
+            "Warning: Can't perform version check, the openscap-daemon dbus "
+            "interface doesn't provide the GetVersion method.\n\n"
+        )
+
 
     if args.action == "status":
         cli_status(dbus_iface, args)
