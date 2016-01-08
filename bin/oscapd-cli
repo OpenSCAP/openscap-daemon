@@ -458,12 +458,16 @@ def cli_scan(dbus_iface, args):
     token = dbus_iface.CVEScanListAsync(
         scan_targets, threads_count, fetch_cve
     )
-    print("Processing...")
-    while True:
-        success, scan_results = dbus_iface.GetCVEScanListAsyncResults(token)
-        if success:
-            break
-        time.sleep(1)
+    try:
+        print("Processing...")
+        while True:
+            success, scan_results = dbus_iface.GetCVEScanListAsyncResults(token)
+            if success:
+                break
+            time.sleep(1)
+    except:
+        dbus_iface.CancelCVEScanListAsync(token)
+        raise
 
     if args.json:
         print(scan_results)

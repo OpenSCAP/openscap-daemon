@@ -486,3 +486,9 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
 
         except system.ResultsNotAvailable:
             return (False, "")
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="n", out_signature="")
+    def CancelCVEScanListAsync(self, token):
+        # TODO
+        pass
