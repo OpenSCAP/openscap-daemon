@@ -24,8 +24,6 @@ import subprocess
 import xml.etree.ElementTree as ET
 import platform
 import sys
-from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
-from oscap_docker_python.get_cve_input import getInputCVE
 import bz2
 
 if sys.version_info < (3,):
@@ -90,6 +88,7 @@ class Scan(object):
                    "PRIMARY_HOST_NAME"] = "{0}:{1}".format(hostname,
                                                            self.image_name)
 
+        from oscap_docker_python.get_cve_input import getInputCVE
         # We only support RHEL 6|7 in containers right now
         osc = getInputCVE("/tmp")
         if "Red Hat Enterprise Linux" in self.os_release:
@@ -134,6 +133,7 @@ class Scan(object):
 
     def report_results(self):
         if not os.path.exists(self.chroot_cve_file):
+            from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
             raise ImageScannerClientError("Unable to find {0}"
                                           .format(self.chroot_cve_file))
             return False

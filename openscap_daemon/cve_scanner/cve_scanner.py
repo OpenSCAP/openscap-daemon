@@ -24,8 +24,6 @@ from openscap_daemon.cve_scanner.generate_summary import Create_Summary
 from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 import dbus
 
-from oscap_docker_python.get_cve_input import getInputCVE
-
 import os
 import timeit
 import threading
@@ -236,6 +234,8 @@ class Worker(object):
                 raise ImageScannerClientError(str(error))
 
     def _do_work(self, image_list):
+        from oscap_docker_python.get_cve_input import getInputCVE
+
         self.scan_list = image_list
         cve_get = getInputCVE(self.image_tmp)
         if self.ac.fetch_cve_url != "":
