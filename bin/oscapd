@@ -36,7 +36,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="OpenSCAP-Daemon executable."
     )
-    parser.add_argument("-v", "--verbose",
+    parser.add_argument("--verbose",
                         help="be verbose, useful for debugging",
                         action="store_true")
     args = parser.parse_args()
