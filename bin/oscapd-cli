@@ -513,11 +513,17 @@ def confirm(prompt, default=False):
             sys.stderr.write("Operation aborted.\n")
             return default
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="OpenSCAP-Daemon command line interface."
     )
+    parser.add_argument(
+        "-v", "--version", action="version",
+        version="%(prog)s " + version.VERSION_STRING
+    )
     subparsers = parser.add_subparsers()
+
     task_accessor = TaskAccessor()
 
     task_accessor.add_setter("enabled",
@@ -688,6 +694,10 @@ def main():
         add_scan_parser(subparsers)
 
     args = parser.parse_args()
+
+    if args.version:
+        print("OpenSCAP-daemon CLI %s" % (version.VERSION_STRING))
+        sys.exit(0)
 
     gobject.threads_init()
 
