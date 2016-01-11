@@ -36,17 +36,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="OpenSCAP-Daemon executable."
     )
-    parser.add_argument("-v", "--version",
-                        help="show version",
-                        action="store_true")
+    parser.add_argument(
+        "-v", "--version", action="version",
+        version="%(prog)s " + version.VERSION_STRING
+    )
     parser.add_argument("--verbose",
                         help="be verbose, useful for debugging",
                         action="store_true")
     args = parser.parse_args()
-
-    if args.version:
-        print("OpenSCAP-daemon %s" % (version.VERSION_STRING))
-        sys.exit(0)
 
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         level=logging.DEBUG if args.verbose else logging.INFO)
