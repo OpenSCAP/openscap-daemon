@@ -23,7 +23,7 @@
 PARENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd $PARENT_DIR > /dev/null
 
-./unit/make_check
-./integration/make_check
+./unit/make_check || exit 1
+./integration/make_check || exit 1
 
 popd > /dev/null
