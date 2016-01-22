@@ -35,7 +35,7 @@ EXIT_CODE=0
 for file in test_*.py
 do
     echo -n -e "$file\t\t...\t"
-    output=`./$file 2>&1`
+    output=`$PYTHON ./$file 2>&1`
     if [ "$?" == "0" ]; then
         echo "[ pass ]"
     else

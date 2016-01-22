@@ -33,10 +33,6 @@ export DATA_DIR_TEMPLATE
 
 RUNWRAPPER_NO_FORK=1 source ../../runwrapper.sh
 
-# TODO: temporary
-PYTHON=python
-export PYTHON
-
 EXIT_CODE=0
 for file in test_*.sh
 do
