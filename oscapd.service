@@ -1,8 +1,6 @@
 [Unit]
 Description=OpenSCAP Daemon
 Documentation=http://open-scap.org/tools/openscap-daemon
-After=docker.service
-Requires=docker.service
 
 [Service]
 Type=dbus
