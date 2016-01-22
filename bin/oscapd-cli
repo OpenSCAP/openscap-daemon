@@ -522,7 +522,8 @@ def main():
         "-v", "--version", action="version",
         version="%(prog)s " + version.VERSION_STRING
     )
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(dest="action")
+    subparsers.required = True
 
     task_accessor = TaskAccessor()
 
@@ -548,7 +549,6 @@ def main():
             help="Interactive one-off evaluation of any target supported by "
                  "OpenSCAP Daemon"
         )
-        eval_parser.set_defaults(action="eval")
         # todo non-interactive
     add_eval_parser(subparsers)
 
@@ -558,7 +558,6 @@ def main():
             help="Show info about tasks that have already been defined. "
             "Perform operations on already defined tasks."
         )
-        task_parser.set_defaults(action="task")
         task_parser.add_argument(
             "task_id", metavar="TASK_ID", type=int, nargs="?",
             help="ID of the task to display, if none is provided a summary of "
@@ -594,7 +593,6 @@ def main():
             "task-create",
             help="Create new task."
         )
-        task_create_parser.set_defaults(action="task-create")
         task_create_parser.add_argument(
             "-i", "--interactive", action="store_true", dest="interactive"
         )
@@ -606,7 +604,6 @@ def main():
             help="Displays status, tasks that are planned and tasks that are "
             "being evaluated."
         )
-        status_parser.set_defaults(action="status")
     add_status_parser(subparsers)
 
     def result_id_or_action(val):
@@ -646,7 +643,6 @@ def main():
               action="store_true"
         )
 
-        result_parser.set_defaults(action="result")
     add_result_parser(subparsers)
 
     def add_scan_parser(subparsers):
@@ -687,8 +683,6 @@ def main():
             "--containers", default=False, action='store_true',
             help="scan all containers"
         )
-
-        scan_parser.set_defaults(action="scan")
 
     if atomic_support:
         add_scan_parser(subparsers)
