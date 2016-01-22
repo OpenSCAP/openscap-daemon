@@ -28,6 +28,8 @@ pushd $PARENT_DIR
 
 BIN="$PARENT_DIR/../../bin"
 export BIN
+DATA_DIR_TEMPLATE="$PARENT_DIR/../../tests/data_dir_template"
+export DATA_DIR_TEMPLATE
 
 RUNWRAPPER_NO_FORK=1 source ../../runwrapper.sh
 
