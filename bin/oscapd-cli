@@ -695,10 +695,6 @@ def main():
 
     args = parser.parse_args()
 
-    if args.version:
-        print("OpenSCAP-daemon CLI %s" % (version.VERSION_STRING))
-        sys.exit(0)
-
     gobject.threads_init()
 
     dbus_iface = None
