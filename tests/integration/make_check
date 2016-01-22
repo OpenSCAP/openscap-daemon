@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Copyright 2016 Red Hat Inc., Durham, North Carolina.
+# All Rights Reserved.
+#
+# openscap-daemon is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# openscap-daemon is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+
+# You should have received a copy of the GNU Lesser General Public License
+# along with openscap-daemon.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Authors:
+#   Martin Preisler <mpreisle@redhat.com>
+
+# parent dir of this script
+PARENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+pushd $PARENT_DIR
+
+BIN="$PARENT_DIR/../../bin"
+export BIN
+
+RUNWRAPPER_NO_FORK=1 source ../../runwrapper.sh
+
+# TODO: temporary
+PYTHON=python
+export PYTHON
+
+EXIT_CODE=0
+for file in test_*.sh
+do
+    echo -n -e "$file\t\t...\t"
+    output=`./$file 2>&1`
+    if [ "$?" == "0" ]; then
+        echo "[ pass ]"
+    else
+        echo "[ FAIL ]"
+        echo
+        echo "$output"
+        echo
+        EXIT_CODE=1
+    fi
+done
+
+popd
+
+exit $EXIT_CODE
