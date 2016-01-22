@@ -19,6 +19,9 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
+echo "Running integration tests..."
+echo
+
 # parent dir of this script
 PARENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd $PARENT_DIR

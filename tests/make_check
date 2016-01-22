@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2015 Red Hat Inc., Durham, North Carolina.
+# Copyright 2016 Red Hat Inc., Durham, North Carolina.
 # All Rights Reserved.
 #
 # openscap-daemon is free software: you can redistribute it and/or modify
@@ -21,26 +21,9 @@
 
 # parent dir of this script
 PARENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-pushd $PARENT_DIR
+pushd $PARENT_DIR > /dev/null
 
-RUNWRAPPER_NO_FORK=1 source ../runwrapper.sh
+./unit/make_check
+./integration/make_check
 
-EXIT_CODE=0
-for file in test_*.py
-do
-    echo -n -e "$file\t\t...\t"
-    output=`./$file 2>&1`
-    if [ "$?" == "0" ]; then
-        echo "[ pass ]"
-    else
-        echo "[ FAIL ]"
-        echo
-        echo "$output"
-        echo
-        EXIT_CODE=1
-    fi
-done
-
-popd
-
-exit $EXIT_CODE
+popd > /dev/null

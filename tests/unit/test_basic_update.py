@@ -19,11 +19,11 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-import tests.harness
+import unit_test_harness
 import time
 
 
-class BasicUpdateTest(tests.harness.APITest):
+class BasicUpdateTest(unit_test_harness.APITest):
     def setup_data(self):
         super(BasicUpdateTest, self).setup_data()
         self.copy_to_data("tasks/1.xml")

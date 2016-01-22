@@ -19,10 +19,10 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-import tests.harness
+import unit_test_harness
 
 
-class GenerateGuideTest(tests.harness.APITest):
+class GenerateGuideTest(unit_test_harness.APITest):
     def setup_data(self):
         super(GenerateGuideTest, self).setup_data()
         self.copy_to_data("tasks/1.xml")

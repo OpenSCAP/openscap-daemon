@@ -19,13 +19,13 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-import tests.harness
+import unit_test_harness
 import os.path
 import openscap_daemon.config
 
 
 # TODO: The harness initializes System and we don't need that here
-class ConfigTest(tests.harness.APITest):
+class ConfigTest(unit_test_harness.APITest):
     def setup_data(self):
         super(ConfigTest, self).setup_data()
 

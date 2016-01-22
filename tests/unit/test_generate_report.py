@@ -19,37 +19,24 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-import tests.harness
-import os.path
+import unit_test_harness
 
 
-class SerializationTest(tests.harness.APITest):
+class GenerateReportTest(unit_test_harness.APITest):
     def setup_data(self):
-        super(SerializationTest, self).setup_data()
+        super(GenerateReportTest, self).setup_data()
         self.copy_to_data("tasks/1.xml")
+        #self.ensure_dir("results/1/1")
+        #self.copy_to_data("results/1/1")
 
     def test(self):
-        super(SerializationTest, self).test()
+        super(GenerateReportTest, self).test()
 
         self.system.load_tasks()
         assert(len(self.system.tasks) == 1)
-        self.system.tasks[1].save_as(
-            os.path.join(self.data_dir_path, "tasks", "2.xml")
-        )
-        self.system.load_tasks()
-        assert(len(self.system.tasks) == 2)
 
-        assert(
-            self.system.tasks[1].is_equivalent_to(self.system.tasks[2])
-        )
-        self.system.tasks[2].title = "Broken!"
-        assert(
-            not self.system.tasks[1].is_equivalent_to(self.system.tasks[2])
-        )
-
-        task_id = self.system.create_task()
-        self.system.tasks[task_id].save()
+        #print(self.system.generate_report_for_task_result(1, 1))
 
 
 if __name__ == "__main__":
-    SerializationTest.run()
+    GenerateReportTest.run()
