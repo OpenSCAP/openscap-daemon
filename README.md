@@ -3,6 +3,12 @@
 > Avoid copying big SCAP files around, avoid having to type long IDs, avoid
 > writing ad-hoc bash scripts to solve your compliance needs!
 
+## Project Description
+OpenSCAP-daemon is a service that performs SCAP scans of bare-metal machines,
+virtual machines and containers. These scans can be either one-shot or
+continuous according to a schedule. You can interact with the service
+using the provided oscapd-cli tool or via the DBus interface.
+
 ## Motivation
 The [OpenSCAP](http://open-scap.org) project has progressed greatly over the
 past years and now provides very nice tooling to perform solicited one-off
@@ -24,8 +30,8 @@ use-cases.
   [OpenSCAP](http://open-scap.org) -- a **NIST-certified** scanner
   * **local machine** -- `oscap`
   * **remote machine** -- `oscap-ssh`
-  * **virtual machine** -- `oscap-vm` -- work in progress
-  * **container** -- `oscap-docker` -- work in progress
+  * **virtual machine** -- `oscap-vm`
+  * **container** -- `oscap-docker`
 * flexible task definition and planning
   * use any valid *SCAP* content -- for example
     [SCAP Security Guide](http://github.com/OpenSCAP/scap-security-guide),
@@ -35,9 +41,10 @@ use-cases.
   * evaluate on demand
 * parallel task processing
 * results storage -- query ARFs of past results, generate HTML reports, get
-  `oscap` stdout/stderr
+  `oscap` stdout/stderr and exit codes
 * command-line interface
 * *dbus* *API*
+* fully automated CVE evaluation of containers using OpenSCAP and Atomic.mount
 * *Cockpit* integration (planned)
 
 ## Key Goals & Design Decisions
