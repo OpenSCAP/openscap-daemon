@@ -639,14 +639,19 @@ def main():
 
         result_parser.add_argument(
             "result_id", metavar="RESULT_ID", type=result_id_or_action, nargs="?",
-            help="ID of the result we want to display, if none is provided "
-            "a summary of all results of given task is displayed."
+            help="ID of the result we want to interact with, if none is "
+            "provided a summary of all results of given task is displayed."
         )
 
+        result_actions = [
+            "arf", "stdout", "stderr", "exit_code", "report", "remove"
+        ]
         result_parser.add_argument(
             "result_action", metavar="ACTION", type=str,
-            choices=["arf", "stdout", "stderr", "exit_code", "report", "remove"],
-            default="arf", nargs="?"
+            choices=result_actions,
+            help="Which action to perform on selected result. Use one of " +
+            ", ".join(result_actions),
+            default="arf", nargs="?",
         )
 
         result_parser.add_argument(
