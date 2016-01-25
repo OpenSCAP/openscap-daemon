@@ -44,7 +44,6 @@ except:
 
 
 class TaskAccessor(object):
-
     def __init__(self):
         self._attributes = dict()
 
@@ -63,12 +62,14 @@ class TaskAccessor(object):
     def _expect_param_len(values, expected):
         length = len(values)
         if length != expected:
-            raise ValueError("Expected %d parameters, but %d given." % (expected, length))
+            raise ValueError(
+                "Expected %d parameters, but %d were provided." %
+                (expected, length)
+            )
 
     @staticmethod
     def get_string(values):
-        if len(values) != 1:
-            raise ValueError("Not expected parameters")
+        TaskAccessor._expect_param_len(values, 1)
         return [values[0]]
 
     def add_accessor(self, key, dbus_getter, dbus_setter, check=None, result_processor=None):
@@ -103,7 +104,6 @@ class TaskAccessor(object):
 
     def get_allowed(self):
         return self._attributes.keys()
-
 
 
 def get_dbus_interface():
@@ -247,10 +247,17 @@ def cli_task(dbus_iface, task_accessor, args):
             if args.force or confirm("Do you really want to delete task with ID %i?" % args.task_id):
                 dbus_iface.RemoveTask(args.task_id, args.remove_results)
         elif args.task_action in task_accessor:
-            task_accessor.eval(
-                dbus_iface, args.task_action, args.task_id, args.parameters[0]
-            )
+            try:
+                task_accessor.eval(
+                    dbus_iface, args.task_action, args.task_id,
+                    args.parameters[0]
+                )
+            except ValueError as e:
+                sys.stderr.write("%s\n" % (e))
+                sys.exit(1)
         else:
+            # throwing exception here, this code should never be executed if
+            # argparse does its job
             raise RuntimeError("Unknown action '%s'." % (args.task_action))
 
 
