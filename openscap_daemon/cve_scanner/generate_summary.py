@@ -24,7 +24,6 @@ generate the results dict from the oscap results.xml files
 
 import xml.etree.ElementTree as ET
 from collections import namedtuple
-from openscap_daemon.cve_scanner.image_scanner_client import Client
 from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 import json
 import sys
@@ -51,6 +50,8 @@ class Create_Summary(object):
         Returns an ET object for the input XML which can be a file
         or a URL pointing to an xml file
         '''
+        from openscap_daemon.cve_scanner.image_scanner_client import Client
+
         if result_file.startswith("http://"):
             split_url = urlparse.urlsplit(result_file)
             image_scanner = Client(split_url.hostname, port=split_url.port)
