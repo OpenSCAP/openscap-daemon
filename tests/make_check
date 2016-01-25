@@ -28,12 +28,14 @@ PYTHON_VERSIONS="$(which python2 2> /dev/null) $(which python3 2> /dev/null)"
 for PYTHON in $PYTHON_VERSIONS;
 do
     echo "Testing with python '$PYTHON'"
+    echo
     export PYTHON
 
     ./unit/make_check || exit 1
-    ./integration/make_check || exit 1
-
     echo
+    ./integration/make_check || exit 1
+    echo
+
     echo
 done
 

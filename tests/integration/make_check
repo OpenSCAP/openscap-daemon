@@ -24,7 +24,7 @@ echo
 
 # parent dir of this script
 PARENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-pushd $PARENT_DIR
+pushd $PARENT_DIR > /dev/null
 
 BIN="$PARENT_DIR/../../bin"
 export BIN
@@ -49,6 +49,6 @@ do
     fi
 done
 
-popd
+popd > /dev/null
 
 exit $EXIT_CODE
