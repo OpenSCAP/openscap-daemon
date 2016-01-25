@@ -121,12 +121,12 @@ class Configuration(object):
                     self.container_support = True
 
                 except ImportError:
-                    logging.error("Can't import the 'Atomic.mount' package. "
-                                  "Container scanning functionality will be "
-                                  "disabled.")
+                    logging.warning("Can't import the 'Atomic.mount' package. "
+                                    "Container scanning functionality will be "
+                                    "disabled.")
             except ImportError:
-                logging.error("Can't import the 'docker' package. Container "
-                              "scanning functionality will be disabled.")
+                logging.warning("Can't import the 'docker' package. Container "
+                                "scanning functionality will be disabled.")
 
     def autodetect_content_paths(self):
         def autodetect_content_path(possible_paths):
