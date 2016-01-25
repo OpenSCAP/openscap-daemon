@@ -67,7 +67,7 @@ OpenSCAP-daemon thinks in terms of tasks. Let us first define the task we want
 to perform:
 ```bash
 # interactively create a new task
-oscapd-cli task_create -i
+oscapd-cli task-create -i
 Creating new task in interactive mode
 Title: Daily USGCB
 Target (empty for localhost): 
