@@ -567,8 +567,8 @@ def main():
         )
         task_parser.add_argument(
             "task_id", metavar="TASK_ID", type=int, nargs="?",
-            help="ID of the task to display, if none is provided a summary of "
-            "all tasks is displayed"
+            help="ID of the task to display, or perform action on. If none is "
+            "provided a summary of all tasks is displayed."
         )
 
         task_actions = ["info", "guide", "run", "enable", "disable", "remove"]
@@ -577,12 +577,16 @@ def main():
         task_parser.add_argument(
             "task_action", metavar="ACTION", type=str,
             choices=task_actions,
+            help="Which action to perform on selected task. Use one of " +
+            ", ".join(task_actions),
             default="info", nargs="?"
         )
 
         task_parser.add_argument(
-            "parameters", help="parameters", metavar="actions", action="append",
-            nargs="*"
+            "parameters", metavar="parameter", action="append", nargs="*",
+            help="Parameters for the ACTION. For setter actions this is the "
+            "string that you want to set. Some actions, such as enable, remove, "
+            "... don't require any parameters."
         )
 
         task_parser.add_argument(
