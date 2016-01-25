@@ -19,27 +19,24 @@
 
 ''' Image scanner API '''
 
+from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
+
 import json
 import xml.etree.ElementTree as ET
 import collections
 import os
 import sys
+from multiprocessing.dummy import Pool as ThreadPool
+
+# TODO: External dep, verify that we really need it!
+import requests
+
 if sys.version_info < (3,):
     import urlparse
     import ConfigParser
 else:
     import urllib.parse as urlparse
     import configparser as ConfigParser
-    
-from multiprocessing.dummy import Pool as ThreadPool
-
-# TODO: External dep, verify that we really need it!
-import requests
-
-
-class ImageScannerClientError(Exception):
-    """Docker Error"""
-    pass
 
 
 class Client(requests.Session):
