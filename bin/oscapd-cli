@@ -139,6 +139,10 @@ def cli_eval(dbus_iface, args):
                     dbus_iface.GetEvaluateSpecXMLAsyncResults(token)
 
                 if success:
+                    if args.results_arf:
+                        args.results_arf.write(arf)
+                        args.results_arf.close()
+
                     # TODO: show the results
                     break
                 time.sleep(1)
@@ -555,6 +559,10 @@ def main():
             "eval",
             help="Interactive one-off evaluation of any target supported by "
                  "OpenSCAP Daemon"
+        )
+        eval_parser.add_argument(
+              "--results-arf", type=argparse.FileType("w"), dest="results_arf",
+              help="Write ARF (result data stream) into file on this path."
         )
         # todo non-interactive
     add_eval_parser(subparsers)
