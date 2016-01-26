@@ -148,7 +148,7 @@ def cli_eval(dbus_iface, args):
                         args.stdout.close()
 
                     if args.stderr:
-                        args.stderr.write(stdout)
+                        args.stderr.write(stderr)
                         args.stderr.close()
 
                     # TODO: show the results
