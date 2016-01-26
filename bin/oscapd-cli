@@ -143,6 +143,14 @@ def cli_eval(dbus_iface, args):
                         args.results_arf.write(arf)
                         args.results_arf.close()
 
+                    if args.stdout:
+                        args.stdout.write(stdout)
+                        args.stdout.close()
+
+                    if args.stderr:
+                        args.stderr.write(stdout)
+                        args.stderr.close()
+
                     # TODO: show the results
                     break
                 time.sleep(1)
@@ -563,6 +571,14 @@ def main():
         eval_parser.add_argument(
               "--results-arf", type=argparse.FileType("w"), dest="results_arf",
               help="Write ARF (result data stream) into file on this path."
+        )
+        eval_parser.add_argument(
+              "--stdout", type=argparse.FileType("w"),
+              help="Write stdout from oscap into file on this path."
+        )
+        eval_parser.add_argument(
+              "--stderr", type=argparse.FileType("w"),
+              help="Write stderr from oscap into file on this path."
         )
         # todo non-interactive
     add_eval_parser(subparsers)
