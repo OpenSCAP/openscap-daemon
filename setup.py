@@ -60,5 +60,7 @@ setup(
          ["oscapd.service"]),
         (os.path.join("/", "usr", "share", "doc", "openscap-daemon"),
          ["README.md", "LICENSE"]),
+        (os.path.join("/", "usr", "share", "man", "man8"),
+         ["man/oscapd.8"]),
     ],
 )

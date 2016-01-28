@@ -1,0 +1,30 @@
+.TH OSCAPD "8" "Jan 2016" "Red Hat" "System Administration Utilities"
+
+.SH NAME
+oscapd \- OpenSCAP-daemon service
+
+.SH SYNOPSIS
+\fBoscapd\fR [\fI-h\fR] [\fI-v\fR] [\fI--verbose\fR]
+
+.SH DESCRIPTION
+\fBoscapd\fP is the central executable of OpenSCAP-daemon. When started it provides a dbus interface that other tools (such as oscapd-cli and atomic) can interact with.
+
+In production environments it is not recommended to start the service directly, use \fBsystemctl start oscapd\fP instead.
+
+.SH GENERAL OPTIONS
+.TP
+\fB\-v, \-\-version\fR
+Show version.
+.TP
+\fB\-h, \-\-help\fR
+Help screen.
+.TP
+\fB\-\-verbose\fR
+Start in verbose mode.
+
+.SH AUTHORS
+.nf
+Martin Preisler <mpreisle@redhat.com>
+Brent Baude <baude@redhat.com>
+Zbynek Moravec <zmoravec@redhat.com>
+.fi
