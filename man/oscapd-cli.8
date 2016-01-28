@@ -1,0 +1,44 @@
+.TH OSCAPD-CLI "8" "January 2016" "Red Hat" "System Administration Utilities"
+
+.SH NAME
+oscapd-cli \- OpenSCAP-daemon command line interface
+
+.SH SYNOPSIS
+\fBoscapd-cli\fR [\fI-h\fR] {eval,scan,task,task-create,status,result}
+
+.SS "positional arguments:"
+.IP
+{eval,task,task\-create,status,result}
+.TP
+eval
+Interactive one\-off evaluation of any target supported
+by OpenSCAP Daemon
+.TP
+task
+Show info about tasks that have already been defined.
+Perform operations on already defined tasks.
+.TP
+task\-create
+Create new task.
+.TP
+status
+Displays status, tasks that are planned and tasks that
+are being evaluated.
+.TP
+result
+Displays info about past results
+
+.SS "optional arguments:"
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+show this help message and exit
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+show program's version number and exit
+
+.SH AUTHORS
+.nf
+Martin Preisler <mpreisle@redhat.com>
+Brent Baude <baude@redhat.com>
+Zbynek Moravec <zmoravec@redhat.com>
+.fi
