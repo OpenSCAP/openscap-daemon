@@ -277,7 +277,16 @@ class Worker(object):
         sys.exit(0)
 
     def search_containers(self, image, cids, output):
-        f = Scan(image, cids, output, self.ac)
+        try:
+            f = Scan(image, cids, output, self.ac)
+        except Exception as e:
+            # We don't know all types of docker/atomic exception, so we catch
+            # all these exceptions to avoid daemon freezing
+            self.failed_scan = str(e)
+            self.threads_complete += 1
+            self.cur_scan_threads -= 1
+            return
+
         try:
             if f.get_release():
 
