@@ -38,7 +38,6 @@ import platform
 import collections
 import re
 
-from threading import Lock # Only temporary solution for fixing problems
 
 class ContainerSearch(object):
     ''' Does a series of docker queries to setup variables '''
@@ -136,7 +135,7 @@ class Worker(object):
         self.scan_list = None
         self.failed_scan = None
         self.rpms = {}
-        self._mount_lock = Lock() # todo temporary solution
+
 
         # full image name can look like sha256:abcdxy:efgfz
         self.name_regex = re.compile(r"((?:sha256:)?[^:]+)(?::([^:]+))?")
@@ -285,8 +284,7 @@ class Worker(object):
 
     def search_containers(self, image, cids, output):
         try:
-            with self._mount_lock:
-                f = Scan(image, cids, output, self.ac)
+            f = Scan(image, cids, output, self.ac)
         except Exception as e:
             # We don't know all types of docker/atomic exception, so we catch
             # all these exceptions to avoid daemon freezing
@@ -316,9 +314,7 @@ class Worker(object):
 
         # umount and clean up temporary container
         try:
-            with self._mount_lock:
-                f.DM.unmount_path(f.dest)
-                f.DM._clean_temp_container_by_path(f.dest)
+            f.unmount()
         except ValueError as e:
             logging.error("Unmount error: {}".format(e.msg))
         except Exception as e:
