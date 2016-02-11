@@ -25,6 +25,7 @@ import xml.etree.ElementTree as ET
 import platform
 import sys
 import bz2
+from threading import Lock
 
 if sys.version_info < (3,):
     from StringIO import StringIO
@@ -33,6 +34,11 @@ else:
 
 
 class Scan(object):
+
+    # Fix race-condition in atomic mount/unmount
+    # We don't want to do mount and unmount simultaneously
+    _mount_lock = Lock()
+
     def __init__(self, image_uuid, con_uuids, output, appc):
         self.image_name = image_uuid
         self.ac = appc
@@ -46,14 +52,15 @@ class Scan(object):
         self.report_dir = os.path.join(self.ac.workdir, "reports")
         if not os.path.exists(self.report_dir):
             os.mkdir(self.report_dir)
-
         start = time.time()
         from Atomic.mount import DockerMount
         self.DM = DockerMount("/tmp", mnt_mkdir=True)
-        self.dm_results = self.DM.mount(image_uuid)
+        with Scan._mount_lock:
+            self.dm_results = self.DM.mount(image_uuid)
         logging.debug("Created scanning chroot in {0}"
                       " seconds".format(time.time() - start))
         self.dest = self.dm_results
+
 
     def get_release(self):
         etc_release_path = os.path.join(self.dest, "rootfs",
@@ -244,3 +251,8 @@ class Scan(object):
                                                    hdr['arch'])
                 image_rpms.append(foo)
         return image_rpms
+
+    def unmount(self):
+        with Scan._mount_lock:
+            self.DM.unmount_path(self.dest)
+            self.DM._clean_temp_container_by_path(self.dest)

@@ -488,7 +488,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         try:
             json_results = \
                 self.system.get_evaluate_cve_scanner_worker_async_results(token)
-            return (True, json_results)
+            return (True, json.dumps(json_results))
 
         except system.ResultsNotAvailable:
             return (False, "")

@@ -21,6 +21,7 @@ import threading
 import logging
 import time
 import sys
+import traceback
 if sys.version_info < (3,):
     import Queue as queue
 else:
@@ -102,6 +103,8 @@ class AsyncManager(object):
                 logging.error("Action '%s' threw an exception that hasn't been "
                               "caught. This is most likely a bug, please"
                               "report it. %s" % (action, e))
+                exc_type, exc_value, tb = sys.exc_info()
+                traceback.print_tb(tb, file=sys.stderr)
 
             self.queue.task_done()
 

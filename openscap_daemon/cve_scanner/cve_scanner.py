@@ -36,6 +36,7 @@ from datetime import datetime
 import json
 import platform
 import collections
+import re
 
 
 class ContainerSearch(object):
@@ -134,6 +135,11 @@ class Worker(object):
         self.scan_list = None
         self.failed_scan = None
         self.rpms = {}
+
+
+        # full image name can look like sha256:abcdxy:efgfz
+        self.name_regex = re.compile(r"((?:sha256:)?[^:]+)(?::([^:]+))?")
+
 
     def set_procs(self, number):
         if number is None:
@@ -308,8 +314,7 @@ class Worker(object):
 
         # umount and clean up temporary container
         try:
-            f.DM.unmount_path(f.dest)
-            f.DM._clean_temp_container_by_path(f.dest)
+            f.unmount()
         except ValueError as e:
             logging.error("Unmount error: {}".format(e.msg))
         except Exception as e:
@@ -354,15 +359,23 @@ class Worker(object):
                     break
         return None
 
+    def parse_image_name(self, input_name):
+        """
+        Parse image name and return its parts as tuple
+        :param input_name:
+        :return: (name, tag)
+        """
+        m = self.name_regex.match(input_name)
+        if m:
+            return (m.group(1), m.group(2))
+        else:
+            return (input_name, None)
+
     def _namesearch(self, input_name):
         """
         Looks to see if the input name is the name of a image
         """
-        if ":" in input_name:
-            image_name, tag = input_name.split(":")
-        else:
-            image_name = input_name
-            tag = None
+        image_name, tag = self.parse_image_name(input_name)
 
         name_search = self.ac.conn.images(name=image_name, all=True)
         # We found only one result, return it
