@@ -56,7 +56,7 @@ class Reporter(object):
                     image.sevs['Important']
                 image_json[image.iid]['moderate'] = image.sevs['Moderate']
                 image_json[image.iid]['low'] = image.sevs['Low']
-                image_json[image.iid]['os'] = self.appc.os_release
+                image_json[image.iid]['os'] = image.os
             else:
                 image_json[image.iid]['msg'] = image.msg
             self.appc.return_json[image.iid] = image_json[image.iid]
