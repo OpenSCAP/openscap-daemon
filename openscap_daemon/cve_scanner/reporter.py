@@ -28,9 +28,9 @@ class Reporter(object):
         self.output = collections.namedtuple('Summary', 'iid, cid, os, sevs,'
                                              'log, msg',)
         self.list_of_outputs = []
-        self.appc = appc
-        self.report_dir = os.path.join(self.appc.reportdir, "reports")
-        self.appc.docker_state = os.path.join(self.report_dir,
+        self.ac = appc
+        self.report_dir = os.path.join(self.ac.reportdir, "reports")
+        self.ac.docker_state = os.path.join(self.report_dir,
                                               "docker_state.json")
 
         if not os.path.exists(self.report_dir):
@@ -59,7 +59,7 @@ class Reporter(object):
                 image_json[image.iid]['os'] = image.os
             else:
                 image_json[image.iid]['msg'] = image.msg
-            self.appc.return_json[image.iid] = image_json[image.iid]
+            self.ac.return_json[image.iid] = image_json[image.iid]
         report_files = []
         for image in self.list_of_outputs:
             if image.msg is None:
@@ -74,11 +74,11 @@ class Reporter(object):
     def _get_dtype(self, iid):
         ''' Returns whether the given id is an image or container '''
         # Images
-        for image in self.appc.allimages:
+        for image in self.ac.allimages:
             if image['Id'].startswith(iid):
                 return "Image"
         # Containers
-        for con in self.appc.cons:
+        for con in self.ac.cons:
             if con['Id'].startswith(iid):
                 return "Container"
         return None
