@@ -7,7 +7,7 @@ RUN dnf -y install atomic && dnf clean all
 
 # TODO: Don't clone from scratch, instead add local working copy there
 RUN dnf -y install git python3 python3-devel python3-gobject-base \
-    python3-setuptools dbus python3-dbus && dnf clean all && \
+    python3-setuptools dbus python3-dbus python-requests && dnf clean all && \
     git clone https://github.com/OpenSCAP/openscap-daemon && \
     pushd /openscap-daemon && python3 setup.py install && popd
 
