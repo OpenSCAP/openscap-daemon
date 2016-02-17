@@ -6,7 +6,7 @@ scan other containers, container images or even machines.
 ## Fedora 22 in SPC
 ```bash
 cd openscap-daemon/atomic
-docker build f22_spc
+docker build -t openscap-daemon-f22 f22_spc
 # replace ID with the final ID that `docker build` gives you
 atomic install $ID
 atomic run $ID
@@ -22,7 +22,7 @@ in the container.
 
 ```bash
 cd openscap-daemon/atomic
-docker build rhel7_spc
+docker build -t openscap-daemon-rhel7 rhel7_spc
 # replace ID with the final ID that `docker build` gives you
 atomic install $ID
 atomic run $ID
