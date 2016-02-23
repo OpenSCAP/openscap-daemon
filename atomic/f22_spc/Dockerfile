@@ -2,31 +2,11 @@
 
 FROM fedora:22
 
-RUN dnf -y update && dnf -y groupinstall "Development Tools" && dnf -y install make wget git && dnf clean all
+RUN dnf -y install atomic && dnf clean all
 
-RUN dnf -y install scap-security-guide && dnf clean all
+RUN dnf -y install openscap-containers scap-security-guide openscap-daemon && dnf clean all
 
-# TODO: Change to openscap package once 1.2.6 is everywhere
-RUN dnf -y install autoconf automake libtool curl-devel libxml2-devel \
-    libxslt-devel pcre-devel libacl-devel libselinux-devel libcap-devel \
-    libblkid-devel bzip2-devel perl-XML-XPath bzip2 perl-XML-Parser swig \
-    python-devel && dnf clean all && \
-    git clone -b maint-1.2 https://github.com/OpenSCAP/openscap.git && \
-    pushd /openscap && ./autogen.sh && \
-    ./configure --enable-sce --prefix=/usr && make -j 4 install && popd
-
-# TODO: Change to Atomic package once 1.4 is everywhere
-# PYLINT=/bin/true skips pylint checks
-RUN dnf -y install python-setuptools dbus-python docker pygobject2 \
-    libselinux-python python-docker-py golang-github-cpuguy83-go-md2man && \
-    dnf clean all && \
-    git clone https://github.com/projectatomic/atomic.git && \
-    pushd /atomic && PREFIX=/usr PYLINT=/bin/true make install && popd
-
-# TODO: Don't clone from scratch, instead add local working copy there
-RUN dnf -y install python-setuptools dbus-python && dnf clean all && \
-    git clone https://github.com/OpenSCAP/openscap-daemon && \
-    pushd /openscap-daemon && python setup.py install && popd
+RUN dnf -y install wget && dnf clean all
 
 ADD install.sh /root/
 
