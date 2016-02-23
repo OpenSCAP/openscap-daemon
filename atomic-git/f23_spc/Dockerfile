@@ -13,6 +13,6 @@ RUN git clone -b maint-1.2 https://github.com/OpenSCAP/openscap.git && \
 RUN git clone https://github.com/OpenSCAP/openscap-daemon && \
     pushd /openscap-daemon && python3 setup.py install && popd
 
-RUN dnf -y install python3-requests && git clone https://github.com/projectatomic/atomic.git && \
+RUN git clone https://github.com/projectatomic/atomic.git && \
     pushd /atomic && PREFIX=/usr PYLINT=/bin/true PYTHON=python3 make install && \
-    popd && rm -rf ./atomic && dnf clean all
+    popd && rm -rf ./atomic
