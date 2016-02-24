@@ -62,6 +62,18 @@ We have learned many important lessons when developing the lower layers of the
 
 ## Example Use-Cases
 
+### Scan a container or container image on Atomic Host
+Atomic host can use the functionality in OpenSCAP-Daemon to perform vulnerability
+scans of containers and container images using the `atomic scan` command.
+
+To use this functionality, install atomic. Then install openscap-daemon either
+in standalone mode or as a SPC container image. When the daemon is running
+the `atomic scan` functionality is available.
+
+### Scan all containers or all contaner images on Atomic Host
+The `atomic scan` command has command-line arguments --images, --containers and
+--all that scan all images, all container and everything respectively.
+
 ### Scan local machine every day at 1:00 AM UTC
 OpenSCAP-daemon thinks in terms of tasks. Let us first define the task we want
 to perform:
