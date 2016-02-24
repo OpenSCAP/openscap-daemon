@@ -173,6 +173,15 @@ local machine -- the machine that runs *OpenSCAP-daemon*. It is not necessary
 to perform any extra manual action to get the content to the scanned machines,
 this is done automatically.
 
+### Scan all images in my registry to make sure no vulnerable images are published
+When maintaining a registry it makes sense to unpublish images that have known
+vulnerabilities to prevent people from using them.
+
+We need to react to the CVE feeds changing and re-scan the images and of course
+we need to scan all new images incoming into the registry.
+
+This is a future use-case that hasn't been fully implemented yet.
+
 ## Requirements
 * [*python2*](http://python.org) >= 2.6 OR [*python3*](http://python.org) >= 3.2
   * full source compatibility with *python2* and *python3*
