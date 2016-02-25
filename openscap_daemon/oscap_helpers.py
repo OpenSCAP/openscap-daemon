@@ -164,6 +164,10 @@ def get_evaluation_args(spec, config):
         storage_name = spec.target[len("vm-image://"):]
         ret.extend([config.oscap_vm_path, "image", storage_name])
 
+    elif spec.target.startswith("chroot://"):
+        path = spec.target[len("chroot://"):]
+        ret.extend([config.oscap_chroot_path, path])
+
     else:
         raise RuntimeError(
             "Unrecognized target '%s' in evaluation spec." % (spec.target)
