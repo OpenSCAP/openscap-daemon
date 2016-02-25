@@ -305,6 +305,32 @@ class EvaluationSpec(object):
     def generate_guide(self, config):
         return oscap_helpers.generate_guide(self, config)
 
+    def get_oscap_arguments(self):
+        ret = ["xccdf", "eval"]
+
+        if self.input_.datastream_id is not None:
+            ret.extend(["--datastream-id", self.input_.datastream_id])
+
+        if self.input_.xccdf_id is not None:
+            ret.extend(["--xccdf-id", self.input_.xccdf_id])
+
+        if self.tailoring.file_path is not None:
+            ret.extend(["--tailoring-file", self.tailoring.file_path])
+
+        if self.profile_id is not None:
+            ret.extend(["--profile", self.profile_id])
+
+        if self.online_remediation:
+            ret.append("--remediate")
+
+        # We are on purpose only interested in ARF, everything else can be
+        # generated from that.
+        ret.extend(["--results-arf", "arf.xml"])
+
+        ret.append(self.input_.file_path)
+
+        return ret
+
     def evaluate_into_dir(self, config):
         return oscap_helpers.evaluate(self, config)
 

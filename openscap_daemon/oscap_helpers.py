@@ -173,29 +173,7 @@ def get_evaluation_args(spec, config):
             "Unrecognized target '%s' in evaluation spec." % (spec.target)
         )
 
-    ret.extend(["xccdf", "eval"])
-
-    if spec.input_.datastream_id is not None:
-        ret.extend(["--datastream-id", spec.input_.datastream_id])
-
-    if spec.input_.xccdf_id is not None:
-        ret.extend(["--xccdf-id", spec.input_.xccdf_id])
-
-    if spec.tailoring.file_path is not None:
-        ret.extend(["--tailoring-file", spec.tailoring.file_path])
-
-    if spec.profile_id is not None:
-        ret.extend(["--profile", spec.profile_id])
-
-    if spec.online_remediation:
-        ret.append("--remediate")
-
-    # We are on purpose only interested in ARF, everything else can be
-    # generated from that.
-    ret.extend(["--results-arf", "arf.xml"])
-
-    ret.append(spec.input_.file_path)
-
+    ret.extend(spec.get_oscap_arguments())
     return ret
 
 
