@@ -44,7 +44,6 @@ class Configuration(object):
         # Tools section
         self.oscap_path = ""
         self.oscap_ssh_path = ""
-        # TODO: oscap-vm doesn't even exist yet
         self.oscap_vm_path = ""
         self.oscap_docker_path = ""
         self.container_support = True
