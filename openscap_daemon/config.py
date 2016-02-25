@@ -46,6 +46,7 @@ class Configuration(object):
         self.oscap_ssh_path = ""
         self.oscap_vm_path = ""
         self.oscap_docker_path = ""
+        self.oscap_chroot_path = ""
         self.container_support = True
 
         # Content section
@@ -95,6 +96,8 @@ class Configuration(object):
             self.oscap_vm_path = autodetect_tool_path(["oscap-vm"])
         if self.oscap_docker_path == "":
             self.oscap_docker_path = autodetect_tool_path(["oscap-docker"])
+        if self.oscap_chroot_path == "":
+            self.oscap_chroot_path = autodetect_tool_path(["oscap-chroot"])
 
         if self.container_support:
             # let's verify that we really can enable container support
@@ -204,6 +207,11 @@ class Configuration(object):
             pass
 
         try:
+            self.oscap_chroot_path = absolutize(config.get("Tools", "oscap-chroot"))
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
             self.container_support = config.get("Tools", "container-support") \
                 not in ["no", "0", "false", "False"]
         except (configparser.NoOptionError, configparser.NoSectionError):
@@ -243,6 +251,7 @@ class Configuration(object):
         config.set("Tools", "oscap-ssh", str(self.oscap_ssh_path))
         config.set("Tools", "oscap-vm", str(self.oscap_vm_path))
         config.set("Tools", "oscap-docker", str(self.oscap_docker_path))
+        config.set("Tools", "oscap-chroot", str(self.oscap_chroot_path))
         config.set("Tools", "container-support",
                    "yes" if self.container_support else "no")
 
