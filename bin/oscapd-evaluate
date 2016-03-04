@@ -92,6 +92,8 @@ def main():
             args.stderr.write(stderr)
             args.stderr.close()
 
+        sys.exit(exit_code)
+
 
 if __name__ == "__main__":
     main()
