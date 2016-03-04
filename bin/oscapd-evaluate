@@ -1,0 +1,85 @@
+#!/usr/bin/python
+
+# Copyright 2016 Red Hat Inc., Durham, North Carolina.
+# All Rights Reserved.
+#
+# openscap-daemon is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# openscap-daemon is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+
+# You should have received a copy of the GNU Lesser General Public License
+# along with openscap-daemon.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Authors:
+#   Martin Preisler <mpreisle@redhat.com>
+
+from openscap_daemon import config as config_
+from openscap_daemon import evaluation_spec
+from openscap_daemon import version
+
+import os
+import logging
+import argparse
+import sys
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="OpenSCAP-Daemon one-off evaluator."
+    )
+    parser.add_argument(
+        "-v", "--version", action="version",
+        version="%(prog)s " + version.VERSION_STRING
+    )
+    parser.add_argument("--verbose",
+                        help="be verbose, useful for debugging",
+                        action="store_true")
+
+    subparsers = parser.add_subparsers(dest="action")
+    subparsers.required = True
+
+    xml_parser = subparsers.add_parser(
+        "xml",
+        help="Evaluate an EvaluationSpec passed as an XML, either to stdin or "
+             "as a file"
+    )
+    xml_parser.add_argument(
+        "--path", metavar="PATH", type=argparse.FileType("r"),
+        default=sys.stdin
+    )
+    xml_parser.add_argument(
+        "--arf", metavar="PATH", type=argparse.FileType("w")
+    )
+    args = parser.parse_args()
+
+    logging.basicConfig(format='%(levelname)s:%(message)s',
+                        level=logging.DEBUG if args.verbose else logging.INFO)
+    logging.info("OpenSCAP Daemon one-off evaluator %s", version.VERSION_STRING)
+
+    config_file = os.path.join("/", "etc", "oscapd", "config.ini")
+    if "OSCAPD_CONFIG_FILE" in os.environ:
+        config_file = os.environ["OSCAPD_CONFIG_FILE"]
+
+    config = config_.Configuration()
+    config.load(config_file)
+    config.autodetect_tool_paths()
+    config.autodetect_content_paths()
+    config.prepare_dirs()
+
+    if args.action == "xml":
+        spec = evaluation_spec.EvaluationSpec()
+        spec.load_from_xml_file(args.path)
+        arf, stdout, stderr, exit_code = spec.evaluate(config)
+        if args.arf is not None:
+            args.arf.write(arf)
+            args.arf.close()
+
+
+if __name__ == "__main__":
+    main()
