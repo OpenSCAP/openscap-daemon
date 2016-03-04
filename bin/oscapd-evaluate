@@ -56,6 +56,12 @@ def main():
     xml_parser.add_argument(
         "--arf", metavar="PATH", type=argparse.FileType("w")
     )
+    xml_parser.add_argument(
+        "--stdout", metavar="PATH", type=argparse.FileType("w")
+    )
+    xml_parser.add_argument(
+        "--stderr", metavar="PATH", type=argparse.FileType("w")
+    )
     args = parser.parse_args()
 
     logging.basicConfig(format='%(levelname)s:%(message)s',
@@ -79,6 +85,12 @@ def main():
         if args.arf is not None:
             args.arf.write(arf)
             args.arf.close()
+        if args.stdout is not None:
+            args.stdout.write(stdout)
+            args.stdout.close()
+        if args.stderr is not None:
+            args.stderr.write(stderr)
+            args.stderr.close()
 
 
 if __name__ == "__main__":
