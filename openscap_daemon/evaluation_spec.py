@@ -271,6 +271,10 @@ class EvaluationSpec(object):
         element = ElementTree.fromstring(xml_source)
         self.load_from_xml_element(element)
 
+    def load_from_xml_file(self, file_):
+        element = ElementTree.parse(file_)
+        self.load_from_xml_element(element)
+
     def to_xml_element(self):
         ret = ElementTree.Element("evaluation_spec")
 
