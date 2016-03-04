@@ -142,29 +142,64 @@ def get_evaluation_args(spec, config):
     ret = []
 
     if spec.target == "localhost":
+        if config.oscap_path == "":
+            raise RuntimeError(
+                "Target '%s' requires the oscap tool which hasn't been found" %
+                (spec.target)
+            )
         ret.extend([config.oscap_path])
 
     elif spec.target.startswith("ssh://"):
+        if config.oscap_ssh_path == "":
+            raise RuntimeError(
+                "Target '%s' requires the oscap-ssh tool which hasn't been "
+                "found" % (spec.target)
+            )
         host, port = split_ssh_target(spec.target)
         ret.extend([config.oscap_ssh_path, host, str(port)])
 
     elif spec.target.startswith("docker-image://"):
+        if config.oscap_ssh_path == "":
+            raise RuntimeError(
+                "Target '%s' requires the oscap-docker tool which hasn't been "
+                "found" % (spec.target)
+            )
         image_name = spec.target[len("docker-image://"):]
         ret.extend([config.oscap_docker_path, "image", image_name])
 
     elif spec.target.startswith("docker-container://"):
+        if config.oscap_ssh_path == "":
+            raise RuntimeError(
+                "Target '%s' requires the oscap-docker tool which hasn't been "
+                "found" % (spec.target)
+            )
         container_name = spec.target[len("docker-container://"):]
         ret.extend([config.oscap_docker_path, "container", container_name])
 
     elif spec.target.startswith("vm-domain://"):
+        if config.oscap_vm_path == "":
+            raise RuntimeError(
+                "Target '%s' requires the oscap-vm tool which hasn't been "
+                "found" % (spec.target)
+            )
         domain_name = spec.target[len("vm-domain://"):]
         ret.extend([config.oscap_vm_path, "domain", domain_name])
 
     elif spec.target.startswith("vm-image://"):
+        if config.oscap_vm_path == "":
+            raise RuntimeError(
+                "Target '%s' requires the oscap-vm tool which hasn't been "
+                "found" % (spec.target)
+            )
         storage_name = spec.target[len("vm-image://"):]
         ret.extend([config.oscap_vm_path, "image", storage_name])
 
     elif spec.target.startswith("chroot://"):
+        if config.oscap_chroot_path == "":
+            raise RuntimeError(
+                "Target '%s' requires the oscap-chroot tool which hasn't been "
+                "found" % (spec.target)
+            )
         path = spec.target[len("chroot://"):]
         ret.extend([config.oscap_chroot_path, path])
 
