@@ -62,6 +62,39 @@ def main():
     xml_parser.add_argument(
         "--stderr", metavar="PATH", type=argparse.FileType("w")
     )
+
+    spec_parser = subparsers.add_parser(
+        "spec",
+        help="Evaluate an EvaluationSpec created using arguments passed on "
+             "the command line."
+    )
+    spec_parser.add_argument(
+        "--target", type=str,
+        default="localhost"
+    )
+    spec_parser.add_argument(
+        "--input", metavar="PATH", dest="input_", type=argparse.FileType("r"),
+        default=sys.stdin
+    )
+    spec_parser.add_argument(
+        "--tailoring", metavar="PATH", type=argparse.FileType("r")
+    )
+    spec_parser.add_argument(
+        "--profile", type=str,
+        default=""
+    )
+    spec_parser.add_argument(
+        "--remediate", default=False, action="store_true"
+    )
+    spec_parser.add_argument(
+        "--arf", metavar="PATH", type=argparse.FileType("w")
+    )
+    spec_parser.add_argument(
+        "--stdout", metavar="PATH", type=argparse.FileType("w")
+    )
+    spec_parser.add_argument(
+        "--stderr", metavar="PATH", type=argparse.FileType("w")
+    )
     args = parser.parse_args()
 
     logging.basicConfig(format='%(levelname)s:%(message)s',
@@ -81,6 +114,28 @@ def main():
     if args.action == "xml":
         spec = evaluation_spec.EvaluationSpec()
         spec.load_from_xml_file(args.path)
+        arf, stdout, stderr, exit_code = spec.evaluate(config)
+        if args.arf is not None:
+            args.arf.write(arf)
+            args.arf.close()
+        if args.stdout is not None:
+            args.stdout.write(stdout)
+            args.stdout.close()
+        if args.stderr is not None:
+            args.stderr.write(stderr)
+            args.stderr.close()
+
+        sys.exit(exit_code)
+
+    elif args.action == "spec":
+        spec = evaluation_spec.EvaluationSpec()
+        spec.target = args.target
+        spec.input_.set_contents(args.input_.read().decode("utf-8"))
+        if args.tailoring is not None:
+            spec.tailoring.set_contents(args.tailoring.read().decode("utf-8"))
+        spec.profile = args.profile
+        spec.online_remediation = args.remediate
+
         arf, stdout, stderr, exit_code = spec.evaluate(config)
         if args.arf is not None:
             args.arf.write(arf)
