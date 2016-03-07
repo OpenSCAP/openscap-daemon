@@ -27,6 +27,7 @@ import tempfile
 import shutil
 import codecs
 
+
 class SCAPInput(object):
     """Encapsulates all sorts of SCAP input, either embedded in the spec
     itself or separate in a file installed via RPM or other means.
@@ -190,6 +191,38 @@ class SCAPTailoring(object):
                 ret.text = f.read()
 
         return ret
+
+
+class EvaluationMode(object):
+    UNKNOWN = -1
+
+    SOURCE_DATASTREAM = 1
+    OVAL = 2
+    CVE_SCAN = 3
+
+    @staticmethod
+    def to_string(value):
+        if value == EvaluationMode.SOURCE_DATASTREAM:
+            return "source datastream"
+        elif value == EvaluationMode.OVAL:
+            return "OVAL"
+        elif value == EvaluationMode.CVE_SCAN:
+            return "CVE scan"
+
+        else:
+            return "unknown"
+
+    @staticmethod
+    def from_string(value):
+        if value == "source datastream":
+            return EvaluationMode.SOURCE_DATASTREAM
+        elif value == "OVAL":
+            return EvaluationMode.OVAL
+        elif value == "CVE scan":
+            return EvaluationMode.CVE_SCAN
+
+        else:
+            return EvaluationMode.UNKNOWN
 
 
 class EvaluationSpec(object):
