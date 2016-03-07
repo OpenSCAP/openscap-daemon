@@ -112,6 +112,8 @@ def get_profile_choices_for_input(input_file, tailoring_file):
 
 
 def get_generate_guide_args(spec, config):
+    assert(spec.mode == EvaluationMode.SOURCE_DATASTREAM)
+
     ret = [config.oscap_path, "xccdf", "generate", "guide"]
 
     # TODO: Is this supported in OpenSCAP?
@@ -135,6 +137,13 @@ def get_generate_guide_args(spec, config):
 
 
 def generate_guide(spec, config):
+    if spec.mode != EvaluationMode.SOURCE_DATASTREAM:
+        raise RuntimeError(
+            "Can't generate guide for an EvaluationSpec with mode '%s'. "
+            "Generating an HTML guide only works for 'source datastream' mode."
+            % (EvaluationMode.to_string(spec.mode))
+        )
+
     if not spec.is_valid():
         raise RuntimeError(
             "Can't generate guide for an invalid EvaluationSpec."
@@ -326,8 +335,20 @@ def evaluate(spec, config):
     return working_directory
 
 
-def get_generate_report_args_for_arf(spec, arf_path, config):
-    return [config.oscap_path, "xccdf", "generate", "report", arf_path]
+def get_generate_report_args_for_arf(spec, results_path, config):
+    if spec.mode == EvaluationMode.SOURCE_DATASTREAM:
+        # results_path is an ARF XML file
+        return [config.oscap_path, "xccdf", "generate", "report", results_path]
+
+    elif spec.mode == EvaluationMode.OVAL:
+        # results_path is an OVAL results XML file
+        return [config.oscap_path, "oval", "generate", "report", results_path]
+
+    elif spec.mode == EvaluationMode.CVE_SCAN:
+        raise NotImplementedError("Not implemented yet!")
+
+    else:
+        raise RuntimeError("Unknown evaluation mode")
 
 
 def generate_report_for_result(spec, results_dir, result_id, config):
@@ -341,14 +362,14 @@ def generate_report_for_result(spec, results_dir, result_id, config):
         raise RuntimeError("Can't generate report for any result of an "
                            "invalid EvaluationSpec.")
 
-    arf_path = os.path.join(results_dir, str(result_id), "arf.xml")
+    results_path = os.path.join(results_dir, str(result_id), "results.xml")
 
-    if not os.path.exists(arf_path):
-        raise RuntimeError("Can't generate report for result '%s'. "
-                           "Expected ARF at '%s' but the file doesn't exist."
-                           % (result_id, arf_path))
+    if not os.path.exists(results_path):
+        raise RuntimeError("Can't generate report for result '%s'. Expected "
+                           "results XML at '%s' but the file doesn't exist."
+                           % (result_id, results_path))
 
-    args = get_generate_report_args_for_arf(spec, arf_path, config)
+    args = get_generate_report_args_for_arf(spec, results_path, config)
 
     logging.debug(
         "Generating report for result %i of EvaluationSpec with command '%s'.",

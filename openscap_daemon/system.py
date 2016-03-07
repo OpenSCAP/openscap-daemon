@@ -595,12 +595,12 @@ class System(object):
 
         return task.get_result_created_timestamp(result_id, self.config)
 
-    def get_arf_of_task_result(self, task_id, result_id):
+    def get_xml_of_task_result(self, task_id, result_id):
         task = None
         with self.tasks_lock:
             task = self.tasks[task_id]
 
-        return task.get_arf_of_result(result_id, self.config)
+        return task.get_xml_of_result(result_id, self.config)
 
     def get_stdout_of_task_result(self, task_id, result_id):
         task = None

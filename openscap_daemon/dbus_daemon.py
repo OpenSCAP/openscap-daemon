@@ -323,10 +323,22 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="xx", out_signature="s")
+    def GetXMLOfTaskResult(self, task_id, result_id):
+        """Retrieves full XML of result of given task.
+        This can be an ARF or OVAL result file, depending on task EvaluationMode
+
+        Deprecated, use GetXMLOfTaskResult instead.
+        """
+        return self.system.get_xml_of_task_result(task_id, result_id)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="xx", out_signature="s")
     def GetARFOfTaskResult(self, task_id, result_id):
         """Retrieves full ARF of result of given task.
+
+        Deprecated, use GetXMLOfTaskResult instead.
         """
-        return self.system.get_arf_of_task_result(task_id, result_id)
+        return self.system.get_xml_of_task_result(task_id, result_id)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="x", out_signature="")

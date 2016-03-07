@@ -202,6 +202,7 @@ class EvaluationSpec(object):
     """
 
     def __init__(self):
+        self.mode = oscap_helpers.EvaluationMode.SOURCE_DATASTREAM
         self.target = "localhost"
         self.input_ = SCAPInput()
         self.tailoring = SCAPTailoring()
@@ -210,6 +211,8 @@ class EvaluationSpec(object):
 
     def __str__(self):
         ret = "Evaluation spec\n"
+        ret += "- mode: \t%s\n" % \
+            (oscap_helpers.EvaluationMode.to_string(self.mode))
         ret += "- target: \t%s\n" % (self.target)
         ret += "- input:\n"
         ret += "  - file: \t%s\n" % (self.input_.file_path)
@@ -227,10 +230,13 @@ class EvaluationSpec(object):
         return ret
 
     def is_valid(self):
-        if not self.input_.is_valid():
+        if self.mode == oscap_helpers.EvaluationMode.UNKNOWN:
             return False
 
         if self.target is None:
+            return False
+
+        if not self.input_.is_valid():
             return False
 
         return True
@@ -241,6 +247,7 @@ class EvaluationSpec(object):
         """
 
         return \
+            self.mode == other.mode and \
             self.target == other.target and \
             self.input_.is_equivalent_to(other.input_) and \
             self.tailoring.is_equivalent_to(other.tailoring) and \
@@ -248,6 +255,10 @@ class EvaluationSpec(object):
             self.online_remediation == other.online_remediation
 
     def load_from_xml_element(self, element):
+        self.mode = oscap_helpers.EvaluationMode.from_string(
+            et_helpers.get_element_text(element, "mode", "source datastream")
+        )
+
         self.target = et_helpers.get_element_text(element, "target")
 
         self.input_ = SCAPInput()
@@ -279,6 +290,10 @@ class EvaluationSpec(object):
     def to_xml_element(self):
         ret = ElementTree.Element("evaluation_spec")
 
+        mode_element = ElementTree.Element("mode")
+        mode_element.text = oscap_helpers.EvaluationMode.to_string(self.mode)
+        ret.append(mode_element)
+
         target_element = ElementTree.Element("target")
         target_element.text = self.target
         ret.append(target_element)
@@ -308,31 +323,55 @@ class EvaluationSpec(object):
         return ElementTree.tostring(element, "utf-8")
 
     def generate_guide(self, config):
-        return oscap_helpers.generate_guide(self, config)
+        if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
+            return oscap_helpers.generate_guide(self, config)
+
+        elif self.mode == oscap_helpers.EvaluationMode.OVAL:
+            # TODO: improve this
+            return "<html><body>OVAL evaluation</body></html>"
+
+        elif self.mode == oscap_helpers.EvaluationMode.CVE_SCAN:
+            # TODO: improve this
+            return "<html><body>CVE scan evaluation</body></html>"
 
     def get_oscap_arguments(self):
-        ret = ["xccdf", "eval"]
+        if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
+            ret = ["xccdf", "eval"]
 
-        if self.input_.datastream_id is not None:
-            ret.extend(["--datastream-id", self.input_.datastream_id])
+            if self.input_.datastream_id is not None:
+                ret.extend(["--datastream-id", self.input_.datastream_id])
 
-        if self.input_.xccdf_id is not None:
-            ret.extend(["--xccdf-id", self.input_.xccdf_id])
+            if self.input_.xccdf_id is not None:
+                ret.extend(["--xccdf-id", self.input_.xccdf_id])
 
-        if self.tailoring.file_path is not None:
-            ret.extend(["--tailoring-file", self.tailoring.file_path])
+            if self.tailoring.file_path is not None:
+                ret.extend(["--tailoring-file", self.tailoring.file_path])
 
-        if self.profile_id is not None:
-            ret.extend(["--profile", self.profile_id])
+            if self.profile_id is not None:
+                ret.extend(["--profile", self.profile_id])
 
-        if self.online_remediation:
-            ret.append("--remediate")
+            if self.online_remediation:
+                ret.append("--remediate")
 
-        # We are on purpose only interested in ARF, everything else can be
-        # generated from that.
-        ret.extend(["--results-arf", "arf.xml"])
+            # We are on purpose only interested in ARF, everything else can be
+            # generated from that.
+            ret.extend(["--results-arf", "results.xml"])
 
-        ret.append(self.input_.file_path)
+            ret.append(self.input_.file_path)
+
+        elif self.mode == oscap_helpers.EvaluationMode.OVAL:
+            ret = ["oval", "eval"]
+            ret.extend(["--results", "results.xml"])
+
+            # Again, we are only interested in OVAL results, everything else can
+            # be generated.
+            ret.append(self.input_.file_path)
+
+        elif self.mode == oscap_helpers.EvaluationMode.CVE_SCAN:
+            raise NotImplementedError("Not implemented yet!")
+
+        else:
+            raise RuntimeError("Unknown evaluation mode %i" % (self.mode))
 
         return ret
 
@@ -342,9 +381,9 @@ class EvaluationSpec(object):
     def evaluate(self, config):
         wip_result = self.evaluate_into_dir(config)
         try:
-            arf = ""
-            with open(os.path.join(wip_result, "arf.xml"), "r") as f:
-                arf = f.read()
+            results = ""
+            with open(os.path.join(wip_result, "results.xml"), "r") as f:
+                results = f.read()
 
             stdout = ""
             with open(os.path.join(wip_result, "stdout"), "r") as f:
@@ -358,8 +397,7 @@ class EvaluationSpec(object):
             with open(os.path.join(wip_result, "exit_code"), "r") as f:
                 exit_code = int(f.read())
 
-            return (arf, stdout, stderr, exit_code)
+            return (results, stdout, stderr, exit_code)
 
         finally:
             shutil.rmtree(wip_result)
-
