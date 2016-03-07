@@ -28,6 +28,38 @@ from openscap_daemon import et_helpers
 from openscap_daemon.compat import subprocess_check_output
 
 
+class EvaluationMode(object):
+    UNKNOWN = -1
+
+    SOURCE_DATASTREAM = 1
+    OVAL = 2
+    CVE_SCAN = 3
+
+    @staticmethod
+    def to_string(value):
+        if value == EvaluationMode.SOURCE_DATASTREAM:
+            return "source datastream"
+        elif value == EvaluationMode.OVAL:
+            return "OVAL"
+        elif value == EvaluationMode.CVE_SCAN:
+            return "CVE scan"
+
+        else:
+            return "unknown"
+
+    @staticmethod
+    def from_string(value):
+        if value == "source datastream":
+            return EvaluationMode.SOURCE_DATASTREAM
+        elif value == "OVAL":
+            return EvaluationMode.OVAL
+        elif value == "CVE scan":
+            return EvaluationMode.CVE_SCAN
+
+        else:
+            return EvaluationMode.UNKNOWN
+
+
 def get_profile_choices_for_input(input_file, tailoring_file):
     # Ideally oscap would have a command line to do this, but as of now it
     # doesn't so we have to implement it ourselves. Importing openscap Python
