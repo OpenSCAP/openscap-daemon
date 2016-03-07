@@ -29,6 +29,8 @@ import logging
 import shutil
 import inspect
 
+from openscap_daemon import cve_feed_manager
+
 
 class Configuration(object):
     def __init__(self):
@@ -57,6 +59,7 @@ class Configuration(object):
         # CVEScanner section
         self.fetch_cve = True
         self.fetch_cve_url = ""
+        self.cve_feed_manager = cve_feed_manager.CVEFeedManager()
 
     def autodetect_tool_paths(self):
         """This will try a few well-known public paths and change the paths
@@ -318,3 +321,16 @@ class Configuration(object):
                 )
 
                 shutil.rmtree(full_path)
+
+    def get_cve_feed(self, dist):
+        self.cve_feed_manager.dest = self.cve_feeds_dir
+
+        if self.fetch_cve_url != "":
+            self.cve_feed_manager.url = self.fetch_cve_url
+        else:
+            self.cve_feed_manager.url = \
+                cve_feed_manager.CVEFeedManager.default_url
+
+        self.cve_feed_manager.fetch_enabled = self.fetch_cve
+
+        return self.cve_feed_manager.get_cve_feed(dist)
