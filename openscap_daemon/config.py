@@ -39,6 +39,8 @@ class Configuration(object):
         self.results_dir = os.path.join("/", "var", "lib", "oscapd", "results")
         self.work_in_progress_dir = \
             os.path.join("/", "var", "lib", "oscapd", "work_in_progress")
+        self.cve_feeds_dir = \
+            os.path.join("/", "var", "lib", "oscapd", "cve_feeds")
         self.jobs = 4
 
         # Tools section
@@ -181,6 +183,11 @@ class Configuration(object):
             pass
 
         try:
+            self.cve_feeds_dir = absolutize(config.get("General", "cve-feeds-dir"))
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
             self.jobs = config.getint("General", "jobs")
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
@@ -244,6 +251,7 @@ class Configuration(object):
         config.set("General", "tasks-dir", str(self.tasks_dir))
         config.set("General", "results-dir", str(self.results_dir))
         config.set("General", "work-in-progress-dir", str(self.work_in_progress_dir))
+        config.set("General", "cve-feeds-dir", str(self.cve_feeds_dir))
         config.set("General", "jobs", str(self.jobs))
 
         config.add_section("Tools")
@@ -291,6 +299,13 @@ class Configuration(object):
                 "it didn't exist.", self.work_in_progress_dir
             )
             os.makedirs(self.work_in_progress_dir)
+
+        if not os.path.exists(self.cve_feeds_dir):
+            logging.info(
+                "Creating CVE feeds directory at '%s' because it didn't exist.",
+                self.work_in_progress_dir
+            )
+            os.makedirs(self.cve_feeds_dir)
 
         if cleanup_allowed:
             for dir_ in os.listdir(self.work_in_progress_dir):
