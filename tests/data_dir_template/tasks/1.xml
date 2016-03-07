@@ -2,7 +2,7 @@
 <task enabled="true">
     <title>Weekly SCAP Security Guide Evaluation</title>
     <evaluation_spec>
-        <mode>source datastream</mode>
+        <mode>sds</mode>
         <target>localhost</target>
         <input>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;ds:data-stream-collection xmlns:ds="http://scap.nist.gov/schema/scap/source/1.2" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:cat="urn:oasis:names:tc:entity:xmlns:xml:catalog" id="scap_org.open-scap_collection_from_xccdf_ssg-fedora-xccdf-1.2.xml" schematron-version="1.0"&gt;

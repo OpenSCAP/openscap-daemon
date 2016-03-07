@@ -256,7 +256,7 @@ class EvaluationSpec(object):
 
     def load_from_xml_element(self, element):
         self.mode = oscap_helpers.EvaluationMode.from_string(
-            et_helpers.get_element_text(element, "mode", "source datastream")
+            et_helpers.get_element_text(element, "mode", "sds")
         )
 
         self.target = et_helpers.get_element_text(element, "target")

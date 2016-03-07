@@ -38,22 +38,22 @@ class EvaluationMode(object):
     @staticmethod
     def to_string(value):
         if value == EvaluationMode.SOURCE_DATASTREAM:
-            return "source datastream"
+            return "sds"
         elif value == EvaluationMode.OVAL:
-            return "OVAL"
+            return "oval"
         elif value == EvaluationMode.CVE_SCAN:
-            return "CVE scan"
+            return "cve_scan"
 
         else:
             return "unknown"
 
     @staticmethod
     def from_string(value):
-        if value == "source datastream":
+        if value == "sds":
             return EvaluationMode.SOURCE_DATASTREAM
-        elif value == "OVAL":
+        elif value == "oval":
             return EvaluationMode.OVAL
-        elif value == "CVE scan":
+        elif value == "cve_scan":
             return EvaluationMode.CVE_SCAN
 
         else:
@@ -140,7 +140,7 @@ def generate_guide(spec, config):
     if spec.mode != EvaluationMode.SOURCE_DATASTREAM:
         raise RuntimeError(
             "Can't generate guide for an EvaluationSpec with mode '%s'. "
-            "Generating an HTML guide only works for 'source datastream' mode."
+            "Generating an HTML guide only works for 'sds' mode."
             % (EvaluationMode.to_string(spec.mode))
         )
 
