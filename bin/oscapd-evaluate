@@ -92,6 +92,12 @@ def main():
         "--remediate", default=False, action="store_true"
     )
     spec_parser.add_argument(
+        "--print-xml",
+        dest="print_xml",
+        help="Don't evaluate the EvaluationSpec, just print its XML to stdout",
+        action="store_true"
+    )
+    spec_parser.add_argument(
         "--results", metavar="PATH", type=argparse.FileType("w")
     )
     spec_parser.add_argument(
@@ -142,18 +148,23 @@ def main():
         spec.profile = args.profile
         spec.online_remediation = args.remediate
 
-        results, stdout, stderr, exit_code = spec.evaluate(config)
-        if args.results is not None:
-            args.results.write(results)
-            args.results.close()
-        if args.stdout is not None:
-            args.stdout.write(stdout)
-            args.stdout.close()
-        if args.stderr is not None:
-            args.stderr.write(stderr)
-            args.stderr.close()
+        if args.print_xml:
+            print(spec.to_xml_source())
+            sys.exit(0)
 
-        sys.exit(exit_code)
+        else:
+            results, stdout, stderr, exit_code = spec.evaluate(config)
+            if args.results is not None:
+                args.results.write(results)
+                args.results.close()
+            if args.stdout is not None:
+                args.stdout.write(stdout)
+                args.stdout.close()
+            if args.stderr is not None:
+                args.stderr.write(stderr)
+                args.stderr.close()
+
+            sys.exit(exit_code)
 
 
 if __name__ == "__main__":
