@@ -55,7 +55,7 @@ def main():
         default=sys.stdin
     )
     xml_parser.add_argument(
-        "--arf", metavar="PATH", type=argparse.FileType("w")
+        "--results", metavar="PATH", type=argparse.FileType("w")
     )
     xml_parser.add_argument(
         "--stdout", metavar="PATH", type=argparse.FileType("w")
@@ -92,7 +92,7 @@ def main():
         "--remediate", default=False, action="store_true"
     )
     spec_parser.add_argument(
-        "--arf", metavar="PATH", type=argparse.FileType("w")
+        "--results", metavar="PATH", type=argparse.FileType("w")
     )
     spec_parser.add_argument(
         "--stdout", metavar="PATH", type=argparse.FileType("w")
@@ -119,10 +119,10 @@ def main():
     if args.action == "xml":
         spec = evaluation_spec.EvaluationSpec()
         spec.load_from_xml_file(args.path)
-        arf, stdout, stderr, exit_code = spec.evaluate(config)
-        if args.arf is not None:
-            args.arf.write(arf)
-            args.arf.close()
+        results, stdout, stderr, exit_code = spec.evaluate(config)
+        if args.results is not None:
+            args.results.write(results)
+            args.results.close()
         if args.stdout is not None:
             args.stdout.write(stdout)
             args.stdout.close()
@@ -142,10 +142,10 @@ def main():
         spec.profile = args.profile
         spec.online_remediation = args.remediate
 
-        arf, stdout, stderr, exit_code = spec.evaluate(config)
-        if args.arf is not None:
-            args.arf.write(arf)
-            args.arf.close()
+        results, stdout, stderr, exit_code = spec.evaluate(config)
+        if args.results is not None:
+            args.results.write(results)
+            args.results.close()
         if args.stdout is not None:
             args.stdout.write(stdout)
             args.stdout.close()
