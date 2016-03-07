@@ -270,7 +270,7 @@ class Configuration(object):
     def save(self):
         self.save_as(self.config_file)
 
-    def prepare_dirs(self):
+    def prepare_dirs(self, cleanup_allowed=True):
         if not os.path.exists(self.tasks_dir):
             logging.info(
                 "Creating tasks directory at '%s' because it didn't exist.",
@@ -292,13 +292,14 @@ class Configuration(object):
             )
             os.makedirs(self.work_in_progress_dir)
 
-        for dir_ in os.listdir(self.work_in_progress_dir):
-            full_path = os.path.join(self.work_in_progress_dir, dir_)
+        if cleanup_allowed:
+            for dir_ in os.listdir(self.work_in_progress_dir):
+                full_path = os.path.join(self.work_in_progress_dir, dir_)
 
-            logging.info(
-                "Found '%s' in work_in_progress results directory, full path "
-                "is '%s'. This is most likely a left-over from an earlier "
-                "crash. Deleting...", dir_, full_path
-            )
+                logging.info(
+                    "Found '%s' in work_in_progress results directory, full "
+                    "path is '%s'. This is most likely a left-over from an "
+                    "earlier crash. Deleting...", dir_, full_path
+                )
 
-            shutil.rmtree(full_path)
+                shutil.rmtree(full_path)

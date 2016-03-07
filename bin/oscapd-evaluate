@@ -120,7 +120,7 @@ def main():
     config.load(config_file)
     config.autodetect_tool_paths()
     config.autodetect_content_paths()
-    config.prepare_dirs()
+    config.prepare_dirs(cleanup_allowed=False)
 
     if args.action == "xml":
         spec = evaluation_spec.EvaluationSpec()
