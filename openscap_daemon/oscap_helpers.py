@@ -249,7 +249,7 @@ def get_evaluation_args(spec, config):
             "Unrecognized target '%s' in evaluation spec." % (spec.target)
         )
 
-    ret.extend(spec.get_oscap_arguments())
+    ret.extend(spec.get_oscap_arguments(config))
     return ret
 
 

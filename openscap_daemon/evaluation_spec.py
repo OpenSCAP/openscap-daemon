@@ -236,7 +236,9 @@ class EvaluationSpec(object):
         if self.target is None:
             return False
 
-        if not self.input_.is_valid():
+        # cve_scan mode doesn't use the input element
+        if self.mode != oscap_helpers.EvaluationMode.CVE_SCAN and \
+           not self.input_.is_valid():
             return False
 
         return True
@@ -334,7 +336,7 @@ class EvaluationSpec(object):
             # TODO: improve this
             return "<html><body>CVE scan evaluation</body></html>"
 
-    def get_oscap_arguments(self):
+    def get_oscap_arguments(self, config):
         if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
             ret = ["xccdf", "eval"]
 
@@ -368,7 +370,13 @@ class EvaluationSpec(object):
             ret.append(self.input_.file_path)
 
         elif self.mode == oscap_helpers.EvaluationMode.CVE_SCAN:
-            raise NotImplementedError("Not implemented yet!")
+            ret = ["oval", "eval"]
+            ret.extend(["--results", "results.xml"])
+
+            # Again, we are only interested in OVAL results, everything else can
+            # be generated.
+            # TODO: The version is hardcoded here!
+            ret.append(config.get_cve_feed(7))
 
         else:
             raise RuntimeError("Unknown evaluation mode %i" % (self.mode))
