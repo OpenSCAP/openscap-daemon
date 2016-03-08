@@ -153,7 +153,11 @@ class Configuration(object):
 
     def load(self, config_file):
         config = configparser.SafeConfigParser()
-        config.read(config_file)
+        try:
+            config.read(config_file)
+        except configparser.Error as e:
+            logging.error("Configuration file cannot be parsed. %s" % e)
+            return
 
         base_dir = os.path.dirname(config_file)
 
