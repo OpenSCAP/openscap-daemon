@@ -45,6 +45,17 @@ def main():
     subparsers = parser.add_subparsers(dest="action")
     subparsers.required = True
 
+    config_parser = subparsers.add_parser(
+        "config",
+        help="Start with default configuration, auto-detect tool and content "
+             "locations and output the resulting INI results into stdout or "
+             "given file path"
+    )
+    config_parser.add_argument(
+        "--path", metavar="PATH", type=argparse.FileType("w"),
+        default=sys.stdout
+    )
+
     xml_parser = subparsers.add_parser(
         "xml",
         help="Evaluate an EvaluationSpec passed as an XML, either to stdin or "
@@ -111,6 +122,13 @@ def main():
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         level=logging.DEBUG if args.verbose else logging.INFO)
     logging.info("OpenSCAP Daemon one-off evaluator %s", version.VERSION_STRING)
+
+    if args.action == "config":
+        config = config_.Configuration()
+        config.autodetect_tool_paths()
+        config.autodetect_content_paths()
+        config.save_as(args.path)
+        sys.exit(0)
 
     config_file = os.path.join("/", "etc", "oscapd", "config.ini")
     if "OSCAPD_CONFIG_FILE" in os.environ:

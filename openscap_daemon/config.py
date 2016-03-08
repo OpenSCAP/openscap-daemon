@@ -273,10 +273,16 @@ class Configuration(object):
         config.set("CVEScanner", "fetch-cve", "yes" if self.fetch_cve else "no")
         config.set("CVEScanner", "fetch-cve-url", str(self.fetch_cve_url))
 
-        with open(config_file, "w") as f:
-            config.write(f)
+        if hasattr(config_file, "write"):
+            # config_file is an already opened file, let's use it like one
+            config.write(config_file)
 
-        self.config_file = config_file
+        else:
+            # treat config_file as a path
+            with open(config_file, "w") as f:
+                config.write(f)
+
+            self.config_file = config_file
 
     def save(self):
         self.save_as(self.config_file)
