@@ -438,5 +438,33 @@ class EvaluationSpec(object):
                                "stdout:\n%s\n\nstderr:\n%s"
                                % (target, stdout, stderr))
 
-        # TODO
-        print(results)
+        namespaces = {
+            "ovalres": "http://oval.mitre.org/XMLSchema/oval-results-5",
+            "ovaldef": "http://oval.mitre.org/XMLSchema/oval-definitions-5"
+        }
+        results_tree = ElementTree.fromstring(results)
+        # first we collect all definition ids that resulted in true
+        definition_ids = []
+        for definition in results_tree.findall(
+                "./ovalres:results/ovalres:system/ovalres:definitions/"
+                "ovalres:definition[@result='true']", namespaces):
+            def_id_attr = definition.get("definition_id")
+            if def_id_attr is None:
+                continue
+            definition_ids.append(def_id_attr)
+
+        cpe_ids = []
+        # now we need to lookup the CPE ID for each definition id
+        for definition_id in definition_ids:
+            for reference in results_tree.findall(
+                    "./ovaldef:oval_definitions/ovaldef:definitions/"
+                    "ovaldef:definition[@id='%s']/ovaldef:metadata/"
+                    "ovaldef:reference[@source='CPE']" % (definition_id),
+                    namespaces):
+                ref_id = reference.get("ref_id")
+                if ref_id is None:
+                    continue
+
+                cpe_ids.append(ref_id)
+
+        return cpe_ids
