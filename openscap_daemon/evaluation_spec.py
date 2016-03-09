@@ -236,8 +236,9 @@ class EvaluationSpec(object):
         if self.target is None:
             return False
 
-        # cve_scan mode doesn't use the input element
-        if self.mode != oscap_helpers.EvaluationMode.CVE_SCAN and \
+        # cve_scan and standard_scan modes don't require the input element
+        if self.mode not in [oscap_helpers.EvaluationMode.CVE_SCAN,
+                             oscap_helpers.EvaluationMode.STANDARD_SCAN] and \
            not self.input_.is_valid():
             return False
 
@@ -336,6 +337,49 @@ class EvaluationSpec(object):
             # TODO: improve this
             return "<html><body>CVE scan evaluation</body></html>"
 
+        elif self.mode == oscap_helpers.EvaluationMode.STANDARD_SCAN:
+            return oscap_helpers.generate_guide(self, config)
+
+        raise RuntimeError("Unknown EvaluationMode %i" % (self.mode))
+
+    def get_oscap_guide_arguments(self, config):
+        ret = []
+
+        if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
+            # TODO: Is this supported in OpenSCAP?
+            if self.input_.datastream_id is not None:
+                ret.extend(["--datastream-id", self.input_.datastream_id])
+
+            # TODO: Is this supported in OpenSCAP?
+            if self.input_.xccdf_id is not None:
+                ret.extend(["--xccdf-id", self.input_.xccdf_id])
+
+            # TODO: Is this supported in OpenSCAP?
+            if self.tailoring.file_path is not None:
+                ret.extend(["--tailoring-file", self.tailoring.file_path])
+
+            if self.profile_id is not None:
+                ret.extend(["--profile", self.profile_id])
+
+            ret.append(self.input_.file_path)
+
+        elif self.mode == oscap_helpers.EvaluationMode.STANDARD_SCAN:
+            # TODO: Is this supported in OpenSCAP?
+            if self.tailoring.file_path is not None:
+                ret.extend(["--tailoring-file", self.tailoring.file_path])
+
+            ret.extend(["--profile",
+                        "xccdf_org.ssgproject.content_profile_standard"])
+
+            ret.append(config.get_ssg_sds(
+                EvaluationSpec.detect_CPEs_of_target(self.target, config))
+            )
+
+        else:
+            raise NotImplementedError("This EvaluationMode is unsupported here!")
+
+        return ret
+
     def get_oscap_arguments(self, config):
         if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
             ret = ["xccdf", "eval"]
@@ -376,6 +420,26 @@ class EvaluationSpec(object):
             # Again, we are only interested in OVAL results, everything else can
             # be generated.
             ret.append(config.get_cve_feed(
+                EvaluationSpec.detect_CPEs_of_target(self.target, config))
+            )
+
+        elif self.mode == oscap_helpers.EvaluationMode.STANDARD_SCAN:
+            ret = ["xccdf", "eval"]
+
+            if self.tailoring.file_path is not None:
+                ret.extend(["--tailoring-file", self.tailoring.file_path])
+
+            ret.extend(["--profile",
+                        "xccdf_org.ssgproject.content_profile_standard"])
+
+            if self.online_remediation:
+                ret.append("--remediate")
+
+            # We are on purpose only interested in ARF, everything else can be
+            # generated from that.
+            ret.extend(["--results-arf", "results.xml"])
+
+            ret.append(config.get_ssg_sds(
                 EvaluationSpec.detect_CPEs_of_target(self.target, config))
             )
 

@@ -34,6 +34,7 @@ class EvaluationMode(object):
     SOURCE_DATASTREAM = 1
     OVAL = 2
     CVE_SCAN = 3
+    STANDARD_SCAN = 4
 
     @staticmethod
     def to_string(value):
@@ -43,6 +44,8 @@ class EvaluationMode(object):
             return "oval"
         elif value == EvaluationMode.CVE_SCAN:
             return "cve_scan"
+        elif value == EvaluationMode.STANDARD_SCAN:
+            return "standard_scan"
 
         else:
             return "unknown"
@@ -55,6 +58,8 @@ class EvaluationMode(object):
             return EvaluationMode.OVAL
         elif value == "cve_scan":
             return EvaluationMode.CVE_SCAN
+        elif value == "standard_scan":
+            return EvaluationMode.STANDARD_SCAN
 
         else:
             return EvaluationMode.UNKNOWN
@@ -112,35 +117,19 @@ def get_profile_choices_for_input(input_file, tailoring_file):
 
 
 def get_generate_guide_args(spec, config):
-    assert(spec.mode == EvaluationMode.SOURCE_DATASTREAM)
-
     ret = [config.oscap_path, "xccdf", "generate", "guide"]
-
-    # TODO: Is this supported in OpenSCAP?
-    if spec.input_.datastream_id is not None:
-        ret.extend(["--datastream-id", spec.input_.datastream_id])
-
-    # TODO: Is this supported in OpenSCAP?
-    if spec.input_.xccdf_id is not None:
-        ret.extend(["--xccdf-id", spec.input_.xccdf_id])
-
-    # TODO: Is this supported in OpenSCAP?
-    if spec.tailoring.file_path is not None:
-        ret.extend(["--tailoring-file", spec.tailoring.file_path])
-
-    if spec.profile_id is not None:
-        ret.extend(["--profile", spec.profile_id])
-
-    ret.append(spec.input_.file_path)
+    ret.extend(spec.get_oscap_guide_arguments(config))
 
     return ret
 
 
 def generate_guide(spec, config):
-    if spec.mode != EvaluationMode.SOURCE_DATASTREAM:
+    if spec.mode not in [EvaluationMode.SOURCE_DATASTREAM,
+                         EvaluationMode.STANDARD_SCAN]:
         raise RuntimeError(
             "Can't generate guide for an EvaluationSpec with mode '%s'. "
-            "Generating an HTML guide only works for 'sds' mode."
+            "Generating an HTML guide only works for 'sds' and 'standard_scan' "
+            "modes."
             % (EvaluationMode.to_string(spec.mode))
         )
 
@@ -347,6 +336,10 @@ def get_generate_report_args_for_results(spec, results_path, config):
     elif spec.mode == EvaluationMode.CVE_SCAN:
         # results_path is an OVAL results XML file
         return [config.oscap_path, "oval", "generate", "report", results_path]
+
+    elif spec.mode == EvaluationMode.STANDARD_SCAN:
+        # results_path is an ARF XML file
+        return [config.oscap_path, "xccdf", "generate", "report", results_path]
 
     else:
         raise RuntimeError("Unknown evaluation mode")
