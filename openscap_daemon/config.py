@@ -54,6 +54,7 @@ class Configuration(object):
         self.container_support = True
 
         # Content section
+        self.cpe_oval_path = ""
         self.ssg_path = ""
 
         # CVEScanner section
@@ -136,7 +137,33 @@ class Configuration(object):
                                 "scanning functionality will be disabled.")
 
     def autodetect_content_paths(self):
-        def autodetect_content_path(possible_paths):
+        def autodetect_content_path(possible_paths, possible_filenames):
+            for path in possible_paths:
+                if not os.path.isdir(path):
+                    continue
+
+                for filename in possible_filenames:
+                    full_path = os.path.join(path, filename)
+                    if os.path.exists(full_path):
+                        logging.info("Autodetected SCAP content at \"%s\".",
+                                     full_path)
+                    return full_path
+
+            logging.error(
+                "Failed to autodetect SCAP content in paths %s with filenames "
+                "%s.", ", ".join(possible_paths), ", ".join(possible_filenames)
+            )
+            return ""
+
+        if self.cpe_oval_path == "":
+            self.cpe_oval_path = autodetect_content_path([
+                os.path.join("/", "usr", "share", "openscap", "cpe"),
+                os.path.join("/", "usr", "local", "share", "openscap", "cpe"),
+                os.path.join("/", "opt", "openscap", "cpe")],
+                ["openscap-cpe-oval.xml"]
+            )
+
+        def autodetect_content_dir(possible_paths):
             for path in possible_paths:
                 if os.path.isdir(path):
                     logging.info("Autodetected SCAP content in path \"%s\".",
@@ -150,7 +177,7 @@ class Configuration(object):
             return ""
 
         if self.ssg_path == "":
-            self.ssg_path = autodetect_content_path([
+            self.ssg_path = autodetect_content_dir([
                 os.path.join("/", "usr", "share", "xml", "scap", "ssg", "content"),
                 os.path.join("/", "usr", "local", "share", "xml", "scap", "ssg", "content"),
                 os.path.join("/", "opt", "ssg", "content")
@@ -229,6 +256,11 @@ class Configuration(object):
 
         # Content section
         try:
+            self.cpe_oval_path = absolutize(config.get("Content", "cpe-oval"))
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
             self.ssg_path = absolutize(config.get("Content", "ssg"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
@@ -267,6 +299,7 @@ class Configuration(object):
                    "yes" if self.container_support else "no")
 
         config.add_section("Content")
+        config.set("Content", "cpe-oval", str(self.cpe_oval_path))
         config.set("Content", "ssg", str(self.ssg_path))
 
         config.add_section("CVEScanner")
