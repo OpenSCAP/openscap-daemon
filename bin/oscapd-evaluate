@@ -197,7 +197,7 @@ def main():
         cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
             args.target, config
         )
-        print(cpes)
+        print("\n".join(cpes))
         sys.exit(0)
 
 
