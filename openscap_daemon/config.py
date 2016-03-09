@@ -361,7 +361,7 @@ class Configuration(object):
 
                 shutil.rmtree(full_path)
 
-    def get_cve_feed(self, dist):
+    def get_cve_feed(self, cpe_ids):
         self.cve_feed_manager.dest = self.cve_feeds_dir
 
         if self.fetch_cve_url != "":
@@ -372,4 +372,4 @@ class Configuration(object):
 
         self.cve_feed_manager.fetch_enabled = self.fetch_cve
 
-        return self.cve_feed_manager.get_cve_feed(dist)
+        return self.cve_feed_manager.get_cve_feed(cpe_ids)

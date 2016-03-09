@@ -125,7 +125,7 @@ class CVEFeedManager(object):
         logging.debug("File {0} is same as upstream".format(local_file))
         return True
 
-    def get_cve_feed(self, dist):
+    def get_rhel_cve_feed(self, dist):
         """Given a distribution number (i.e. 7), it will fetch the
         distribution specific data file if upstream has a newer
         input file. Returns the path of file.
@@ -174,7 +174,7 @@ class CVEFeedManager(object):
 
         return local_file
 
-    def fetch_all_cve_feeds(self):
+    def fetch_all_rhel_cve_feeds(self):
         """Fetches all the the distribution specific data used for
         input with openscap cve scanning and returns a list
         of those files.
@@ -184,3 +184,15 @@ class CVEFeedManager(object):
         for dist in self.dists:
             cve_files.append(self.get_cve_feed(dist))
         return cve_files
+
+    def get_cve_feed(self, cpe_ids):
+        if "cpe:/o:redhat:enterprise_linux:7" in cpe_ids:
+            return self.get_rhel_cve_feed(7)
+        elif "cpe:/o:redhat:enterprise_linux:6" in cpe_ids:
+            return self.get_rhel_cve_feed(6)
+        elif "cpe:/o:redhat:enterprise_linux:5" in cpe_ids:
+            return self.get_rhel_cve_feed(5)
+
+        raise RuntimeError(
+            "Can't find a supported CPE ID in %s" % (", ".join(cpe_ids))
+        )
