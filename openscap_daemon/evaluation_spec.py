@@ -208,6 +208,7 @@ class EvaluationSpec(object):
         self.tailoring = SCAPTailoring()
         self.profile_id = None
         self.online_remediation = False
+        self.cpe_hints = []
 
     def __str__(self):
         ret = "Evaluation spec\n"
@@ -226,6 +227,8 @@ class EvaluationSpec(object):
         ret += "- profile ID: \t%s\n" % (self.profile_id)
         ret += "- online remediation: \t%s\n" % \
             ("enabled" if self.online_remediation else "disabled")
+        ret += "- CPE hints: \t%s\n" % \
+            ("none" if len(self.cpe_hints) == 0 else ", ".join(self.cpe_hints))
 
         return ret
 
@@ -255,7 +258,8 @@ class EvaluationSpec(object):
             self.input_.is_equivalent_to(other.input_) and \
             self.tailoring.is_equivalent_to(other.tailoring) and \
             self.profile_id == other.profile_id and \
-            self.online_remediation == other.online_remediation
+            self.online_remediation == other.online_remediation and \
+            self.cpe_hints == other.cpe_hints
 
     def load_from_xml_element(self, element):
         self.mode = oscap_helpers.EvaluationMode.from_string(
@@ -281,6 +285,12 @@ class EvaluationSpec(object):
         self.profile_id = et_helpers.get_element_text(element, "profile")
         self.online_remediation = \
             et_helpers.get_element_text(element, "online_remediation") == "true"
+
+        cpe_hints_str = et_helpers.get_element_text(element, "cpe_hints")
+        self.cpe_hints = []
+        if cpe_hints_str is not None:
+            for cpe_hint in cpe_hints_str.split(", "):
+                self.cpe_hints.append(cpe_hint)
 
     def load_from_xml_source(self, xml_source):
         element = ElementTree.fromstring(xml_source)
@@ -319,11 +329,25 @@ class EvaluationSpec(object):
             "true" if self.online_remediation else "false"
         ret.append(online_remediation_element)
 
+        if len(self.cpe_hints) > 0:
+            cpe_hints_element = ElementTree.Element("cpe_hints")
+            cpe_hints_element.text = ", ".join(self.cpe_hints)
+            ret.append(cpe_hints_element)
+
         return ret
 
     def to_xml_source(self):
         element = self.to_xml_element()
         return ElementTree.tostring(element, "utf-8")
+
+    def get_cpe_ids(self, config):
+        cpe_ids = self.cpe_hints
+        if len(cpe_ids) == 0:
+            cpe_ids = EvaluationSpec.detect_CPEs_of_target(
+                self.target, config
+            )
+
+        return cpe_ids
 
     def generate_guide(self, config):
         if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
@@ -371,9 +395,7 @@ class EvaluationSpec(object):
             ret.extend(["--profile",
                         "xccdf_org.ssgproject.content_profile_standard"])
 
-            ret.append(config.get_ssg_sds(
-                EvaluationSpec.detect_CPEs_of_target(self.target, config))
-            )
+            ret.append(config.get_ssg_sds(self.get_cpe_ids(config)))
 
         else:
             raise NotImplementedError("This EvaluationMode is unsupported here!")
@@ -419,9 +441,7 @@ class EvaluationSpec(object):
 
             # Again, we are only interested in OVAL results, everything else can
             # be generated.
-            ret.append(config.get_cve_feed(
-                EvaluationSpec.detect_CPEs_of_target(self.target, config))
-            )
+            ret.append(config.get_cve_feed(self.get_cpe_ids()))
 
         elif self.mode == oscap_helpers.EvaluationMode.STANDARD_SCAN:
             ret = ["xccdf", "eval"]
@@ -439,9 +459,7 @@ class EvaluationSpec(object):
             # generated from that.
             ret.extend(["--results-arf", "results.xml"])
 
-            ret.append(config.get_ssg_sds(
-                EvaluationSpec.detect_CPEs_of_target(self.target, config))
-            )
+            ret.append(config.get_ssg_sds(self.get_cpe_ids()))
 
         else:
             raise RuntimeError("Unknown evaluation mode %i" % (self.mode))
