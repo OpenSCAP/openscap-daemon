@@ -117,6 +117,14 @@ def main():
     spec_parser.add_argument(
         "--stderr", metavar="PATH", type=argparse.FileType("w")
     )
+    target_cpes_parser = subparsers.add_parser(
+        "target-cpes",
+        help="Detect CPEs applicable on given target"
+    )
+    target_cpes_parser.add_argument(
+        "--target", type=str,
+        default="localhost"
+    )
     args = parser.parse_args()
 
     logging.basicConfig(format='%(levelname)s:%(message)s',
@@ -183,6 +191,13 @@ def main():
                 args.stderr.close()
 
             sys.exit(exit_code)
+
+    elif args.action == "target-cpes":
+        cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
+            args.target, config
+        )
+        print(cpes)
+        sys.exit(0)
 
 
 if __name__ == "__main__":

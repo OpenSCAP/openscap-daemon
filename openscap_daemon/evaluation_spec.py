@@ -409,3 +409,34 @@ class EvaluationSpec(object):
 
         finally:
             shutil.rmtree(wip_result)
+
+    @staticmethod
+    def detect_CPEs_of_target(target, config):
+        """Returns list of CPEs that are applicable on given target. For example
+        if the target is a Red Hat Enterprise Linux 7 machine this static method
+        would return:
+        ["cpe:/o:redhat:enterprise_linux", "cpe:/o:redhat:enterprise_linux:7"]
+        """
+
+        # We detect the CPEs by running the OpenSCAP CPE OVAL and looking at
+        # positive definitions.
+
+        if config.cpe_oval_path == "":
+            raise RuntimeError(
+                "Cannot detect CPEs without the OpenSCAP CPE OVAL. Please set "
+                "its path in the config file"
+            )
+
+        es = EvaluationSpec()
+        es.mode = oscap_helpers.EvaluationMode.OVAL
+        es.target = target
+        es.input_.set_file_path(config.cpe_oval_path)
+
+        results, stdout, stderr, exit_code = es.evaluate(config)
+        if exit_code != 0:
+            raise RuntimeError("Failed to detect CPEs of target '%s'.\n\n"
+                               "stdout:\n%s\n\nstderr:\n%s"
+                               % (target, stdout, stderr))
+
+        # TODO
+        print(results)
