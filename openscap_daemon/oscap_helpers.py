@@ -345,7 +345,8 @@ def get_generate_report_args_for_arf(spec, results_path, config):
         return [config.oscap_path, "oval", "generate", "report", results_path]
 
     elif spec.mode == EvaluationMode.CVE_SCAN:
-        raise NotImplementedError("Not implemented yet!")
+        # results_path is an OVAL results XML file
+        return [config.oscap_path, "oval", "generate", "report", results_path]
 
     else:
         raise RuntimeError("Unknown evaluation mode")
