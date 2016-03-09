@@ -335,7 +335,7 @@ def evaluate(spec, config):
     return working_directory
 
 
-def get_generate_report_args_for_arf(spec, results_path, config):
+def get_generate_report_args_for_results(spec, results_path, config):
     if spec.mode == EvaluationMode.SOURCE_DATASTREAM:
         # results_path is an ARF XML file
         return [config.oscap_path, "xccdf", "generate", "report", results_path]
@@ -370,7 +370,7 @@ def generate_report_for_result(spec, results_dir, result_id, config):
                            "results XML at '%s' but the file doesn't exist."
                            % (result_id, results_path))
 
-    args = get_generate_report_args_for_arf(spec, results_path, config)
+    args = get_generate_report_args_for_results(spec, results_path, config)
 
     logging.debug(
         "Generating report for result %i of EvaluationSpec with command '%s'.",
