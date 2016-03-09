@@ -81,7 +81,7 @@ def main():
              "the command line."
     )
     spec_parser.add_argument(
-        "--mode", type=str, choices=["sds", "oval", "cve_scan"],
+        "--mode", type=str, choices=["sds", "oval", "cve_scan", "standard_scan"],
         default="sds"
     )
     spec_parser.add_argument(
