@@ -390,9 +390,9 @@ class EvaluationSpec(object):
     def evaluate(self, config):
         wip_result = self.evaluate_into_dir(config)
         try:
-            results = ""
-            with open(os.path.join(wip_result, "results.xml"), "r") as f:
-                results = f.read()
+            exit_code = -1
+            with open(os.path.join(wip_result, "exit_code"), "r") as f:
+                exit_code = int(f.read())
 
             stdout = ""
             with open(os.path.join(wip_result, "stdout"), "r") as f:
@@ -402,9 +402,16 @@ class EvaluationSpec(object):
             with open(os.path.join(wip_result, "stderr"), "r") as f:
                 stderr = f.read()
 
-            exit_code = -1
-            with open(os.path.join(wip_result, "exit_code"), "r") as f:
-                exit_code = int(f.read())
+            results = ""
+            try:
+                with open(os.path.join(wip_result, "results.xml"), "r") as f:
+                    results = f.read()
+            except Exception as e:
+                raise RuntimeError(
+                    "Failed to read results.xml of EvaluationSpec evaluation.\n"
+                    "stdout:\n%s\n\nstderr:\n%s\n\nexception: %s" %
+                    (stdout, stderr, e)
+                )
 
             return (results, stdout, stderr, exit_code)
 
