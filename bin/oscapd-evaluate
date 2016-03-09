@@ -168,7 +168,8 @@ def main():
         spec = evaluation_spec.EvaluationSpec()
         spec.mode = oscap_helpers.EvaluationMode.from_string(args.mode)
         spec.target = args.target
-        spec.input_.set_contents(args.input_.read().decode("utf-8"))
+        if spec.mode != oscap_helpers.EvaluationMode.CVE_SCAN:
+            spec.input_.set_contents(args.input_.read().decode("utf-8"))
         if args.tailoring is not None:
             spec.tailoring.set_contents(args.tailoring.read().decode("utf-8"))
         spec.profile = args.profile
