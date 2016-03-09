@@ -375,8 +375,9 @@ class EvaluationSpec(object):
 
             # Again, we are only interested in OVAL results, everything else can
             # be generated.
-            # TODO: The version is hardcoded here!
-            ret.append(config.get_cve_feed("cpe:/o:redhat:enterprise_linux:7"))
+            ret.append(config.get_cve_feed(
+                EvaluationSpec.detect_CPEs_of_target(self.target, config))
+            )
 
         else:
             raise RuntimeError("Unknown evaluation mode %i" % (self.mode))
