@@ -373,3 +373,31 @@ class Configuration(object):
         self.cve_feed_manager.fetch_enabled = self.fetch_cve
 
         return self.cve_feed_manager.get_cve_feed(cpe_ids)
+
+    def get_ssg_sds(self, cpe_ids):
+        if "cpe:/o:redhat:enterprise_linux:7" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-rhel7-ds.xml")
+
+        if "cpe:/o:redhat:enterprise_linux:6" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-rhel6-ds.xml")
+
+        if "cpe:/o:redhat:enterprise_linux:5" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-rhel5-ds.xml")
+
+        for cpe_id in cpe_ids:
+            if cpe_id.startswith("cpe:/o:fedoraproject:fedora:"):
+                return os.path.join(self.ssg_path, "ssg-fedora-ds.xml")
+
+        if "cpe:/o:centos:centos:7" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-centos7-ds.xml")
+
+        if "cpe:/o:centos:centos:6" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-centos6-ds.xml")
+
+        if "cpe:/o:centos:centos:5" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-centos5-ds.xml")
+
+        raise RuntimeError(
+            "Can't find suitable SSG source datastream for CPE IDs %s" %
+            (", ".join(cpe_ids))
+        )
