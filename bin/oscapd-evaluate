@@ -236,14 +236,14 @@ def main():
         for target in args.targets:
             queue.put_nowait(target)
 
-        # we use a nasty trick of adding None elements to a list
-        # because Python's int type is immutable
-        done_tasks = []
+        scanned_targets = []
 
         def scan_worker():
             while True:
                 try:
                     target = queue.get(False)
+                    cve_results = None
+                    standard_scan_results = None
 
                     logging.debug("Started scanning target '%s'", target)
 
@@ -257,7 +257,7 @@ def main():
                             es.mode = oscap_helpers.EvaluationMode.CVE_SCAN
                             es.target = target
                             es.cpe_hints = cpes
-                            results, stdout, stderr, exit_code = \
+                            cve_results, stdout, stderr, exit_code = \
                                 es.evaluate(config)
 
                         if not args.no_standard_compliance:
@@ -265,17 +265,20 @@ def main():
                             es.mode = oscap_helpers.EvaluationMode.STANDARD_SCAN
                             es.target = target
                             es.cpe_hints = cpes
-                            results, stdout, stderr, exit_code = \
+                            standard_scan_results, stdout, stderr, exit_code = \
                                 es.evaluate(config)
 
                     except Exception as e:
                         logging.exception(e)
 
                     queue.task_done()
-                    done_tasks.append(None)
+                    scanned_targets.append(
+                        (target, cve_results, standard_scan_results)
+                    )
 
-                    percent = "{0:6.2f}%".format(float(len(done_tasks) * 100) /
-                                                 len(args.targets))
+                    percent = "{0:6.2f}%".format(
+                        float(len(scanned_targets) * 100) / len(args.targets)
+                    )
 
                     logging.info("[%s] Scanned target '%s'", percent, target)
 
