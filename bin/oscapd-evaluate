@@ -271,8 +271,6 @@ def main():
                     except Exception as e:
                         logging.exception(e)
 
-                    logging.debug("Finished scanning target '%s'", target)
-
                     queue.task_done()
                     done_tasks.append(None)
 
