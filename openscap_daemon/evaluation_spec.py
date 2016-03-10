@@ -441,7 +441,7 @@ class EvaluationSpec(object):
 
             # Again, we are only interested in OVAL results, everything else can
             # be generated.
-            ret.append(config.get_cve_feed(self.get_cpe_ids()))
+            ret.append(config.get_cve_feed(self.get_cpe_ids(config)))
 
         elif self.mode == oscap_helpers.EvaluationMode.STANDARD_SCAN:
             ret = ["xccdf", "eval"]
@@ -459,7 +459,7 @@ class EvaluationSpec(object):
             # generated from that.
             ret.extend(["--results-arf", "results.xml"])
 
-            ret.append(config.get_ssg_sds(self.get_cpe_ids()))
+            ret.append(config.get_ssg_sds(self.get_cpe_ids(config)))
 
         else:
             raise RuntimeError("Unknown evaluation mode %i" % (self.mode))
