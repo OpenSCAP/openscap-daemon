@@ -155,6 +155,10 @@ def main():
         dest="no_standard_compliance",
         help="Skip the standard profile compliance scan."
     )
+    scan_parser.add_argument(
+        "--output", type=str, required=True,
+        help="A directory where results will be stored in."
+    )
     args = parser.parse_args()
 
     logging.basicConfig(format='%(levelname)s:%(message)s',
@@ -232,6 +236,8 @@ def main():
         sys.exit(0)
 
     elif args.action == "scan":
+        assert(os.path.isdir(args.output))
+
         queue = Queue.Queue(len(args.targets))
         for target in args.targets:
             queue.put_nowait(target)
@@ -297,6 +303,21 @@ def main():
             worker.start()
 
         queue.join()
+
+        for target, cve_results, standard_scan_results in scanned_targets:
+            mangled_target = target
+            mangled_target = mangled_target.replace(":", "_")
+            mangled_target = mangled_target.replace("/", "_")
+
+            if cve_results is not None:
+                with open(os.path.join(
+                          args.output, mangled_target + "-cve.xml"), "w") as f:
+                    f.write(cve_results)
+
+            if standard_scan_results is not None:
+                with open(os.path.join(
+                        args.output, mangled_target + "-std.xml"), "w") as f:
+                    f.write(standard_scan_results)
 
 
 if __name__ == "__main__":
