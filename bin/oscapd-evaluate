@@ -266,6 +266,13 @@ def main():
                             cve_results, stdout, stderr, exit_code = \
                                 es.evaluate(config)
 
+                            if exit_code == 1:
+                                logging.warning(
+                                    "CVE scan of target '%s' failed with "
+                                    "exit_code %i.\n\nstdout:%s\n\nstderr:%s" %
+                                    (target, exit_code, stdout, stderr)
+                                )
+
                         if not args.no_standard_compliance:
                             es = evaluation_spec.EvaluationSpec()
                             es.mode = oscap_helpers.EvaluationMode.STANDARD_SCAN
@@ -273,6 +280,14 @@ def main():
                             es.cpe_hints = cpes
                             standard_scan_results, stdout, stderr, exit_code = \
                                 es.evaluate(config)
+
+                            if exit_code == 1:
+                                logging.warning(
+                                    "Standard compliance scan of target '%s' "
+                                    "failed with exit_code %i.\n\nstdout:%s\n\n"
+                                    "stderr:%s" %
+                                    (target, exit_code, stdout, stderr)
+                                )
 
                     except Exception as e:
                         logging.exception(e)
@@ -316,7 +331,7 @@ def main():
 
             if standard_scan_results is not None:
                 with open(os.path.join(
-                        args.output, mangled_target + "-std.xml"), "w") as f:
+                          args.output, mangled_target + "-std.xml"), "w") as f:
                     f.write(standard_scan_results)
 
 
