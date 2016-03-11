@@ -345,7 +345,7 @@ class Configuration(object):
         if not os.path.exists(self.cve_feeds_dir):
             logging.info(
                 "Creating CVE feeds directory at '%s' because it didn't exist.",
-                self.work_in_progress_dir
+                self.cve_feeds_dir
             )
             os.makedirs(self.cve_feeds_dir)
 
