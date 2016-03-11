@@ -296,23 +296,21 @@ def evaluate(spec, config):
 
     if exit_code == 0:
         logging.info(
-            "Evaluated EvaluationSpec, exit code 0 means the target evaluated "
-            "as compliant."
+            "Evaluated EvaluationSpec, exit_code=0."
         )
         # TODO: Assert that arf was generated
 
     elif exit_code == 2:
         logging.warning(
-            "Evaluated EvaluationSpec, exit code 2 means the target evaluated "
-            "as non-compliant!"
+            "Evaluated EvaluationSpec, exit_code=2."
         )
         # TODO: Assert that arf was generated
 
     elif exit_code == 1:
         logging.error(
             "EvaluationSpec failed to evaluate, oscap returned 1 as exit code, "
-            "it may not be possible to get ARF or generate reports for this "
-            "result!"
+            "it may not be possible to get ARF/OVAL results or generate reports"
+            " for this result!"
         )
         # TODO: Assert that arf was NOT generated
 
