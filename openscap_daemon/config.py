@@ -29,6 +29,8 @@ import logging
 import shutil
 import inspect
 
+from openscap_daemon import cve_feed_manager
+
 
 class Configuration(object):
     def __init__(self):
@@ -39,6 +41,8 @@ class Configuration(object):
         self.results_dir = os.path.join("/", "var", "lib", "oscapd", "results")
         self.work_in_progress_dir = \
             os.path.join("/", "var", "lib", "oscapd", "work_in_progress")
+        self.cve_feeds_dir = \
+            os.path.join("/", "var", "lib", "oscapd", "cve_feeds")
         self.jobs = 4
 
         # Tools section
@@ -50,11 +54,13 @@ class Configuration(object):
         self.container_support = True
 
         # Content section
+        self.cpe_oval_path = ""
         self.ssg_path = ""
 
         # CVEScanner section
         self.fetch_cve = True
         self.fetch_cve_url = ""
+        self.cve_feed_manager = cve_feed_manager.CVEFeedManager()
 
     def autodetect_tool_paths(self):
         """This will try a few well-known public paths and change the paths
@@ -131,7 +137,33 @@ class Configuration(object):
                                 "scanning functionality will be disabled.")
 
     def autodetect_content_paths(self):
-        def autodetect_content_path(possible_paths):
+        def autodetect_content_path(possible_paths, possible_filenames):
+            for path in possible_paths:
+                if not os.path.isdir(path):
+                    continue
+
+                for filename in possible_filenames:
+                    full_path = os.path.join(path, filename)
+                    if os.path.exists(full_path):
+                        logging.info("Autodetected SCAP content at \"%s\".",
+                                     full_path)
+                    return full_path
+
+            logging.error(
+                "Failed to autodetect SCAP content in paths %s with filenames "
+                "%s.", ", ".join(possible_paths), ", ".join(possible_filenames)
+            )
+            return ""
+
+        if self.cpe_oval_path == "":
+            self.cpe_oval_path = autodetect_content_path([
+                os.path.join("/", "usr", "share", "openscap", "cpe"),
+                os.path.join("/", "usr", "local", "share", "openscap", "cpe"),
+                os.path.join("/", "opt", "openscap", "cpe")],
+                ["openscap-cpe-oval.xml"]
+            )
+
+        def autodetect_content_dir(possible_paths):
             for path in possible_paths:
                 if os.path.isdir(path):
                     logging.info("Autodetected SCAP content in path \"%s\".",
@@ -145,7 +177,7 @@ class Configuration(object):
             return ""
 
         if self.ssg_path == "":
-            self.ssg_path = autodetect_content_path([
+            self.ssg_path = autodetect_content_dir([
                 os.path.join("/", "usr", "share", "xml", "scap", "ssg", "content"),
                 os.path.join("/", "usr", "local", "share", "xml", "scap", "ssg", "content"),
                 os.path.join("/", "opt", "ssg", "content")
@@ -177,6 +209,11 @@ class Configuration(object):
 
         try:
             self.work_in_progress_dir = absolutize(config.get("General", "work-in-progress-dir"))
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
+            self.cve_feeds_dir = absolutize(config.get("General", "cve-feeds-dir"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
@@ -219,6 +256,11 @@ class Configuration(object):
 
         # Content section
         try:
+            self.cpe_oval_path = absolutize(config.get("Content", "cpe-oval"))
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
             self.ssg_path = absolutize(config.get("Content", "ssg"))
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
@@ -244,6 +286,7 @@ class Configuration(object):
         config.set("General", "tasks-dir", str(self.tasks_dir))
         config.set("General", "results-dir", str(self.results_dir))
         config.set("General", "work-in-progress-dir", str(self.work_in_progress_dir))
+        config.set("General", "cve-feeds-dir", str(self.cve_feeds_dir))
         config.set("General", "jobs", str(self.jobs))
 
         config.add_section("Tools")
@@ -256,21 +299,28 @@ class Configuration(object):
                    "yes" if self.container_support else "no")
 
         config.add_section("Content")
+        config.set("Content", "cpe-oval", str(self.cpe_oval_path))
         config.set("Content", "ssg", str(self.ssg_path))
 
         config.add_section("CVEScanner")
         config.set("CVEScanner", "fetch-cve", "yes" if self.fetch_cve else "no")
         config.set("CVEScanner", "fetch-cve-url", str(self.fetch_cve_url))
 
-        with open(config_file, "w") as f:
-            config.write(f)
+        if hasattr(config_file, "write"):
+            # config_file is an already opened file, let's use it like one
+            config.write(config_file)
 
-        self.config_file = config_file
+        else:
+            # treat config_file as a path
+            with open(config_file, "w") as f:
+                config.write(f)
+
+            self.config_file = config_file
 
     def save(self):
         self.save_as(self.config_file)
 
-    def prepare_dirs(self):
+    def prepare_dirs(self, cleanup_allowed=True):
         if not os.path.exists(self.tasks_dir):
             logging.info(
                 "Creating tasks directory at '%s' because it didn't exist.",
@@ -292,13 +342,62 @@ class Configuration(object):
             )
             os.makedirs(self.work_in_progress_dir)
 
-        for dir_ in os.listdir(self.work_in_progress_dir):
-            full_path = os.path.join(self.work_in_progress_dir, dir_)
-
+        if not os.path.exists(self.cve_feeds_dir):
             logging.info(
-                "Found '%s' in work_in_progress results directory, full path "
-                "is '%s'. This is most likely a left-over from an earlier "
-                "crash. Deleting...", dir_, full_path
+                "Creating CVE feeds directory at '%s' because it didn't exist.",
+                self.work_in_progress_dir
             )
+            os.makedirs(self.cve_feeds_dir)
 
-            shutil.rmtree(full_path)
+        if cleanup_allowed:
+            for dir_ in os.listdir(self.work_in_progress_dir):
+                full_path = os.path.join(self.work_in_progress_dir, dir_)
+
+                logging.info(
+                    "Found '%s' in work_in_progress results directory, full "
+                    "path is '%s'. This is most likely a left-over from an "
+                    "earlier crash. Deleting...", dir_, full_path
+                )
+
+                shutil.rmtree(full_path)
+
+    def get_cve_feed(self, cpe_ids):
+        self.cve_feed_manager.dest = self.cve_feeds_dir
+
+        if self.fetch_cve_url != "":
+            self.cve_feed_manager.url = self.fetch_cve_url
+        else:
+            self.cve_feed_manager.url = \
+                cve_feed_manager.CVEFeedManager.default_url
+
+        self.cve_feed_manager.fetch_enabled = self.fetch_cve
+
+        return self.cve_feed_manager.get_cve_feed(cpe_ids)
+
+    def get_ssg_sds(self, cpe_ids):
+        if "cpe:/o:redhat:enterprise_linux:7" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-rhel7-ds.xml")
+
+        if "cpe:/o:redhat:enterprise_linux:6" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-rhel6-ds.xml")
+
+        if "cpe:/o:redhat:enterprise_linux:5" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-rhel5-ds.xml")
+
+        for cpe_id in cpe_ids:
+            if cpe_id.startswith("cpe:/o:fedoraproject:fedora:"):
+                return os.path.join(self.ssg_path, "ssg-fedora-ds.xml")
+
+        if "cpe:/o:centos:centos:7" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-centos7-ds.xml")
+
+        if "cpe:/o:centos:centos:6" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-centos6-ds.xml")
+
+        if "cpe:/o:centos:centos:5" in cpe_ids:
+            return os.path.join(self.ssg_path, "ssg-centos5-ds.xml")
+
+        raise RuntimeError(
+            "Can't find suitable SSG source datastream for CPE IDs %s" %
+            (", ".join(cpe_ids))
+        )

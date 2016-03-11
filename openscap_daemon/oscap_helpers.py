@@ -28,6 +28,43 @@ from openscap_daemon import et_helpers
 from openscap_daemon.compat import subprocess_check_output
 
 
+class EvaluationMode(object):
+    UNKNOWN = -1
+
+    SOURCE_DATASTREAM = 1
+    OVAL = 2
+    CVE_SCAN = 3
+    STANDARD_SCAN = 4
+
+    @staticmethod
+    def to_string(value):
+        if value == EvaluationMode.SOURCE_DATASTREAM:
+            return "sds"
+        elif value == EvaluationMode.OVAL:
+            return "oval"
+        elif value == EvaluationMode.CVE_SCAN:
+            return "cve_scan"
+        elif value == EvaluationMode.STANDARD_SCAN:
+            return "standard_scan"
+
+        else:
+            return "unknown"
+
+    @staticmethod
+    def from_string(value):
+        if value == "sds":
+            return EvaluationMode.SOURCE_DATASTREAM
+        elif value == "oval":
+            return EvaluationMode.OVAL
+        elif value == "cve_scan":
+            return EvaluationMode.CVE_SCAN
+        elif value == "standard_scan":
+            return EvaluationMode.STANDARD_SCAN
+
+        else:
+            return EvaluationMode.UNKNOWN
+
+
 def get_profile_choices_for_input(input_file, tailoring_file):
     # Ideally oscap would have a command line to do this, but as of now it
     # doesn't so we have to implement it ourselves. Importing openscap Python
@@ -81,28 +118,21 @@ def get_profile_choices_for_input(input_file, tailoring_file):
 
 def get_generate_guide_args(spec, config):
     ret = [config.oscap_path, "xccdf", "generate", "guide"]
-
-    # TODO: Is this supported in OpenSCAP?
-    if spec.input_.datastream_id is not None:
-        ret.extend(["--datastream-id", spec.input_.datastream_id])
-
-    # TODO: Is this supported in OpenSCAP?
-    if spec.input_.xccdf_id is not None:
-        ret.extend(["--xccdf-id", spec.input_.xccdf_id])
-
-    # TODO: Is this supported in OpenSCAP?
-    if spec.tailoring.file_path is not None:
-        ret.extend(["--tailoring-file", spec.tailoring.file_path])
-
-    if spec.profile_id is not None:
-        ret.extend(["--profile", spec.profile_id])
-
-    ret.append(spec.input_.file_path)
+    ret.extend(spec.get_oscap_guide_arguments(config))
 
     return ret
 
 
 def generate_guide(spec, config):
+    if spec.mode not in [EvaluationMode.SOURCE_DATASTREAM,
+                         EvaluationMode.STANDARD_SCAN]:
+        raise RuntimeError(
+            "Can't generate guide for an EvaluationSpec with mode '%s'. "
+            "Generating an HTML guide only works for 'sds' and 'standard_scan' "
+            "modes."
+            % (EvaluationMode.to_string(spec.mode))
+        )
+
     if not spec.is_valid():
         raise RuntimeError(
             "Can't generate guide for an invalid EvaluationSpec."
@@ -208,7 +238,7 @@ def get_evaluation_args(spec, config):
             "Unrecognized target '%s' in evaluation spec." % (spec.target)
         )
 
-    ret.extend(spec.get_oscap_arguments())
+    ret.extend(spec.get_oscap_arguments(config))
     return ret
 
 
@@ -266,23 +296,21 @@ def evaluate(spec, config):
 
     if exit_code == 0:
         logging.info(
-            "Evaluated EvaluationSpec, exit code 0 means the target evaluated "
-            "as compliant."
+            "Evaluated EvaluationSpec, exit_code=0."
         )
         # TODO: Assert that arf was generated
 
     elif exit_code == 2:
         logging.warning(
-            "Evaluated EvaluationSpec, exit code 2 means the target evaluated "
-            "as non-compliant!"
+            "Evaluated EvaluationSpec, exit_code=2."
         )
         # TODO: Assert that arf was generated
 
     elif exit_code == 1:
         logging.error(
             "EvaluationSpec failed to evaluate, oscap returned 1 as exit code, "
-            "it may not be possible to get ARF or generate reports for this "
-            "result!"
+            "it may not be possible to get ARF/OVAL results or generate reports"
+            " for this result!"
         )
         # TODO: Assert that arf was NOT generated
 
@@ -294,8 +322,25 @@ def evaluate(spec, config):
     return working_directory
 
 
-def get_generate_report_args_for_arf(spec, arf_path, config):
-    return [config.oscap_path, "xccdf", "generate", "report", arf_path]
+def get_generate_report_args_for_results(spec, results_path, config):
+    if spec.mode == EvaluationMode.SOURCE_DATASTREAM:
+        # results_path is an ARF XML file
+        return [config.oscap_path, "xccdf", "generate", "report", results_path]
+
+    elif spec.mode == EvaluationMode.OVAL:
+        # results_path is an OVAL results XML file
+        return [config.oscap_path, "oval", "generate", "report", results_path]
+
+    elif spec.mode == EvaluationMode.CVE_SCAN:
+        # results_path is an OVAL results XML file
+        return [config.oscap_path, "oval", "generate", "report", results_path]
+
+    elif spec.mode == EvaluationMode.STANDARD_SCAN:
+        # results_path is an ARF XML file
+        return [config.oscap_path, "xccdf", "generate", "report", results_path]
+
+    else:
+        raise RuntimeError("Unknown evaluation mode")
 
 
 def generate_report_for_result(spec, results_dir, result_id, config):
@@ -309,14 +354,14 @@ def generate_report_for_result(spec, results_dir, result_id, config):
         raise RuntimeError("Can't generate report for any result of an "
                            "invalid EvaluationSpec.")
 
-    arf_path = os.path.join(results_dir, str(result_id), "arf.xml")
+    results_path = os.path.join(results_dir, str(result_id), "results.xml")
 
-    if not os.path.exists(arf_path):
-        raise RuntimeError("Can't generate report for result '%s'. "
-                           "Expected ARF at '%s' but the file doesn't exist."
-                           % (result_id, arf_path))
+    if not os.path.exists(results_path):
+        raise RuntimeError("Can't generate report for result '%s'. Expected "
+                           "results XML at '%s' but the file doesn't exist."
+                           % (result_id, results_path))
 
-    args = get_generate_report_args_for_arf(spec, arf_path, config)
+    args = get_generate_report_args_for_results(spec, results_path, config)
 
     logging.debug(
         "Generating report for result %i of EvaluationSpec with command '%s'.",

@@ -27,6 +27,7 @@ import tempfile
 import shutil
 import codecs
 
+
 class SCAPInput(object):
     """Encapsulates all sorts of SCAP input, either embedded in the spec
     itself or separate in a file installed via RPM or other means.
@@ -201,14 +202,18 @@ class EvaluationSpec(object):
     """
 
     def __init__(self):
+        self.mode = oscap_helpers.EvaluationMode.SOURCE_DATASTREAM
         self.target = "localhost"
         self.input_ = SCAPInput()
         self.tailoring = SCAPTailoring()
         self.profile_id = None
         self.online_remediation = False
+        self.cpe_hints = []
 
     def __str__(self):
         ret = "Evaluation spec\n"
+        ret += "- mode: \t%s\n" % \
+            (oscap_helpers.EvaluationMode.to_string(self.mode))
         ret += "- target: \t%s\n" % (self.target)
         ret += "- input:\n"
         ret += "  - file: \t%s\n" % (self.input_.file_path)
@@ -222,14 +227,22 @@ class EvaluationSpec(object):
         ret += "- profile ID: \t%s\n" % (self.profile_id)
         ret += "- online remediation: \t%s\n" % \
             ("enabled" if self.online_remediation else "disabled")
+        ret += "- CPE hints: \t%s\n" % \
+            ("none" if len(self.cpe_hints) == 0 else ", ".join(self.cpe_hints))
 
         return ret
 
     def is_valid(self):
-        if not self.input_.is_valid():
+        if self.mode == oscap_helpers.EvaluationMode.UNKNOWN:
             return False
 
         if self.target is None:
+            return False
+
+        # cve_scan and standard_scan modes don't require the input element
+        if self.mode not in [oscap_helpers.EvaluationMode.CVE_SCAN,
+                             oscap_helpers.EvaluationMode.STANDARD_SCAN] and \
+           not self.input_.is_valid():
             return False
 
         return True
@@ -240,13 +253,19 @@ class EvaluationSpec(object):
         """
 
         return \
+            self.mode == other.mode and \
             self.target == other.target and \
             self.input_.is_equivalent_to(other.input_) and \
             self.tailoring.is_equivalent_to(other.tailoring) and \
             self.profile_id == other.profile_id and \
-            self.online_remediation == other.online_remediation
+            self.online_remediation == other.online_remediation and \
+            self.cpe_hints == other.cpe_hints
 
     def load_from_xml_element(self, element):
+        self.mode = oscap_helpers.EvaluationMode.from_string(
+            et_helpers.get_element_text(element, "mode", "sds")
+        )
+
         self.target = et_helpers.get_element_text(element, "target")
 
         self.input_ = SCAPInput()
@@ -267,6 +286,12 @@ class EvaluationSpec(object):
         self.online_remediation = \
             et_helpers.get_element_text(element, "online_remediation") == "true"
 
+        cpe_hints_str = et_helpers.get_element_text(element, "cpe_hints")
+        self.cpe_hints = []
+        if cpe_hints_str is not None:
+            for cpe_hint in cpe_hints_str.split(", "):
+                self.cpe_hints.append(cpe_hint)
+
     def load_from_xml_source(self, xml_source):
         element = ElementTree.fromstring(xml_source)
         self.load_from_xml_element(element)
@@ -277,6 +302,10 @@ class EvaluationSpec(object):
 
     def to_xml_element(self):
         ret = ElementTree.Element("evaluation_spec")
+
+        mode_element = ElementTree.Element("mode")
+        mode_element.text = oscap_helpers.EvaluationMode.to_string(self.mode)
+        ret.append(mode_element)
 
         target_element = ElementTree.Element("target")
         target_element.text = self.target
@@ -300,38 +329,140 @@ class EvaluationSpec(object):
             "true" if self.online_remediation else "false"
         ret.append(online_remediation_element)
 
+        if len(self.cpe_hints) > 0:
+            cpe_hints_element = ElementTree.Element("cpe_hints")
+            cpe_hints_element.text = ", ".join(self.cpe_hints)
+            ret.append(cpe_hints_element)
+
         return ret
 
     def to_xml_source(self):
         element = self.to_xml_element()
         return ElementTree.tostring(element, "utf-8")
 
+    def get_cpe_ids(self, config):
+        cpe_ids = self.cpe_hints
+        if len(cpe_ids) == 0:
+            cpe_ids = EvaluationSpec.detect_CPEs_of_target(
+                self.target, config
+            )
+
+        return cpe_ids
+
     def generate_guide(self, config):
-        return oscap_helpers.generate_guide(self, config)
+        if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
+            return oscap_helpers.generate_guide(self, config)
 
-    def get_oscap_arguments(self):
-        ret = ["xccdf", "eval"]
+        elif self.mode == oscap_helpers.EvaluationMode.OVAL:
+            # TODO: improve this
+            return "<html><body>OVAL evaluation</body></html>"
 
-        if self.input_.datastream_id is not None:
-            ret.extend(["--datastream-id", self.input_.datastream_id])
+        elif self.mode == oscap_helpers.EvaluationMode.CVE_SCAN:
+            # TODO: improve this
+            return "<html><body>CVE scan evaluation</body></html>"
 
-        if self.input_.xccdf_id is not None:
-            ret.extend(["--xccdf-id", self.input_.xccdf_id])
+        elif self.mode == oscap_helpers.EvaluationMode.STANDARD_SCAN:
+            return oscap_helpers.generate_guide(self, config)
 
-        if self.tailoring.file_path is not None:
-            ret.extend(["--tailoring-file", self.tailoring.file_path])
+        raise RuntimeError("Unknown EvaluationMode %i" % (self.mode))
 
-        if self.profile_id is not None:
-            ret.extend(["--profile", self.profile_id])
+    def get_oscap_guide_arguments(self, config):
+        ret = []
 
-        if self.online_remediation:
-            ret.append("--remediate")
+        if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
+            # TODO: Is this supported in OpenSCAP?
+            if self.input_.datastream_id is not None:
+                ret.extend(["--datastream-id", self.input_.datastream_id])
 
-        # We are on purpose only interested in ARF, everything else can be
-        # generated from that.
-        ret.extend(["--results-arf", "arf.xml"])
+            # TODO: Is this supported in OpenSCAP?
+            if self.input_.xccdf_id is not None:
+                ret.extend(["--xccdf-id", self.input_.xccdf_id])
 
-        ret.append(self.input_.file_path)
+            # TODO: Is this supported in OpenSCAP?
+            if self.tailoring.file_path is not None:
+                ret.extend(["--tailoring-file", self.tailoring.file_path])
+
+            if self.profile_id is not None:
+                ret.extend(["--profile", self.profile_id])
+
+            ret.append(self.input_.file_path)
+
+        elif self.mode == oscap_helpers.EvaluationMode.STANDARD_SCAN:
+            # TODO: Is this supported in OpenSCAP?
+            if self.tailoring.file_path is not None:
+                ret.extend(["--tailoring-file", self.tailoring.file_path])
+
+            ret.extend(["--profile",
+                        "xccdf_org.ssgproject.content_profile_standard"])
+
+            ret.append(config.get_ssg_sds(self.get_cpe_ids(config)))
+
+        else:
+            raise NotImplementedError("This EvaluationMode is unsupported here!")
+
+        return ret
+
+    def get_oscap_arguments(self, config):
+        if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
+            ret = ["xccdf", "eval"]
+
+            if self.input_.datastream_id is not None:
+                ret.extend(["--datastream-id", self.input_.datastream_id])
+
+            if self.input_.xccdf_id is not None:
+                ret.extend(["--xccdf-id", self.input_.xccdf_id])
+
+            if self.tailoring.file_path is not None:
+                ret.extend(["--tailoring-file", self.tailoring.file_path])
+
+            if self.profile_id is not None:
+                ret.extend(["--profile", self.profile_id])
+
+            if self.online_remediation:
+                ret.append("--remediate")
+
+            # We are on purpose only interested in ARF, everything else can be
+            # generated from that.
+            ret.extend(["--results-arf", "results.xml"])
+
+            ret.append(self.input_.file_path)
+
+        elif self.mode == oscap_helpers.EvaluationMode.OVAL:
+            ret = ["oval", "eval"]
+            ret.extend(["--results", "results.xml"])
+
+            # Again, we are only interested in OVAL results, everything else can
+            # be generated.
+            ret.append(self.input_.file_path)
+
+        elif self.mode == oscap_helpers.EvaluationMode.CVE_SCAN:
+            ret = ["oval", "eval"]
+            ret.extend(["--results", "results.xml"])
+
+            # Again, we are only interested in OVAL results, everything else can
+            # be generated.
+            ret.append(config.get_cve_feed(self.get_cpe_ids(config)))
+
+        elif self.mode == oscap_helpers.EvaluationMode.STANDARD_SCAN:
+            ret = ["xccdf", "eval"]
+
+            if self.tailoring.file_path is not None:
+                ret.extend(["--tailoring-file", self.tailoring.file_path])
+
+            ret.extend(["--profile",
+                        "xccdf_org.ssgproject.content_profile_standard"])
+
+            if self.online_remediation:
+                ret.append("--remediate")
+
+            # We are on purpose only interested in ARF, everything else can be
+            # generated from that.
+            ret.extend(["--results-arf", "results.xml"])
+
+            ret.append(config.get_ssg_sds(self.get_cpe_ids(config)))
+
+        else:
+            raise RuntimeError("Unknown evaluation mode %i" % (self.mode))
 
         return ret
 
@@ -341,9 +472,9 @@ class EvaluationSpec(object):
     def evaluate(self, config):
         wip_result = self.evaluate_into_dir(config)
         try:
-            arf = ""
-            with open(os.path.join(wip_result, "arf.xml"), "r") as f:
-                arf = f.read()
+            exit_code = -1
+            with open(os.path.join(wip_result, "exit_code"), "r") as f:
+                exit_code = int(f.read())
 
             stdout = ""
             with open(os.path.join(wip_result, "stdout"), "r") as f:
@@ -353,12 +484,77 @@ class EvaluationSpec(object):
             with open(os.path.join(wip_result, "stderr"), "r") as f:
                 stderr = f.read()
 
-            exit_code = -1
-            with open(os.path.join(wip_result, "exit_code"), "r") as f:
-                exit_code = int(f.read())
+            results = ""
+            try:
+                with open(os.path.join(wip_result, "results.xml"), "r") as f:
+                    results = f.read()
+            except Exception as e:
+                raise RuntimeError(
+                    "Failed to read results.xml of EvaluationSpec evaluation.\n"
+                    "stdout:\n%s\n\nstderr:\n%s\n\nexception: %s" %
+                    (stdout, stderr, e)
+                )
 
-            return (arf, stdout, stderr, exit_code)
+            return (results, stdout, stderr, exit_code)
 
         finally:
             shutil.rmtree(wip_result)
 
+    @staticmethod
+    def detect_CPEs_of_target(target, config):
+        """Returns list of CPEs that are applicable on given target. For example
+        if the target is a Red Hat Enterprise Linux 7 machine this static method
+        would return:
+        ["cpe:/o:redhat:enterprise_linux", "cpe:/o:redhat:enterprise_linux:7"]
+        """
+
+        # We detect the CPEs by running the OpenSCAP CPE OVAL and looking at
+        # positive definitions.
+
+        if config.cpe_oval_path == "":
+            raise RuntimeError(
+                "Cannot detect CPEs without the OpenSCAP CPE OVAL. Please set "
+                "its path in the config file"
+            )
+
+        es = EvaluationSpec()
+        es.mode = oscap_helpers.EvaluationMode.OVAL
+        es.target = target
+        es.input_.set_file_path(config.cpe_oval_path)
+
+        results, stdout, stderr, exit_code = es.evaluate(config)
+        if exit_code != 0:
+            raise RuntimeError("Failed to detect CPEs of target '%s'.\n\n"
+                               "stdout:\n%s\n\nstderr:\n%s"
+                               % (target, stdout, stderr))
+
+        namespaces = {
+            "ovalres": "http://oval.mitre.org/XMLSchema/oval-results-5",
+            "ovaldef": "http://oval.mitre.org/XMLSchema/oval-definitions-5"
+        }
+        results_tree = ElementTree.fromstring(results)
+        # first we collect all definition ids that resulted in true
+        definition_ids = []
+        for definition in results_tree.findall(
+                "./ovalres:results/ovalres:system/ovalres:definitions/"
+                "ovalres:definition[@result='true']", namespaces):
+            def_id_attr = definition.get("definition_id")
+            if def_id_attr is None:
+                continue
+            definition_ids.append(def_id_attr)
+
+        cpe_ids = []
+        # now we need to lookup the CPE ID for each definition id
+        for definition_id in definition_ids:
+            for reference in results_tree.findall(
+                    "./ovaldef:oval_definitions/ovaldef:definitions/"
+                    "ovaldef:definition[@id='%s']/ovaldef:metadata/"
+                    "ovaldef:reference[@source='CPE']" % (definition_id),
+                    namespaces):
+                ref_id = reference.get("ref_id")
+                if ref_id is None:
+                    continue
+
+                cpe_ids.append(ref_id)
+
+        return cpe_ids

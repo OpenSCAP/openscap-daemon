@@ -21,12 +21,19 @@
 
 from openscap_daemon import config as config_
 from openscap_daemon import evaluation_spec
+from openscap_daemon import oscap_helpers
 from openscap_daemon import version
 
 import os
 import logging
 import argparse
 import sys
+import threading
+
+if sys.version_info < (3,):
+    import Queue
+else:
+    import queue as Queue
 
 
 def main():
@@ -44,6 +51,17 @@ def main():
     subparsers = parser.add_subparsers(dest="action")
     subparsers.required = True
 
+    config_parser = subparsers.add_parser(
+        "config",
+        help="Start with default configuration, auto-detect tool and content "
+             "locations and output the resulting INI results into stdout or "
+             "given file path"
+    )
+    config_parser.add_argument(
+        "--path", metavar="PATH", type=argparse.FileType("w"),
+        default=sys.stdout
+    )
+
     xml_parser = subparsers.add_parser(
         "xml",
         help="Evaluate an EvaluationSpec passed as an XML, either to stdin or "
@@ -54,7 +72,7 @@ def main():
         default=sys.stdin
     )
     xml_parser.add_argument(
-        "--arf", metavar="PATH", type=argparse.FileType("w")
+        "--results", metavar="PATH", type=argparse.FileType("w")
     )
     xml_parser.add_argument(
         "--stdout", metavar="PATH", type=argparse.FileType("w")
@@ -67,6 +85,10 @@ def main():
         "spec",
         help="Evaluate an EvaluationSpec created using arguments passed on "
              "the command line."
+    )
+    spec_parser.add_argument(
+        "--mode", type=str, choices=["sds", "oval", "cve_scan", "standard_scan"],
+        default="sds"
     )
     spec_parser.add_argument(
         "--target", type=str,
@@ -87,7 +109,13 @@ def main():
         "--remediate", default=False, action="store_true"
     )
     spec_parser.add_argument(
-        "--arf", metavar="PATH", type=argparse.FileType("w")
+        "--print-xml",
+        dest="print_xml",
+        help="Don't evaluate the EvaluationSpec, just print its XML to stdout",
+        action="store_true"
+    )
+    spec_parser.add_argument(
+        "--results", metavar="PATH", type=argparse.FileType("w")
     )
     spec_parser.add_argument(
         "--stdout", metavar="PATH", type=argparse.FileType("w")
@@ -95,11 +123,54 @@ def main():
     spec_parser.add_argument(
         "--stderr", metavar="PATH", type=argparse.FileType("w")
     )
+    target_cpes_parser = subparsers.add_parser(
+        "target-cpes",
+        help="Detect CPEs applicable on given target"
+    )
+    target_cpes_parser.add_argument(
+        "--target", type=str,
+        default="localhost"
+    )
+    scan_parser = subparsers.add_parser(
+        "scan",
+        help="Scan a list of targets for CVEs and compliance with the standard "
+        "profile, return aggregated results. This is an integration shim "
+        "intended for Atomic but can also be useful elsewhere."
+    )
+    scan_parser.add_argument(
+        "--targets", type=str, nargs="+",
+        default=["localhost"]
+    )
+    scan_parser.add_argument(
+        "-j", "--jobs", type=int,
+        default=4
+    )
+    scan_parser.add_argument(
+        "--no-cve-scan", default=False, action="store_true",
+        dest="no_cve_scan",
+        help="Skip the CVE scan."
+    )
+    scan_parser.add_argument(
+        "--no-standard-compliance", default=False, action="store_true",
+        dest="no_standard_compliance",
+        help="Skip the standard profile compliance scan."
+    )
+    scan_parser.add_argument(
+        "--output", type=str, required=True,
+        help="A directory where results will be stored in."
+    )
     args = parser.parse_args()
 
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         level=logging.DEBUG if args.verbose else logging.INFO)
     logging.info("OpenSCAP Daemon one-off evaluator %s", version.VERSION_STRING)
+
+    if args.action == "config":
+        config = config_.Configuration()
+        config.autodetect_tool_paths()
+        config.autodetect_content_paths()
+        config.save_as(args.path)
+        sys.exit(0)
 
     config_file = os.path.join("/", "etc", "oscapd", "config.ini")
     if "OSCAPD_CONFIG_FILE" in os.environ:
@@ -109,15 +180,15 @@ def main():
     config.load(config_file)
     config.autodetect_tool_paths()
     config.autodetect_content_paths()
-    config.prepare_dirs()
+    config.prepare_dirs(cleanup_allowed=False)
 
     if args.action == "xml":
         spec = evaluation_spec.EvaluationSpec()
         spec.load_from_xml_file(args.path)
-        arf, stdout, stderr, exit_code = spec.evaluate(config)
-        if args.arf is not None:
-            args.arf.write(arf)
-            args.arf.close()
+        results, stdout, stderr, exit_code = spec.evaluate(config)
+        if args.results is not None:
+            args.results.write(results)
+            args.results.close()
         if args.stdout is not None:
             args.stdout.write(stdout)
             args.stdout.close()
@@ -129,25 +200,124 @@ def main():
 
     elif args.action == "spec":
         spec = evaluation_spec.EvaluationSpec()
+        spec.mode = oscap_helpers.EvaluationMode.from_string(args.mode)
         spec.target = args.target
-        spec.input_.set_contents(args.input_.read().decode("utf-8"))
+        if spec.mode not in [oscap_helpers.EvaluationMode.CVE_SCAN,
+                             oscap_helpers.EvaluationMode.STANDARD_SCAN]:
+            spec.input_.set_contents(args.input_.read().decode("utf-8"))
         if args.tailoring is not None:
             spec.tailoring.set_contents(args.tailoring.read().decode("utf-8"))
         spec.profile = args.profile
         spec.online_remediation = args.remediate
 
-        arf, stdout, stderr, exit_code = spec.evaluate(config)
-        if args.arf is not None:
-            args.arf.write(arf)
-            args.arf.close()
-        if args.stdout is not None:
-            args.stdout.write(stdout)
-            args.stdout.close()
-        if args.stderr is not None:
-            args.stderr.write(stderr)
-            args.stderr.close()
+        if args.print_xml:
+            print(spec.to_xml_source())
+            sys.exit(0)
 
-        sys.exit(exit_code)
+        else:
+            results, stdout, stderr, exit_code = spec.evaluate(config)
+            if args.results is not None:
+                args.results.write(results)
+                args.results.close()
+            if args.stdout is not None:
+                args.stdout.write(stdout)
+                args.stdout.close()
+            if args.stderr is not None:
+                args.stderr.write(stderr)
+                args.stderr.close()
+
+            sys.exit(exit_code)
+
+    elif args.action == "target-cpes":
+        cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
+            args.target, config
+        )
+        print("\n".join(cpes))
+        sys.exit(0)
+
+    elif args.action == "scan":
+        assert(os.path.isdir(args.output))
+
+        queue = Queue.Queue(len(args.targets))
+        for target in args.targets:
+            queue.put_nowait(target)
+
+        scanned_targets = []
+
+        def scan_worker():
+            while True:
+                try:
+                    target = queue.get(False)
+                    cve_results = None
+                    standard_scan_results = None
+
+                    logging.debug("Started scanning target '%s'", target)
+
+                    try:
+                        cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
+                            target, config
+                        )
+
+                        if not args.no_cve_scan:
+                            es = evaluation_spec.EvaluationSpec()
+                            es.mode = oscap_helpers.EvaluationMode.CVE_SCAN
+                            es.target = target
+                            es.cpe_hints = cpes
+                            cve_results, stdout, stderr, exit_code = \
+                                es.evaluate(config)
+
+                        if not args.no_standard_compliance:
+                            es = evaluation_spec.EvaluationSpec()
+                            es.mode = oscap_helpers.EvaluationMode.STANDARD_SCAN
+                            es.target = target
+                            es.cpe_hints = cpes
+                            standard_scan_results, stdout, stderr, exit_code = \
+                                es.evaluate(config)
+
+                    except Exception as e:
+                        logging.exception(e)
+
+                    queue.task_done()
+                    scanned_targets.append(
+                        (target, cve_results, standard_scan_results)
+                    )
+
+                    percent = "{0:6.2f}%".format(
+                        float(len(scanned_targets) * 100) / len(args.targets)
+                    )
+
+                    logging.info("[%s] Scanned target '%s'", percent, target)
+
+                except Queue.Empty:
+                    break
+
+        assert(args.jobs > 0)
+
+        workers = []
+        for worker_id in range(args.jobs):
+            worker = threading.Thread(
+                name="Atomic scan worker #%i" % (worker_id),
+                target=scan_worker
+            )
+            workers.append(worker)
+            worker.start()
+
+        queue.join()
+
+        for target, cve_results, standard_scan_results in scanned_targets:
+            mangled_target = target
+            mangled_target = mangled_target.replace(":", "_")
+            mangled_target = mangled_target.replace("/", "_")
+
+            if cve_results is not None:
+                with open(os.path.join(
+                          args.output, mangled_target + "-cve.xml"), "w") as f:
+                    f.write(cve_results)
+
+            if standard_scan_results is not None:
+                with open(os.path.join(
+                        args.output, mangled_target + "-std.xml"), "w") as f:
+                    f.write(standard_scan_results)
 
 
 if __name__ == "__main__":

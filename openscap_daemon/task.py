@@ -469,17 +469,17 @@ class Task(object):
             "Set task '%i' to be run once outside the schedule.", self.id_
         )
 
-    def get_arf_of_result(self, result_id, config):
+    def get_xml_of_result(self, result_id, config):
         # TODO: This needs refactoring in the future, the secret that the file
-        #       is called "arf.xml" is all over the place.
+        #       is called "results.xml" is all over the place.
         path = os.path.join(
             self._get_task_results_dir(config.results_dir),
             str(result_id),
-            "arf.xml"
+            "results.xml"
         )
 
         logging.debug(
-            "Retrieving ARF of result '%i' of task '%i', expected path '%s'.",
+            "Retrieving XML of result '%i' of task '%i', expected path '%s'.",
             result_id, self.id_, path
         )
 
@@ -488,7 +488,7 @@ class Task(object):
             ret = f.read()
 
         logging.info(
-            "Retrieved ARF of result '%i' of task '%i'.",
+            "Retrieved XML of result '%i' of task '%i'.",
             result_id, self.id_
         )
 

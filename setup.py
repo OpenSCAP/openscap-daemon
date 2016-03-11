@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 # Copyright 2015 Red Hat Inc., Durham, North Carolina.
 # All Rights Reserved.
@@ -51,7 +51,8 @@ setup(
     packages=get_packages(),
     scripts=[
         os.path.join("bin", "oscapd"),
-        os.path.join("bin", "oscapd-cli")
+        os.path.join("bin", "oscapd-cli"),
+        os.path.join("bin", "oscapd-evaluate")
     ],
     data_files=[
         (os.path.join("/", "etc", "dbus-1", "system.d"),
