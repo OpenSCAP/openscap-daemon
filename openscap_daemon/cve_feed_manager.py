@@ -28,9 +28,11 @@ except ImportError:
 
 import os
 import os.path
+import time
 import datetime
 import logging
 import bz2
+import threading
 
 
 class CVEFeedManager(object):
@@ -53,7 +55,15 @@ class CVEFeedManager(object):
         self.local_dist_cve_name = "com.redhat.rhsa-RHEL{0}.xml"
         self.dists = [5, 6, 7]
         self.remote_pattern = '%a, %d %b %Y %H:%M:%S %Z'
+
         self.fetch_enabled = True
+        # check for fresh CVE feeds at most every 10 minutes
+        self.fetch_timeout = 10 * 60
+        # A map of remote URIs to the time we last checked them for fresh
+        # content.
+        self.fetch_last_checked = {}
+        # Let us only check for fresh CVEs once at a time
+        self.fetch_lock = threading.Lock()
 
     def _parse_http_headers(self, http_headers):
         """Returns dictionary containing HTTP headers with lowercase keys
@@ -75,55 +85,73 @@ class CVEFeedManager(object):
         returns True; else False.
         """
 
-        if not os.path.exists(local_file):
-            logging.debug(
-                "No local file cached, will fetch {0}".format(remote_url)
+        with self.fetch_lock:
+            if not os.path.exists(local_file):
+                logging.debug(
+                    "No local file cached, will fetch {0}".format(remote_url)
+                )
+                return False
+
+            last_checked = self.fetch_last_checked.get(remote_url, 0)
+            now = time.time()
+
+            if now - last_checked <= self.fetch_timeout:
+                logging.debug(
+                    "Checked for fresh version of '%s' just %f seconds ago. "
+                    "Will wait %f seconds before checking again.",
+                    remote_url, now - last_checked,
+                    self.fetch_timeout - now + last_checked
+                )
+                return True
+
+            opener = urllib.OpenerDirector()
+            opener.add_handler(urllib.HTTPHandler())
+            opener.add_handler(urllib.HTTPSHandler())
+            opener.add_handler(urllib.HTTPDefaultErrorHandler())
+            # Extra for handling redirects
+            opener.add_handler(urllib.HTTPErrorProcessor())
+            opener.add_handler(urllib.HTTPRedirectHandler())
+            # Add the header
+            opener.addheaders = self.hdr2
+            # Grab the header
+            try:
+                res = opener.open(CVEFeedManager.HeadRequest(remote_url))
+                headers = self._parse_http_headers(res.info())
+                res.close()
+                remote_ts = headers['last-modified']
+
+            except urllib.HTTPError as http_error:
+                logging.debug(
+                    "Cannot send HTTP HEAD request to get \"last-modified\" "
+                    "attribute of remote content file.\n{0} - {1}"
+                    .format(http_error.code, http_error.reason)
+                )
+                return False
+
+            except KeyError:
+                self._print_no_last_modified_warning(remote_url)
+                return False
+
+            self.fetch_last_checked[remote_url] = time.time()
+
+            # The remote's datetime
+            remote_dt = datetime.datetime.strptime(
+                remote_ts, self.remote_pattern
             )
-            return False
-
-        opener = urllib.OpenerDirector()
-        opener.add_handler(urllib.HTTPHandler())
-        opener.add_handler(urllib.HTTPSHandler())
-        opener.add_handler(urllib.HTTPDefaultErrorHandler())
-        # Extra for handling redirects
-        opener.add_handler(urllib.HTTPErrorProcessor())
-        opener.add_handler(urllib.HTTPRedirectHandler())
-        # Add the header
-        opener.addheaders = self.hdr2
-        # Grab the header
-        try:
-            res = opener.open(CVEFeedManager.HeadRequest(remote_url))
-            headers = self._parse_http_headers(res.info())
-            res.close()
-            remote_ts = headers['last-modified']
-
-        except urllib.HTTPError as http_error:
-            logging.debug(
-                "Cannot send HTTP HEAD request to get \"last-modified\" "
-                "attribute of remote content file.\n{0} - {1}"
-                .format(http_error.code, http_error.reason)
+            # Get the locals datetime from the file's mtime, converted to UTC
+            local_dt = datetime.datetime.utcfromtimestamp(
+                os.stat(local_file).st_mtime
             )
-            return False
 
-        except KeyError:
-            self._print_no_last_modified_warning(remote_url)
-            return False
+            # Giving a two second comfort zone
+            # Else we declare they are different
+            if (remote_dt - local_dt).seconds > 2:
+                logging.info("Had a local version of {0} "
+                             "but it wasn't new enough".format(local_file))
+                return False
 
-        # The remote's datetime
-        remote_dt = datetime.datetime.strptime(remote_ts, self.remote_pattern)
-        # Get the locals datetime from the file's mtime, converted to UTC
-        local_dt = datetime.datetime.utcfromtimestamp((os.stat(local_file))
-                                                      .st_mtime)
-
-        # Giving a two second comfort zone
-        # Else we declare they are different
-        if (remote_dt - local_dt).seconds > 2:
-            logging.info("Had a local version of {0} "
-                         "but it wasn't new enough".format(local_file))
-            return False
-
-        logging.debug("File {0} is same as upstream".format(local_file))
-        return True
+            logging.debug("File {0} is same as upstream".format(local_file))
+            return True
 
     def get_rhel_cve_feed(self, dist):
         """Given a distribution number (i.e. 7), it will fetch the
