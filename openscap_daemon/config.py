@@ -60,6 +60,7 @@ class Configuration(object):
         # CVEScanner section
         self.fetch_cve = True
         self.fetch_cve_url = ""
+        self.fetch_cve_timeout = 10*60
         self.cve_feed_manager = cve_feed_manager.CVEFeedManager()
 
     def autodetect_tool_paths(self):
@@ -277,6 +278,11 @@ class Configuration(object):
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
+        try:
+            self.fetch_cve_timeout = config.getint("CVEScanner", "fetch-cve-timeout")
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
         self.config_file = config_file
 
     def save_as(self, config_file):
@@ -305,6 +311,8 @@ class Configuration(object):
         config.add_section("CVEScanner")
         config.set("CVEScanner", "fetch-cve", "yes" if self.fetch_cve else "no")
         config.set("CVEScanner", "fetch-cve-url", str(self.fetch_cve_url))
+        config.set("CVEScanner", "fetch-cve-timeout",
+                   str(self.fetch_cve_timeout))
 
         if hasattr(config_file, "write"):
             # config_file is an already opened file, let's use it like one
@@ -371,6 +379,7 @@ class Configuration(object):
                 cve_feed_manager.CVEFeedManager.default_url
 
         self.cve_feed_manager.fetch_enabled = self.fetch_cve
+        self.cve_feed_manager.fetch_timeout = self.fetch_cve_timeout
 
         return self.cve_feed_manager.get_cve_feed(cpe_ids)
 
