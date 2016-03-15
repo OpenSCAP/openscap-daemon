@@ -59,6 +59,7 @@ class Configuration(object):
 
         # CVEScanner section
         self.fetch_cve = True
+        # empty URL means default URL and is a valid value
         self.fetch_cve_url = ""
         self.fetch_cve_timeout = 10*60
         self.cve_feed_manager = cve_feed_manager.CVEFeedManager()
