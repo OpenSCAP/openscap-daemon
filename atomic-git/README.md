@@ -1,7 +1,7 @@
 # OpenSCAP-daemon
 This directory contains SPC containers with upstream version of packages.
 
-To build images from this directory, you have to build stock image from [I'm a relative reference to a repository file](../atomic/).
+To build images from this directory, you have to build stock image from [the atomic directory](../atomic/).
 
 ## Fedora 23 in SPC
 ```bash
