@@ -59,9 +59,9 @@ class Configuration(object):
 
         # CVEScanner section
         self.fetch_cve = True
-        self.fetch_cve_url = ""
         self.fetch_cve_timeout = 10*60
         self.cve_feed_manager = cve_feed_manager.CVEFeedManager()
+        self.fetch_cve_url = self.cve_feed_manager.url
 
     def autodetect_tool_paths(self):
         """This will try a few well-known public paths and change the paths
@@ -371,13 +371,7 @@ class Configuration(object):
 
     def get_cve_feed(self, cpe_ids):
         self.cve_feed_manager.dest = self.cve_feeds_dir
-
-        if self.fetch_cve_url != "":
-            self.cve_feed_manager.url = self.fetch_cve_url
-        else:
-            self.cve_feed_manager.url = \
-                cve_feed_manager.CVEFeedManager.default_url
-
+        self.cve_feed_manager.url = self.fetch_cve_url
         self.cve_feed_manager.fetch_enabled = self.fetch_cve
         self.cve_feed_manager.fetch_timeout = self.fetch_cve_timeout
 
