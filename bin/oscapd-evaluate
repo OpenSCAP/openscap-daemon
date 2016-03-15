@@ -25,6 +25,7 @@ from openscap_daemon import oscap_helpers
 from openscap_daemon import version
 
 import os
+import os.path
 import logging
 import argparse
 import sys
@@ -34,6 +35,37 @@ if sys.version_info < (3,):
     import Queue
 else:
     import queue as Queue
+
+
+def preprocess_targets(targets):
+    """The main goal of this function is to expand chroots-in-dir:// to a list
+    of chroot:// targets. chroots-in-dir is a convenience function that the rest
+    of the OpenSCAP-daemon API doesn't know about.
+    """
+
+    ret = []
+
+    for target in targets:
+        if target.startswith("chroots-in-dir://"):
+            logging.debug("Expanding target '%s'...", target)
+
+            dir_ = os.path.abspath(target[len("chroots-in-dir://"):])
+            for chroot in os.listdir(dir_):
+                full_path = os.path.abspath(os.path.join(dir_, chroot))
+
+                if not os.path.isdir(full_path):
+                    continue
+
+                expanded_target = "chroot://" + full_path
+                logging.debug(" ... '%s'", expanded_target)
+                ret.append(expanded_target)
+
+            logging.debug("Finished expanding target '%s'.", target)
+
+        else:
+            ret.append(target)
+
+    return ret
 
 
 def main():
@@ -238,8 +270,10 @@ def main():
     elif args.action == "scan":
         assert(os.path.isdir(args.output))
 
-        queue = Queue.Queue(len(args.targets))
-        for target in args.targets:
+        targets = preprocess_targets(args.targets)
+
+        queue = Queue.Queue(len(targets))
+        for target in targets:
             queue.put_nowait(target)
 
         scanned_targets = []
@@ -298,7 +332,7 @@ def main():
                     )
 
                     percent = "{0:6.2f}%".format(
-                        float(len(scanned_targets) * 100) / len(args.targets)
+                        float(len(scanned_targets) * 100) / len(targets)
                     )
 
                     logging.info("[%s] Scanned target '%s'", percent, target)
