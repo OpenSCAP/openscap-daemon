@@ -2,17 +2,21 @@
 
 FROM fedora:23
 
-RUN dnf -y install atomic && dnf clean all
+ENV container docker
 
-RUN dnf -y install openscap-containers scap-security-guide openscap-daemon && dnf clean all
-
-RUN dnf -y install wget && dnf clean all
+RUN dnf -y install \
+                atomic \
+                openscap-containers \
+                openscap-daemon \
+                scap-security-guide \
+                wget && \
+    dnf clean all
 
 ADD install.sh /root/
 
 LABEL INSTALL="docker run --rm --privileged -v /:/host/ IMAGE sh /root/install.sh"
 
-LABEL RUN="docker run -d --privileged --pid=host -v /etc/oscapd:/etc/oscapd -v /proc/:/hostproc/ -v /sys/fs/cgroup:/sys/fs/cgroup  -v /var/log:/var/log -v /run:/run -v /var/lib/docker/devicemapper/metadata/:/var/lib/docker/devicemapper/metadata/ -v /dev/:/dev/ -v /var/tmp/image-scanner:/var/tmp/image-scanner --env container=docker --net=host --cap-add=SYS_ADMIN --ipc=host IMAGE"
+LABEL RUN="docker run -d --privileged --pid=host -v /etc/oscapd:/etc/oscapd -v /proc/:/hostproc/ -v /sys/fs/cgroup:/sys/fs/cgroup  -v /var/log:/var/log -v /run:/run -v /var/lib/docker/devicemapper/metadata/:/var/lib/docker/devicemapper/metadata/ -v /dev/:/dev/ -v /var/tmp/image-scanner:/var/tmp/image-scanner --net=host --cap-add=SYS_ADMIN --ipc=host --name NAME IMAGE"
 
 # Dockerfile reference discourages "ADD" with remote source
 # I would love to tag this with NOCACHE but Dockerfile doesn't have an
@@ -20,4 +24,4 @@ LABEL RUN="docker run -d --privileged --pid=host -v /etc/oscapd:/etc/oscapd -v /
 RUN wget --no-verbose -P /var/tmp/image-scanner/ \
     https://www.redhat.com/security/data/oval/com.redhat.rhsa-RHEL{5,6,7}.xml.bz2
 
-CMD oscapd
+CMD ["/usr/bin/oscapd"]
