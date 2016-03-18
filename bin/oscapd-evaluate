@@ -30,6 +30,7 @@ import logging
 import argparse
 import sys
 import threading
+import io
 
 if sys.version_info < (3,):
     import Queue
@@ -127,11 +128,13 @@ def main():
         default="localhost"
     )
     spec_parser.add_argument(
-        "--input", metavar="PATH", dest="input_", type=argparse.FileType("r"),
+        "--input", metavar="PATH", dest="input_",
+        type=lambda path: io.open(path, "r", encoding="utf-8"),
         default=sys.stdin
     )
     spec_parser.add_argument(
-        "--tailoring", metavar="PATH", type=argparse.FileType("r")
+        "--tailoring", metavar="PATH",
+        type=lambda path: io.open(path, "r", encoding="utf-8"),
     )
     spec_parser.add_argument(
         "--profile", type=str,
@@ -147,13 +150,17 @@ def main():
         action="store_true"
     )
     spec_parser.add_argument(
-        "--results", metavar="PATH", type=argparse.FileType("w")
+        "--results", metavar="PATH",
+        type=lambda path: io.open(path, "w", encoding="utf-8"),
+
     )
     spec_parser.add_argument(
-        "--stdout", metavar="PATH", type=argparse.FileType("w")
+        "--stdout", metavar="PATH",
+        type=lambda path: io.open(path, "w", encoding="utf-8"),
     )
     spec_parser.add_argument(
-        "--stderr", metavar="PATH", type=argparse.FileType("w")
+        "--stderr", metavar="PATH",
+        type=lambda path: io.open(path, "w", encoding="utf-8"),
     )
     target_cpes_parser = subparsers.add_parser(
         "target-cpes",
@@ -236,9 +243,10 @@ def main():
         spec.target = args.target
         if spec.mode not in [oscap_helpers.EvaluationMode.CVE_SCAN,
                              oscap_helpers.EvaluationMode.STANDARD_SCAN]:
-            spec.input_.set_contents(args.input_.read().decode("utf-8"))
+            spec.input_.set_contents(args.input_.read())
         if args.tailoring is not None:
-            spec.tailoring.set_contents(args.tailoring.read().decode("utf-8"))
+            spec.tailoring.set_contents(args.tailoring.read())
+
         spec.profile = args.profile
         spec.online_remediation = args.remediate
 
@@ -382,13 +390,15 @@ def main():
             mangled_target = mangled_target.replace("/", "_")
 
             if cve_results is not None:
-                with open(os.path.join(
-                          args.output, mangled_target + "-cve.xml"), "w") as f:
+                with io.open(os.path.join(
+                        args.output, mangled_target + "-cve.xml"), "w",
+                        encoding="utf-8") as f:
                     f.write(cve_results)
 
             if standard_scan_results is not None:
-                with open(os.path.join(
-                          args.output, mangled_target + "-std.xml"), "w") as f:
+                with io.open(os.path.join(
+                        args.output, mangled_target + "-std.xml"), "w",
+                        encoding="utf-8") as f:
                     f.write(standard_scan_results)
 
 

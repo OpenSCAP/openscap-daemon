@@ -31,6 +31,8 @@ from datetime import datetime
 import os.path
 import json
 import time
+import io
+
 if sys.version_info < (3,):
     import gobject
 else:
@@ -569,15 +571,18 @@ def main():
                  "OpenSCAP Daemon"
         )
         eval_parser.add_argument(
-              "--results-arf", type=argparse.FileType("w"), dest="results_arf",
+              "--results-arf", dest="results_arf",
+              type=lambda path: io.open(path, "w", encoding="utf-8"),
               help="Write ARF (result data stream) into file on this path."
         )
         eval_parser.add_argument(
-              "--stdout", type=argparse.FileType("w"),
+              "--stdout",
+              type=lambda path: io.open(path, "w", encoding="utf-8"),
               help="Write stdout from oscap into file on this path."
         )
         eval_parser.add_argument(
-              "--stderr", type=argparse.FileType("w"),
+              "--stderr",
+              type=lambda path: io.open(path, "w", encoding="utf-8"),
               help="Write stderr from oscap into file on this path."
         )
         # todo non-interactive
