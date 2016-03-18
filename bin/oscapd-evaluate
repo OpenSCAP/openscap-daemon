@@ -277,11 +277,18 @@ def main():
             queue.put_nowait(target)
 
         scanned_targets = []
+        failed_targets = []
 
         def scan_worker():
             while True:
                 try:
                     target = queue.get(False)
+
+                    if len(failed_targets) > 0:
+                        failed_targets.append(target)
+                        queue.task_done()
+                        continue
+
                     cve_results = None
                     standard_scan_results = None
 
@@ -325,6 +332,7 @@ def main():
 
                     except Exception as e:
                         logging.exception(e)
+                        failed_targets.append(target)
 
                     queue.task_done()
                     scanned_targets.append(
@@ -351,7 +359,22 @@ def main():
             workers.append(worker)
             worker.start()
 
-        queue.join()
+        try:
+            queue.join()
+
+        except KeyboardInterrupt:
+            failed_targets.append(None)
+
+            for worker in workers:
+                worker.join()
+
+            sys.stderr.write("Evaluation interrupted by user!\n")
+
+        if len(failed_targets) > 0:
+            sys.stderr.write(
+                "Fatal error encountered while evaluating! Failed to evaluate "
+                "at least %i targets!\n" % (len(failed_targets) - 1)
+            )
 
         for target, cve_results, standard_scan_results in scanned_targets:
             mangled_target = target
