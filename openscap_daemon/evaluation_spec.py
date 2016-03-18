@@ -25,7 +25,7 @@ from xml.etree import cElementTree as ElementTree
 import os.path
 import tempfile
 import shutil
-import codecs
+import io
 
 
 class SCAPInput(object):
@@ -49,7 +49,7 @@ class SCAPInput(object):
         if self.file_path is None:
             return None
 
-        with codecs.open(self.file_path, "r", encoding="utf-8") as f:
+        with io.open(self.file_path, "r", encoding="utf-8") as f:
             return f.read()
 
     def is_equivalent_to(self, other):
@@ -108,7 +108,7 @@ class SCAPInput(object):
         if self.temp_file is None:
             ret.set("href", self.file_path)
         else:
-            with codecs.open(self.temp_file.name, "r", encoding="utf-8") as f:
+            with io.open(self.temp_file.name, "r", encoding="utf-8") as f:
                 ret.text = f.read()
 
         if self.datastream_id is not None:
@@ -133,7 +133,7 @@ class SCAPTailoring(object):
         if self.file_path is None:
             return None
 
-        with codecs.open(self.file_path, "r", encoding="utf-8") as f:
+        with io.open(self.file_path, "r", encoding="utf-8") as f:
             return f.read()
 
     def is_equivalent_to(self, other):
@@ -187,7 +187,7 @@ class SCAPTailoring(object):
         if self.temp_file is None:
             ret.set("href", self.file_path)
         else:
-            with codecs.open(self.temp_file.name, "r", encoding="utf-8") as f:
+            with io.open(self.temp_file.name, "r", encoding="utf-8") as f:
                 ret.text = f.read()
 
         return ret
@@ -473,20 +473,24 @@ class EvaluationSpec(object):
         wip_result = self.evaluate_into_dir(config)
         try:
             exit_code = -1
-            with open(os.path.join(wip_result, "exit_code"), "r") as f:
+            with io.open(os.path.join(wip_result, "exit_code"), "r",
+                         encoding="utf-8") as f:
                 exit_code = int(f.read())
 
             stdout = ""
-            with open(os.path.join(wip_result, "stdout"), "r") as f:
+            with io.open(os.path.join(wip_result, "stdout"), "r",
+                         encoding="utf-8") as f:
                 stdout = f.read()
 
             stderr = ""
-            with open(os.path.join(wip_result, "stderr"), "r") as f:
+            with io.open(os.path.join(wip_result, "stderr"), "r",
+                         encoding="utf-8") as f:
                 stderr = f.read()
 
             results = ""
             try:
-                with open(os.path.join(wip_result, "results.xml"), "r") as f:
+                with io.open(os.path.join(wip_result, "results.xml"), "r",
+                             encoding="utf-8") as f:
                     results = f.read()
             except Exception as e:
                 raise RuntimeError(

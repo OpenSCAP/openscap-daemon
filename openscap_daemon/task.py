@@ -28,7 +28,7 @@ import os.path
 import shutil
 import threading
 import logging
-import codecs
+import io
 
 
 class SlipMode(object):
@@ -269,8 +269,8 @@ class Task(object):
         et_helpers.indent(root)
 
         xml_source = ElementTree.tostring(root, encoding="utf-8")
-        with codecs.open(config_file, "w", encoding="utf-8") as f:
-            f.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+        with io.open(config_file, "w", encoding="utf-8") as f:
+            f.write(u"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
             f.write(xml_source.decode("utf-8"))
 
     def save(self):
@@ -484,7 +484,7 @@ class Task(object):
         )
 
         ret = ""
-        with codecs.open(path, "r", encoding="utf-8") as f:
+        with io.open(path, "r", encoding="utf-8") as f:
             ret = f.read()
 
         logging.info(
@@ -502,7 +502,7 @@ class Task(object):
         )
 
         ret = ""
-        with open(path, "r") as f:
+        with io.open(path, "r", encoding="utf-8") as f:
             ret = f.read()
 
         return ret
@@ -515,7 +515,7 @@ class Task(object):
         )
 
         ret = ""
-        with open(path, "r") as f:
+        with io.open(path, "r", encoding="utf-8") as f:
             ret = f.read()
 
         return ret
@@ -528,7 +528,7 @@ class Task(object):
         )
 
         ret = ""
-        with open(path, "r") as f:
+        with io.open(path, "r", encoding="utf-8") as f:
             ret = f.read()
 
         return int(ret.strip())

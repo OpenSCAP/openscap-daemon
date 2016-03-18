@@ -22,6 +22,7 @@ import subprocess
 import tempfile
 import os.path
 import logging
+import io
 
 from xml.etree import cElementTree as ElementTree
 from openscap_daemon import et_helpers
@@ -258,8 +259,10 @@ def evaluate(spec, config):
         dir=config.work_in_progress_dir
     )
 
-    stdout_file = open(os.path.join(working_directory, "stdout"), "w")
-    stderr_file = open(os.path.join(working_directory, "stderr"), "w")
+    stdout_file = io.open(os.path.join(working_directory, "stdout"), "w",
+                          encoding="utf-8")
+    stderr_file = io.open(os.path.join(working_directory, "stderr"), "w",
+                          encoding="utf-8")
 
     args = get_evaluation_args(spec, config)
 
@@ -287,8 +290,9 @@ def evaluate(spec, config):
     stdout_file.flush()
     stderr_file.flush()
 
-    with open(os.path.join(working_directory, "exit_code"), "w") as f:
-        f.write("%i" % (exit_code))
+    with io.open(os.path.join(working_directory, "exit_code"), "w",
+                 encoding="utf-8") as f:
+        f.write(u"%i" % (exit_code))
 
     # Exit code 0 means evaluation was successful and machine is compliant.
     # Exit code 1 means there was an error while evaluating.
