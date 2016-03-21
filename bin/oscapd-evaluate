@@ -32,6 +32,7 @@ import sys
 import threading
 import io
 import json
+from xml.etree import cElementTree as ElementTree
 
 if sys.version_info < (3,):
     import Queue
@@ -68,6 +69,58 @@ def preprocess_targets(targets):
             ret.append(target)
 
     return ret
+
+
+def summarize_cve_results(oval_source, result_list):
+    namespaces = {
+        "ovalres": "http://oval.mitre.org/XMLSchema/oval-results-5",
+        "ovaldef": "http://oval.mitre.org/XMLSchema/oval-definitions-5"
+    }
+
+    oval_root = ElementTree.fromstring(oval_source.encode("utf-8"))
+
+    for result in oval_root.findall(
+            "ovalres:results/ovalres:system/"
+            "ovalres:definitions/*[@result='true']",
+            namespaces):
+        definition_id = result.get("definition_id")
+        assert(definition_id is not None)
+
+        definition_meta = oval_root.find(
+            "./ovaldef:oval_definitions/ovaldef:definitions/*[@id='%s']/"
+            "ovaldef:metadata" % (definition_id),
+            namespaces
+        )
+        assert(definition_meta is not None)
+
+        title = definition_meta.find("ovaldef:title", namespaces)
+        # there can only be one RHSA per definition
+        rhsa = definition_meta.find("ovaldef:reference[@source='RHSA']",
+                                    namespaces)
+        # there can be one or more CVEs per definition
+        cves = definition_meta.findall("ovaldef:reference[@source='CVE']",
+                                       namespaces)
+        description = definition_meta.find("ovaldef:description", namespaces)
+        severity = definition_meta.find("ovaldef:severity", namespaces)
+
+        # report the vulnerabilities one CVE at a time
+        # (if one RHSA fixes multiple CVEs it will be reported multiple times)
+        for cve in cves:
+            result_json = {}
+            result_json["Title"] = cve.get("ref_id")
+            result_json["Fail"] = "true"
+            result_json["RHSA"] = rhsa.get("ref_id")
+            result_json["CVE"] = cve.get("ref_id")
+            result_json["Short Description"] = \
+                title.text if title is not None else "Unknown"
+            result_json["Long Description"] = \
+                description.text if description is not None else "Unknown"
+            result_json["Severity"] = \
+                severity.text if severity is not None else "Unknown"
+            # TODO
+            #result_json["Notes"] = ""
+
+            result_list.append(result_json)
 
 
 def main():
@@ -398,10 +451,14 @@ def main():
             json_data["UUID"] = json_target
             json_data["Scanner"] = "openscap"
             json_data["Time"] = "TODO"
+            json_data["Vulnerabilities"] = []
 
             scan_type = []
+
             if cve_results is not None:
                 scan_type.append("CVE")
+
+                summarize_cve_results(cve_results, json_data["Vulnerabilities"])
 
                 with io.open(os.path.join(
                         args.output, mangled_target + "-cve.xml"), "w",
