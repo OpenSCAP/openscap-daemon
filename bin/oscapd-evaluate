@@ -112,11 +112,11 @@ def summarize_cve_results(oval_source, result_list):
             result_json["RHSA"] = rhsa.get("ref_id")
             result_json["CVE"] = cve.get("ref_id")
             result_json["Short Description"] = \
-                title.text if title is not None else "Unknown"
+                title.text if title is not None else "unknown"
             result_json["Long Description"] = \
-                description.text if description is not None else "Unknown"
+                description.text if description is not None else "unknown"
             result_json["Severity"] = \
-                severity.text if severity is not None else "Unknown"
+                severity.text if severity is not None else "unknown"
             # TODO
             #result_json["Notes"] = ""
 
@@ -153,15 +153,15 @@ def summarize_standard_compliance_results(arf_source, result_list):
 
         title = rule.find("cdf:title", namespaces)
         description = rule.find("cdf:description", namespaces)
-        severity = rule.get("severity", "Unknown")
+        severity = rule.get("severity", "unknown")
 
         result_json = {}
-        result_json["Title"] = title.text if title is not None else "Unknown"
+        result_json["Title"] = title.text if title is not None else "unknown"
         result_json["Fail"] = "true"
         result_json["Short Description"] = \
-            title.text if title is not None else "Unknown"
+            title.text if title is not None else "unknown"
         result_json["Long Description"] = \
-            description.text if description is not None else "Unknown"
+            description.text if description is not None else "unknown"
         result_json["Severity"] = severity
         result_json["Notes"] = "XCCDF result: %s" % (result)
 
