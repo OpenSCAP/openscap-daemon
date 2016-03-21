@@ -39,7 +39,7 @@ atomic run openscap-daemon-f23
 # at this point OpenSCAP Daemon dbus API is provided on the host
 # that means that you can run 'oscapd-cli' or 'atomic scan' on the host
 # and the SPC does the work
-atomic stop openscap-daemon-f22
+atomic stop openscap-daemon-f23
 # you can stop the SPC with the 'atomic stop' command
 ```
 
