@@ -526,7 +526,7 @@ def main():
 
             with open(os.path.join(
                     args.output, mangled_target + ".json"), "w") as f:
-                json.dump(json_data, f)
+                json.dump(json_data, f, indent=2)
 
 
 if __name__ == "__main__":
