@@ -32,6 +32,7 @@ import sys
 import threading
 import io
 import json
+import datetime
 from xml.etree import cElementTree as ElementTree
 
 if sys.version_info < (3,):
@@ -400,8 +401,11 @@ def main():
                     standard_scan_results = None
 
                     logging.debug("Started scanning target '%s'", target)
+                    started_time = None
+                    finished_time = None
 
                     try:
+                        started_time = datetime.datetime.now()
                         cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
                             target, config
                         )
@@ -437,13 +441,16 @@ def main():
                                     (target, exit_code, stdout, stderr)
                                 )
 
+                        finished_time = datetime.datetime.now()
+
                     except Exception as e:
                         logging.exception(e)
                         failed_targets.append(target)
 
                     queue.task_done()
                     scanned_targets.append(
-                        (target, cve_results, standard_scan_results)
+                        (target, cve_results, standard_scan_results,
+                         started_time, finished_time)
                     )
 
                     percent = "{0:6.2f}%".format(
@@ -483,7 +490,8 @@ def main():
                 "at least %i targets!\n" % (len(failed_targets) - 1)
             )
 
-        for target, cve_results, standard_scan_results in scanned_targets:
+        for target, cve_results, standard_scan_results, \
+                started_time, finished_time in scanned_targets:
             mangled_target = target
             mangled_target = mangled_target.replace(":", "_")
             mangled_target = mangled_target.replace("/", "_")
@@ -495,7 +503,9 @@ def main():
             json_data = {}
             json_data["UUID"] = json_target
             json_data["Scanner"] = "openscap"
-            json_data["Time"] = "TODO"
+            json_data["Time"] = started_time.strftime("%Y-%m-%dT%H:%M:%S")
+            json_data["Finished Time"] = \
+                finished_time.strftime("%Y-%m-%dT%H:%M:%S")
             json_data["Vulnerabilities"] = []
 
             scan_type = []
