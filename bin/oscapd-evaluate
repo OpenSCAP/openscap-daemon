@@ -31,6 +31,7 @@ import argparse
 import sys
 import threading
 import io
+import json
 
 if sys.version_info < (3,):
     import Queue
@@ -389,17 +390,37 @@ def main():
             mangled_target = mangled_target.replace(":", "_")
             mangled_target = mangled_target.replace("/", "_")
 
+            json_target = target
+            if json_target.startswith("chroot://"):
+                json_target = json_target[len("chroot://"):]
+
+            json_data = {}
+            json_data["UUID"] = json_target
+            json_data["Scanner"] = "openscap"
+            json_data["Time"] = "TODO"
+
+            scan_type = []
             if cve_results is not None:
+                scan_type.append("CVE")
+
                 with io.open(os.path.join(
                         args.output, mangled_target + "-cve.xml"), "w",
                         encoding="utf-8") as f:
                     f.write(cve_results)
 
             if standard_scan_results is not None:
+                scan_type.append("Standard Compliance")
+
                 with io.open(os.path.join(
                         args.output, mangled_target + "-std.xml"), "w",
                         encoding="utf-8") as f:
                     f.write(standard_scan_results)
+
+            json_data["Scan Type"] = ", ".join(scan_type)
+
+            with open(os.path.join(
+                    args.output, mangled_target + ".json"), "w") as f:
+                json.dump(json_data, f)
 
 
 if __name__ == "__main__":
