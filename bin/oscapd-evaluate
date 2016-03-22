@@ -102,7 +102,8 @@ def summarize_cve_results(oval_source, result_list):
         cves = definition_meta.findall("ovaldef:reference[@source='CVE']",
                                        namespaces)
         description = definition_meta.find("ovaldef:description", namespaces)
-        severity = definition_meta.find("ovaldef:severity", namespaces)
+        severity = definition_meta.find("ovaldef:advisory/ovaldef:severity",
+                                        namespaces)
 
         # report the vulnerabilities one CVE at a time
         # (if one RHSA fixes multiple CVEs it will be reported multiple times)
@@ -437,7 +438,6 @@ def main():
                                     "Failed to scan target '%s' for "
                                     "vulnerabilities." % (target)
                                 )
-
 
                         if not args.no_standard_compliance:
                             es = evaluation_spec.EvaluationSpec()
