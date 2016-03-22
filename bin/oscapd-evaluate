@@ -532,9 +532,9 @@ def main():
             json_data["Vulnerabilities"] = []
             if (args.no_cve_scan or cve_results) and \
                     (args.no_standard_compliance or standard_scan_results):
-                json_data["Succesful"] = "true"
+                json_data["Successful"] = "true"
             else:
-                json_data["Succesful"] = "false"
+                json_data["Successful"] = "false"
 
             scan_type = []
 
