@@ -406,39 +406,60 @@ def main():
 
                     try:
                         started_time = datetime.datetime.now()
-                        cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
-                            target, config
-                        )
+                        cpes = []
+                        try:
+                            cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
+                                target, config
+                            )
+                        except:
+                            logging.exception(
+                                "Failed to detect CPEs of target '%s'. "
+                                "Assuming no CPEs..." % (target)
+                            )
 
                         if not args.no_cve_scan:
                             es = evaluation_spec.EvaluationSpec()
                             es.mode = oscap_helpers.EvaluationMode.CVE_SCAN
                             es.target = target
                             es.cpe_hints = cpes
-                            cve_results, stdout, stderr, exit_code = \
-                                es.evaluate(config)
+                            try:
+                                cve_results, stdout, stderr, exit_code = \
+                                    es.evaluate(config)
 
-                            if exit_code == 1:
-                                logging.warning(
-                                    "CVE scan of target '%s' failed with "
-                                    "exit_code %i.\n\nstdout:%s\n\nstderr:%s" %
-                                    (target, exit_code, stdout, stderr)
+                                if exit_code == 1:
+                                    logging.warning(
+                                        "CVE scan of target '%s' failed with "
+                                        "exit_code %i.\n\nstdout:%s\n\nstderr:%s" %
+                                        (target, exit_code, stdout, stderr)
+                                    )
+                            except:
+                                logging.exception(
+                                    "Failed to scan target '%s' for "
+                                    "vulnerabilities." % (target)
                                 )
+
 
                         if not args.no_standard_compliance:
                             es = evaluation_spec.EvaluationSpec()
                             es.mode = oscap_helpers.EvaluationMode.STANDARD_SCAN
                             es.target = target
                             es.cpe_hints = cpes
-                            standard_scan_results, stdout, stderr, exit_code = \
-                                es.evaluate(config)
+                            try:
+                                standard_scan_results, stdout, stderr, exit_code = \
+                                    es.evaluate(config)
 
-                            if exit_code == 1:
-                                logging.warning(
-                                    "Standard compliance scan of target '%s' "
-                                    "failed with exit_code %i.\n\nstdout:%s\n\n"
-                                    "stderr:%s" %
-                                    (target, exit_code, stdout, stderr)
+                                if exit_code == 1:
+                                    logging.warning(
+                                        "Standard compliance scan of target '%s' "
+                                        "failed with exit_code %i.\n\nstdout:%s\n\n"
+                                        "stderr:%s" %
+                                        (target, exit_code, stdout, stderr)
+                                    )
+
+                            except:
+                                logging.exception(
+                                    "Failed to scan target '%s' for "
+                                    "standard profile compliance." % (target)
                                 )
 
                         finished_time = datetime.datetime.now()
@@ -509,6 +530,11 @@ def main():
                 finished_time.strftime("%Y-%m-%dT%H:%M:%S") \
                 if finished_time is not None else "unknown"
             json_data["Vulnerabilities"] = []
+            if (args.no_cve_scan or cve_results) and \
+                    (args.no_standard_compliance or standard_scan_results):
+                json_data["Succesful"] = "true"
+            else:
+                json_data["Succesful"] = "false"
 
             scan_type = []
 
