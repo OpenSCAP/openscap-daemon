@@ -503,9 +503,11 @@ def main():
             json_data = {}
             json_data["UUID"] = json_target
             json_data["Scanner"] = "openscap"
-            json_data["Time"] = started_time.strftime("%Y-%m-%dT%H:%M:%S")
+            json_data["Time"] = started_time.strftime("%Y-%m-%dT%H:%M:%S") \
+                if started_time is not None else "unknown"
             json_data["Finished Time"] = \
-                finished_time.strftime("%Y-%m-%dT%H:%M:%S")
+                finished_time.strftime("%Y-%m-%dT%H:%M:%S") \
+                if finished_time is not None else "unknown"
             json_data["Vulnerabilities"] = []
 
             scan_type = []
