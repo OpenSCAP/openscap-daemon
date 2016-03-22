@@ -155,7 +155,15 @@ def summarize_standard_compliance_results(arf_source, result_list):
 
         title = rule.find("cdf:title", namespaces)
         description = rule.find("cdf:description", namespaces)
-        severity = rule.get("severity", "unknown")
+        severity = rule.get("severity", "Unknown")
+        if severity in "low":
+            severity = "Low"
+        elif severity == "medium":
+            severity = "Moderate"
+        elif severity == "high":
+            severity = "Important"
+        else:  # "info", a valid XCCDF severity falls here
+            severity = "Unknown"
 
         result_json = {}
         result_json["Title"] = title.text if title is not None else "unknown"
