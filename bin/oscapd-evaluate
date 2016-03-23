@@ -116,15 +116,17 @@ def summarize_cve_results(oval_source, result_list):
 
         custom = {}
         if rhsa is not None:
-            custom["RHSA"] = (rhsa.get("ref_id", "unknown"),
-                              rhsa.get("ref_url", "unknown"))
+            custom["RHSA ID"] = rhsa.get("ref_id", "unknown")
+            custom["RHSA URL"] = rhsa.get("ref_url", "unknown")
 
         if len(cves) > 0:
-            custom["CVEs"] = []
+            custom["Associated CVEs"] = []
 
             for cve in cves:
-                custom["CVEs"].append((cve.get("ref_id", "unknown"),
-                                       cve.get("ref_url", "unknown")))
+                custom["Associated CVEs"].append(
+                    {"CVE ID": cve.get("ref_id", "unknown"),
+                     "CVE URL": cve.get("ref_url", "unknown")}
+                )
 
         result_json["Custom"] = custom
 
