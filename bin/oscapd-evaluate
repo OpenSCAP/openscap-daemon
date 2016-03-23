@@ -105,24 +105,30 @@ def summarize_cve_results(oval_source, result_list):
         severity = definition_meta.find("ovaldef:advisory/ovaldef:severity",
                                         namespaces)
 
-        # report the vulnerabilities one CVE at a time
-        # (if one RHSA fixes multiple CVEs it will be reported multiple times)
-        for cve in cves:
-            result_json = {}
-            result_json["Title"] = cve.get("ref_id")
-            result_json["Fail"] = "true"
-            result_json["RHSA"] = rhsa.get("ref_id")
-            result_json["CVE"] = cve.get("ref_id")
-            result_json["Short Description"] = \
-                title.text if title is not None else "unknown"
-            result_json["Long Description"] = \
-                description.text if description is not None else "unknown"
-            result_json["Severity"] = \
-                severity.text if severity is not None else "unknown"
-            # TODO
-            #result_json["Notes"] = ""
+        result_json = {}
+        result_json["Title"] = title.text if title is not None else "unknown"
+        result_json["Description"] = \
+            description.text if description is not None else "unknown"
+        result_json["Severity"] = \
+            severity.text if severity is not None else "unknown"
+        # TODO
+        #result_json["Notes"] = ""
 
-            result_list.append(result_json)
+        custom = {}
+        if rhsa is not None:
+            custom["RHSA"] = (rhsa.get("ref_id", "unknown"),
+                              rhsa.get("ref_url", "unknown"))
+
+        if len(cves) > 0:
+            custom["CVEs"] = []
+
+            for cve in cves:
+                custom["CVEs"].append((cve.get("ref_id", "unknown"),
+                                       cve.get("ref_url", "unknown")))
+
+        result_json["Custom"] = custom
+
+        result_list.append(result_json)
 
 
 def summarize_standard_compliance_results(arf_source, result_list):
