@@ -175,13 +175,10 @@ def summarize_standard_compliance_results(arf_source, result_list):
 
         result_json = {}
         result_json["Title"] = title.text if title is not None else "unknown"
-        result_json["Fail"] = "true"
-        result_json["Short Description"] = \
-            title.text if title is not None else "unknown"
-        result_json["Long Description"] = \
+        result_json["Description"] = \
             description.text if description is not None else "unknown"
         result_json["Severity"] = severity
-        result_json["Notes"] = "XCCDF result: %s" % (result)
+        result_json["Custom"] = {"XCCDF result": result}
 
         result_list.append(result_json)
 
