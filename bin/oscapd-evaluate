@@ -41,7 +41,7 @@ else:
     import queue as Queue
 
 
-def preprocess_targets(targets):
+def preprocess_targets(targets, output_dir_map):
     """The main goal of this function is to expand chroots-in-dir:// to a list
     of chroot:// targets. chroots-in-dir is a convenience function that the rest
     of the OpenSCAP-daemon API doesn't know about.
@@ -63,6 +63,7 @@ def preprocess_targets(targets):
                 expanded_target = "chroot://" + full_path
                 logging.debug(" ... '%s'", expanded_target)
                 ret.append(expanded_target)
+                output_dir_map[expanded_target] = chroot
 
             logging.debug("Finished expanding target '%s'.", target)
 
@@ -392,7 +393,8 @@ def main():
     elif args.action == "scan":
         assert(os.path.isdir(args.output))
 
-        targets = preprocess_targets(args.targets)
+        output_dir_map = {}
+        targets = preprocess_targets(args.targets, output_dir_map)
 
         queue = Queue.Queue(len(targets))
         for target in targets:
@@ -526,9 +528,14 @@ def main():
 
         for target, cve_results, standard_scan_results, \
                 started_time, finished_time in scanned_targets:
-            mangled_target = target
-            mangled_target = mangled_target.replace(":", "_")
-            mangled_target = mangled_target.replace("/", "_")
+            output_dir = ""
+            if target in output_dir_map:
+                output_dir = output_dir_map[target]
+
+            else:
+                output_dir = target
+                output_dir = output_dir.replace(":", "_")
+                output_dir = output_dir.replace("/", "_")
 
             json_target = target
             if json_target.startswith("chroot://"):
@@ -550,6 +557,12 @@ def main():
                 json_data["Successful"] = "false"
 
             scan_type = []
+            full_output_dir = os.path.join(args.output, output_dir)
+            try:
+                os.makedirs(full_output_dir)
+            except OSError as e:
+                if e.errno != 17:  # it's fine if it already exists
+                    raise
 
             if cve_results is not None:
                 scan_type.append("CVE")
@@ -557,7 +570,7 @@ def main():
                 summarize_cve_results(cve_results, json_data["Vulnerabilities"])
 
                 with io.open(os.path.join(
-                        args.output, mangled_target + "-cve.xml"), "w",
+                        full_output_dir, "cve.xml"), "w",
                         encoding="utf-8") as f:
                     f.write(cve_results)
 
@@ -569,14 +582,14 @@ def main():
                 )
 
                 with io.open(os.path.join(
-                        args.output, mangled_target + "-std.xml"), "w",
+                        full_output_dir, "std.xml"), "w",
                         encoding="utf-8") as f:
                     f.write(standard_scan_results)
 
             json_data["Scan Type"] = ", ".join(scan_type)
 
             with open(os.path.join(
-                    args.output, mangled_target + ".json"), "w") as f:
+                    full_output_dir, "json"), "w") as f:
                 json.dump(json_data, f, indent=2)
 
 
