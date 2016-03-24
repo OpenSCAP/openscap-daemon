@@ -26,11 +26,17 @@ from openscap_daemon import version
 import os
 import logging
 import sys
+import argparse
+
+gobject_mainloop = None
 if sys.version_info < (3,):
     import gobject
+    gobject_MainLoop = gobject.MainLoop
 else:
     from gi.repository import GObject as gobject
-import argparse
+    from gi.repository import GLib
+    gobject_MainLoop = GLib.MainLoop
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -63,7 +69,7 @@ def main():
 
     obj = dbus_daemon.OpenSCAPDaemonDbus(bus, config_file)
 
-    loop = gobject.MainLoop()
+    loop = gobject_MainLoop()
     loop.run()
 
 if __name__ == "__main__":
