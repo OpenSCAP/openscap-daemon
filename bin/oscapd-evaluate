@@ -433,11 +433,18 @@ def main():
     )
     scan_parser.add_argument(
         "--targets", type=str, nargs="+",
-        default=["localhost"]
+        default=["localhost"],
+        help="Which target(s) should we be scanning. Possible choices include: "
+        "'localhost', 'ssh://user@machine', 'docker-image://IMAGE_ID', "
+        "'docker-container://CONTAINER_ID', 'vm-domain://VM_NAME', "
+        "'vm-image:///path/to/image.qcow2', 'chroot:///path/to/chroot', "
+        "'chroots-in-dir:///path/to/chroots'."
+        "Delimited by spaces."
     )
     scan_parser.add_argument(
         "-j", "--jobs", type=int,
-        default=4
+        default=4,
+        help="How many worker jobs should scan in parallel."
     )
     scan_parser.add_argument(
         "--no-cve-scan", default=False, action="store_true",
@@ -451,7 +458,10 @@ def main():
     )
     scan_parser.add_argument(
         "--output", type=str, required=True,
-        help="A directory where results will be stored in."
+        help="A directory where results will be stored in. There will be a "
+        "directory for each target created there with up to 3 files. 'json' "
+        "with json summary of the scan, cve.xml with CVE scan raw results and "
+        "std.xml with standard profile scan raw results."
     )
     args = parser.parse_args()
 
