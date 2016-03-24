@@ -75,9 +75,8 @@ def cli_scan(args, config):
                     started_time = datetime.datetime.now()
                     cpes = []
                     try:
-                        cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
-                            target, config
-                        )
+                        cpes = evaluation_spec.EvaluationSpec.\
+                            detect_CPEs_of_target(target, config)
                     except:
                         logging.exception(
                             "Failed to detect CPEs of target '%s'. "
@@ -297,7 +296,8 @@ def main():
              "the command line."
     )
     spec_parser.add_argument(
-        "--mode", type=str, choices=["sds", "oval", "cve_scan", "standard_scan"],
+        "--mode", type=str,
+        choices=["sds", "oval", "cve_scan", "standard_scan"],
         default="sds"
     )
     spec_parser.add_argument(
