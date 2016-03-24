@@ -353,46 +353,65 @@ def main():
     spec_parser.add_argument(
         "--mode", type=str,
         choices=["sds", "oval", "cve_scan", "standard_scan"],
-        default="sds"
+        default="sds",
+        help="Evaluation mode for the EvaluationSpec. 'sds' evaluates input as "
+        "a source datastream. 'oval' evaluates it as an OVAL file. 'cve_scan' "
+        "is a special mode that automatically uses the right CVE feed as OVAL "
+        "file. 'standard_scan' uses the right SSG content and standard profile "
+        "based on OS of the scanned system."
     )
     spec_parser.add_argument(
         "--target", type=str,
-        default="localhost"
+        default="localhost",
+        help="Which target should we be evaluation. Possible choices include: "
+        "'localhost', 'ssh://user@machine', 'docker-image://IMAGE_ID', "
+        "'docker-container://CONTAINER_ID', 'vm-domain://VM_NAME', "
+        "'vm-image:///path/to/image.qcow2', 'chroot:///path/to/chroot'."
     )
     spec_parser.add_argument(
         "--input", metavar="PATH", dest="input_",
         type=lambda path: io.open(path, "r", encoding="utf-8"),
-        default=sys.stdin
+        default=sys.stdin,
+        help="Depending on --mode this should be a source datastream or OVAL "
+        "file. In cve_scan and standard_scan mode the --input is not used."
     )
     spec_parser.add_argument(
         "--tailoring", metavar="PATH",
         type=lambda path: io.open(path, "r", encoding="utf-8"),
+        help="XCCDF tailoring file. Only used in 'sds' mode."
     )
     spec_parser.add_argument(
         "--profile", type=str,
-        default=""
+        default="",
+        help="ID of the XCCDF profile to use. Only used in 'sds' mode. Empty "
+        "string is the default and that means the (default) profile."
     )
     spec_parser.add_argument(
-        "--remediate", default=False, action="store_true"
+        "--remediate", default=False, action="store_true",
+        help="Perform remediation for failed rules after the scan. Only used "
+        "in 'sds' and 'standard_scan' modes."
     )
     spec_parser.add_argument(
         "--print-xml",
         dest="print_xml",
-        help="Don't evaluate the EvaluationSpec, just print its XML to stdout",
-        action="store_true"
+        action="store_true",
+        help="Don't evaluate the EvaluationSpec, just print its XML to stdout"
     )
     spec_parser.add_argument(
         "--results", metavar="PATH",
         type=lambda path: io.open(path, "w", encoding="utf-8"),
-
+        help="Write OVAL results or ARF result datastream (depending on mode) "
+        "to this location."
     )
     spec_parser.add_argument(
         "--stdout", metavar="PATH",
         type=lambda path: io.open(path, "w", encoding="utf-8"),
+        help="Write stdout from oscap tool to this file."
     )
     spec_parser.add_argument(
         "--stderr", metavar="PATH",
         type=lambda path: io.open(path, "w", encoding="utf-8"),
+        help="Write stderr from oscap tool to this file."
     )
     target_cpes_parser = subparsers.add_parser(
         "target-cpes",
