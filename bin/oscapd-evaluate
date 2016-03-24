@@ -41,6 +41,211 @@ else:
     import queue as Queue
 
 
+def cli_scan(args, config):
+    assert(os.path.isdir(args.output))
+
+    output_dir_map = {}
+    targets = cli_helpers.preprocess_targets(args.targets, output_dir_map)
+
+    queue = Queue.Queue(len(targets))
+    for target in targets:
+        queue.put_nowait(target)
+
+    scanned_targets = []
+    failed_targets = []
+
+    def scan_worker():
+        while True:
+            try:
+                target = queue.get(False)
+
+                if len(failed_targets) > 0:
+                    failed_targets.append(target)
+                    queue.task_done()
+                    continue
+
+                cve_results = None
+                standard_scan_results = None
+
+                logging.debug("Started scanning target '%s'", target)
+                started_time = None
+                finished_time = None
+
+                try:
+                    started_time = datetime.datetime.now()
+                    cpes = []
+                    try:
+                        cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
+                            target, config
+                        )
+                    except:
+                        logging.exception(
+                            "Failed to detect CPEs of target '%s'. "
+                            "Assuming no CPEs..." % (target)
+                        )
+
+                    if not args.no_cve_scan:
+                        es = evaluation_spec.EvaluationSpec()
+                        es.mode = oscap_helpers.EvaluationMode.CVE_SCAN
+                        es.target = target
+                        es.cpe_hints = cpes
+                        try:
+                            cve_results, stdout, stderr, exit_code = \
+                                es.evaluate(config)
+
+                            if exit_code == 1:
+                                logging.warning(
+                                    "CVE scan of target '%s' failed with "
+                                    "exit_code %i.\n\nstdout:%s\n\nstderr:%s" %
+                                    (target, exit_code, stdout, stderr)
+                                )
+                        except:
+                            logging.exception(
+                                "Failed to scan target '%s' for "
+                                "vulnerabilities." % (target)
+                            )
+
+                    if not args.no_standard_compliance:
+                        es = evaluation_spec.EvaluationSpec()
+                        es.mode = oscap_helpers.EvaluationMode.STANDARD_SCAN
+                        es.target = target
+                        es.cpe_hints = cpes
+                        try:
+                            standard_scan_results, stdout, stderr, exit_code = \
+                                es.evaluate(config)
+
+                            if exit_code == 1:
+                                logging.warning(
+                                    "Standard compliance scan of target '%s' "
+                                    "failed with exit_code %i.\n\nstdout:%s\n\n"
+                                    "stderr:%s" %
+                                    (target, exit_code, stdout, stderr)
+                                )
+
+                        except:
+                            logging.exception(
+                                "Failed to scan target '%s' for "
+                                "standard profile compliance." % (target)
+                            )
+
+                    finished_time = datetime.datetime.now()
+
+                except Exception as e:
+                    logging.exception(e)
+                    failed_targets.append(target)
+
+                queue.task_done()
+                scanned_targets.append(
+                    (target, cve_results, standard_scan_results,
+                        started_time, finished_time)
+                )
+
+                percent = "{0:6.2f}%".format(
+                    float(len(scanned_targets) * 100) / len(targets)
+                )
+
+                logging.info("[%s] Scanned target '%s'", percent, target)
+
+            except Queue.Empty:
+                break
+
+    assert(args.jobs > 0)
+
+    workers = []
+    for worker_id in range(args.jobs):
+        worker = threading.Thread(
+            name="Atomic scan worker #%i" % (worker_id),
+            target=scan_worker
+        )
+        workers.append(worker)
+        worker.start()
+
+    try:
+        queue.join()
+
+    except KeyboardInterrupt:
+        failed_targets.append(None)
+
+        for worker in workers:
+            worker.join()
+
+        sys.stderr.write("Evaluation interrupted by user!\n")
+
+    if len(failed_targets) > 0:
+        sys.stderr.write(
+            "Fatal error encountered while evaluating! Failed to evaluate "
+            "at least %i targets!\n" % (len(failed_targets) - 1)
+        )
+
+    for target, cve_results, standard_scan_results, \
+            started_time, finished_time in scanned_targets:
+        output_dir = ""
+        if target in output_dir_map:
+            output_dir = output_dir_map[target]
+
+        else:
+            output_dir = target
+            output_dir = output_dir.replace(":", "_")
+            output_dir = output_dir.replace("/", "_")
+
+        json_target = target
+        if json_target.startswith("chroot://"):
+            json_target = json_target[len("chroot://"):]
+
+        json_data = {}
+        json_data["UUID"] = json_target
+        json_data["Scanner"] = "openscap"
+        json_data["Time"] = started_time.strftime("%Y-%m-%dT%H:%M:%S") \
+            if started_time is not None else "unknown"
+        json_data["Finished Time"] = \
+            finished_time.strftime("%Y-%m-%dT%H:%M:%S") \
+            if finished_time is not None else "unknown"
+        json_data["Vulnerabilities"] = []
+        if (args.no_cve_scan or cve_results) and \
+                (args.no_standard_compliance or standard_scan_results):
+            json_data["Successful"] = "true"
+        else:
+            json_data["Successful"] = "false"
+
+        scan_type = []
+        full_output_dir = os.path.join(args.output, output_dir)
+        try:
+            os.makedirs(full_output_dir)
+        except OSError as e:
+            if e.errno != 17:  # it's fine if it already exists
+                raise
+
+        if cve_results is not None:
+            scan_type.append("CVE")
+
+            cli_helpers.summarize_cve_results(
+                cve_results, json_data["Vulnerabilities"]
+            )
+
+            with io.open(os.path.join(
+                    full_output_dir, "cve.xml"), "w",
+                    encoding="utf-8") as f:
+                f.write(cve_results)
+
+        if standard_scan_results is not None:
+            scan_type.append("Standard Compliance")
+
+            cli_helpers.summarize_standard_compliance_results(
+                standard_scan_results, json_data["Vulnerabilities"]
+            )
+
+            with io.open(os.path.join(
+                    full_output_dir, "std.xml"), "w",
+                    encoding="utf-8") as f:
+                f.write(standard_scan_results)
+
+        json_data["Scan Type"] = ", ".join(scan_type)
+
+        with open(os.path.join(
+                full_output_dir, "json"), "w") as f:
+            json.dump(json_data, f, indent=2)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="OpenSCAP-Daemon one-off evaluator."
@@ -248,208 +453,7 @@ def main():
         sys.exit(0)
 
     elif args.action == "scan":
-        assert(os.path.isdir(args.output))
-
-        output_dir_map = {}
-        targets = cli_helpers.preprocess_targets(args.targets, output_dir_map)
-
-        queue = Queue.Queue(len(targets))
-        for target in targets:
-            queue.put_nowait(target)
-
-        scanned_targets = []
-        failed_targets = []
-
-        def scan_worker():
-            while True:
-                try:
-                    target = queue.get(False)
-
-                    if len(failed_targets) > 0:
-                        failed_targets.append(target)
-                        queue.task_done()
-                        continue
-
-                    cve_results = None
-                    standard_scan_results = None
-
-                    logging.debug("Started scanning target '%s'", target)
-                    started_time = None
-                    finished_time = None
-
-                    try:
-                        started_time = datetime.datetime.now()
-                        cpes = []
-                        try:
-                            cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
-                                target, config
-                            )
-                        except:
-                            logging.exception(
-                                "Failed to detect CPEs of target '%s'. "
-                                "Assuming no CPEs..." % (target)
-                            )
-
-                        if not args.no_cve_scan:
-                            es = evaluation_spec.EvaluationSpec()
-                            es.mode = oscap_helpers.EvaluationMode.CVE_SCAN
-                            es.target = target
-                            es.cpe_hints = cpes
-                            try:
-                                cve_results, stdout, stderr, exit_code = \
-                                    es.evaluate(config)
-
-                                if exit_code == 1:
-                                    logging.warning(
-                                        "CVE scan of target '%s' failed with "
-                                        "exit_code %i.\n\nstdout:%s\n\nstderr:%s" %
-                                        (target, exit_code, stdout, stderr)
-                                    )
-                            except:
-                                logging.exception(
-                                    "Failed to scan target '%s' for "
-                                    "vulnerabilities." % (target)
-                                )
-
-                        if not args.no_standard_compliance:
-                            es = evaluation_spec.EvaluationSpec()
-                            es.mode = oscap_helpers.EvaluationMode.STANDARD_SCAN
-                            es.target = target
-                            es.cpe_hints = cpes
-                            try:
-                                standard_scan_results, stdout, stderr, exit_code = \
-                                    es.evaluate(config)
-
-                                if exit_code == 1:
-                                    logging.warning(
-                                        "Standard compliance scan of target '%s' "
-                                        "failed with exit_code %i.\n\nstdout:%s\n\n"
-                                        "stderr:%s" %
-                                        (target, exit_code, stdout, stderr)
-                                    )
-
-                            except:
-                                logging.exception(
-                                    "Failed to scan target '%s' for "
-                                    "standard profile compliance." % (target)
-                                )
-
-                        finished_time = datetime.datetime.now()
-
-                    except Exception as e:
-                        logging.exception(e)
-                        failed_targets.append(target)
-
-                    queue.task_done()
-                    scanned_targets.append(
-                        (target, cve_results, standard_scan_results,
-                         started_time, finished_time)
-                    )
-
-                    percent = "{0:6.2f}%".format(
-                        float(len(scanned_targets) * 100) / len(targets)
-                    )
-
-                    logging.info("[%s] Scanned target '%s'", percent, target)
-
-                except Queue.Empty:
-                    break
-
-        assert(args.jobs > 0)
-
-        workers = []
-        for worker_id in range(args.jobs):
-            worker = threading.Thread(
-                name="Atomic scan worker #%i" % (worker_id),
-                target=scan_worker
-            )
-            workers.append(worker)
-            worker.start()
-
-        try:
-            queue.join()
-
-        except KeyboardInterrupt:
-            failed_targets.append(None)
-
-            for worker in workers:
-                worker.join()
-
-            sys.stderr.write("Evaluation interrupted by user!\n")
-
-        if len(failed_targets) > 0:
-            sys.stderr.write(
-                "Fatal error encountered while evaluating! Failed to evaluate "
-                "at least %i targets!\n" % (len(failed_targets) - 1)
-            )
-
-        for target, cve_results, standard_scan_results, \
-                started_time, finished_time in scanned_targets:
-            output_dir = ""
-            if target in output_dir_map:
-                output_dir = output_dir_map[target]
-
-            else:
-                output_dir = target
-                output_dir = output_dir.replace(":", "_")
-                output_dir = output_dir.replace("/", "_")
-
-            json_target = target
-            if json_target.startswith("chroot://"):
-                json_target = json_target[len("chroot://"):]
-
-            json_data = {}
-            json_data["UUID"] = json_target
-            json_data["Scanner"] = "openscap"
-            json_data["Time"] = started_time.strftime("%Y-%m-%dT%H:%M:%S") \
-                if started_time is not None else "unknown"
-            json_data["Finished Time"] = \
-                finished_time.strftime("%Y-%m-%dT%H:%M:%S") \
-                if finished_time is not None else "unknown"
-            json_data["Vulnerabilities"] = []
-            if (args.no_cve_scan or cve_results) and \
-                    (args.no_standard_compliance or standard_scan_results):
-                json_data["Successful"] = "true"
-            else:
-                json_data["Successful"] = "false"
-
-            scan_type = []
-            full_output_dir = os.path.join(args.output, output_dir)
-            try:
-                os.makedirs(full_output_dir)
-            except OSError as e:
-                if e.errno != 17:  # it's fine if it already exists
-                    raise
-
-            if cve_results is not None:
-                scan_type.append("CVE")
-
-                cli_helpers.summarize_cve_results(
-                    cve_results, json_data["Vulnerabilities"]
-                )
-
-                with io.open(os.path.join(
-                        full_output_dir, "cve.xml"), "w",
-                        encoding="utf-8") as f:
-                    f.write(cve_results)
-
-            if standard_scan_results is not None:
-                scan_type.append("Standard Compliance")
-
-                cli_helpers.summarize_standard_compliance_results(
-                    standard_scan_results, json_data["Vulnerabilities"]
-                )
-
-                with io.open(os.path.join(
-                        full_output_dir, "std.xml"), "w",
-                        encoding="utf-8") as f:
-                    f.write(standard_scan_results)
-
-            json_data["Scan Type"] = ", ".join(scan_type)
-
-            with open(os.path.join(
-                    full_output_dir, "json"), "w") as f:
-                json.dump(json_data, f, indent=2)
+        cli_scan(args, config)
 
 
 if __name__ == "__main__":
