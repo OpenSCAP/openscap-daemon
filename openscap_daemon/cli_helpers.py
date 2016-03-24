@@ -250,3 +250,61 @@ def summarize_cve_results(oval_source, result_list):
         result_json["Custom"] = custom
 
         result_list.append(result_json)
+
+
+def summarize_standard_compliance_results(arf_source, result_list):
+    """Takes given ARF XML source and parses it. Each Rule that doesn't have
+    result 'pass', 'fixed', 'informational', 'notselected' or 'notapplicable'
+    is added to result_list.
+
+    This is used to produce JSON output for atomic scan in
+    `oscapd-evaluate scan`.
+    """
+
+    namespaces = {
+        "cdf": "http://checklists.nist.gov/xccdf/1.2",
+    }
+
+    arf_root = ElementTree.fromstring(arf_source.encode("utf-8"))
+
+    test_result = arf_root.find(
+        ".//cdf:TestResult[@id='%s']" %
+        ("xccdf_org.open-scap_testresult_xccdf_org.ssgproject.content_profile_"
+         "standard"), namespaces
+    )
+
+    benchmark = arf_root.find(".//cdf:Benchmark", namespaces)
+
+    for rule_result in test_result.findall("./cdf:rule-result", namespaces):
+        result = rule_result.find("cdf:result", namespaces).text
+
+        if result in ["pass", "fixed", "informational", "notselected",
+                      "notapplicable"]:
+            continue
+
+        rule_id = rule_result.get("idref")
+        assert(rule_id is not None)
+
+        rule = benchmark.find(".//cdf:Rule[@id='%s']" % (rule_id), namespaces)
+        assert(rule is not None)
+
+        title = rule.find("cdf:title", namespaces)
+        description = rule.find("cdf:description", namespaces)
+        severity = rule.get("severity", "Unknown")
+        if severity in "low":
+            severity = "Low"
+        elif severity == "medium":
+            severity = "Moderate"
+        elif severity == "high":
+            severity = "Important"
+        else:  # "info", a valid XCCDF severity falls here
+            severity = "Unknown"
+
+        result_json = {}
+        result_json["Title"] = title.text if title is not None else "unknown"
+        result_json["Description"] = \
+            description.text if description is not None else "unknown"
+        result_json["Severity"] = severity
+        result_json["Custom"] = {"XCCDF result": result}
+
+        result_list.append(result_json)
