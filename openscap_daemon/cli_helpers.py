@@ -21,7 +21,7 @@ import sys
 import os.path
 import logging
 from openscap_daemon import evaluation_spec
-
+from xml.etree import cElementTree as ElementTree
 
 if sys.version_info < (3,):
     py2_raw_input = raw_input
@@ -183,3 +183,70 @@ def preprocess_targets(targets, output_dir_map):
             ret.append(target)
 
     return ret
+
+
+def summarize_cve_results(oval_source, result_list):
+    """Takes given OVAL source, assuming it is CVE feed OVAL results source,
+    and parses it. Each definition that has result 'true' is added to
+    result_list.
+
+    This is used to produce JSON output for atomic scan in
+    `oscapd-evaluate scan`.
+    """
+
+    namespaces = {
+        "ovalres": "http://oval.mitre.org/XMLSchema/oval-results-5",
+        "ovaldef": "http://oval.mitre.org/XMLSchema/oval-definitions-5"
+    }
+
+    oval_root = ElementTree.fromstring(oval_source.encode("utf-8"))
+
+    for result in oval_root.findall(
+            "ovalres:results/ovalres:system/"
+            "ovalres:definitions/*[@result='true']",
+            namespaces):
+        definition_id = result.get("definition_id")
+        assert(definition_id is not None)
+
+        definition_meta = oval_root.find(
+            "./ovaldef:oval_definitions/ovaldef:definitions/*[@id='%s']/"
+            "ovaldef:metadata" % (definition_id),
+            namespaces
+        )
+        assert(definition_meta is not None)
+
+        title = definition_meta.find("ovaldef:title", namespaces)
+        # there can only be one RHSA per definition
+        rhsa = definition_meta.find("ovaldef:reference[@source='RHSA']",
+                                    namespaces)
+        # there can be one or more CVEs per definition
+        cves = definition_meta.findall("ovaldef:reference[@source='CVE']",
+                                       namespaces)
+        description = definition_meta.find("ovaldef:description", namespaces)
+        severity = definition_meta.find("ovaldef:advisory/ovaldef:severity",
+                                        namespaces)
+
+        result_json = {}
+        result_json["Title"] = title.text if title is not None else "unknown"
+        result_json["Description"] = \
+            description.text if description is not None else "unknown"
+        result_json["Severity"] = \
+            severity.text if severity is not None else "unknown"
+
+        custom = {}
+        if rhsa is not None:
+            custom["RHSA ID"] = rhsa.get("ref_id", "unknown")
+            custom["RHSA URL"] = rhsa.get("ref_url", "unknown")
+
+        if len(cves) > 0:
+            custom["Associated CVEs"] = []
+
+            for cve in cves:
+                custom["Associated CVEs"].append(
+                    {"CVE ID": cve.get("ref_id", "unknown"),
+                     "CVE URL": cve.get("ref_url", "unknown")}
+                )
+
+        result_json["Custom"] = custom
+
+        result_list.append(result_json)
