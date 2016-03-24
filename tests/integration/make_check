@@ -36,7 +36,7 @@ RUNWRAPPER_NO_FORK=1 source ../../runwrapper.sh
 EXIT_CODE=0
 for file in test_*.sh
 do
-    echo -n -e "$file\t\t...\t"
+    printf "%-60s %s ... " "$file"
     output=`./$file 2>&1`
     if [ "$?" == "0" ]; then
         echo "[ pass ]"

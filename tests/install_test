@@ -19,11 +19,15 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-echo -n -e "Running install test\t\t...\t"
+echo "Running install tests..."
+echo
 
 PARENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 EXIT_CODE=0
+
+test="setup.py --dry-run"
+printf "%-60s %s ... " "$test"
 
 pushd $PARENT_DIR/.. > /dev/null
 output=`$PYTHON setup.py --dry-run install 2>&1`
