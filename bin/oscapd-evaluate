@@ -58,6 +58,38 @@ def cli_xml(args, config):
     sys.exit(exit_code)
 
 
+def cli_spec(args, config):
+    spec = evaluation_spec.EvaluationSpec()
+    spec.mode = oscap_helpers.EvaluationMode.from_string(args.mode)
+    spec.target = args.target
+    if spec.mode not in [oscap_helpers.EvaluationMode.CVE_SCAN,
+                         oscap_helpers.EvaluationMode.STANDARD_SCAN]:
+        spec.input_.set_contents(args.input_.read())
+    if args.tailoring is not None:
+        spec.tailoring.set_contents(args.tailoring.read())
+
+    spec.profile = args.profile
+    spec.online_remediation = args.remediate
+
+    if args.print_xml:
+        print(spec.to_xml_source())
+        sys.exit(0)
+
+    else:
+        results, stdout, stderr, exit_code = spec.evaluate(config)
+        if args.results is not None:
+            args.results.write(results)
+            args.results.close()
+        if args.stdout is not None:
+            args.stdout.write(stdout)
+            args.stdout.close()
+        if args.stderr is not None:
+            args.stderr.write(stderr)
+            args.stderr.close()
+
+        sys.exit(exit_code)
+
+
 def cli_scan(args, config):
     assert(os.path.isdir(args.output))
 
@@ -419,35 +451,7 @@ def main():
         cli_xml(args, config)
 
     elif args.action == "spec":
-        spec = evaluation_spec.EvaluationSpec()
-        spec.mode = oscap_helpers.EvaluationMode.from_string(args.mode)
-        spec.target = args.target
-        if spec.mode not in [oscap_helpers.EvaluationMode.CVE_SCAN,
-                             oscap_helpers.EvaluationMode.STANDARD_SCAN]:
-            spec.input_.set_contents(args.input_.read())
-        if args.tailoring is not None:
-            spec.tailoring.set_contents(args.tailoring.read())
-
-        spec.profile = args.profile
-        spec.online_remediation = args.remediate
-
-        if args.print_xml:
-            print(spec.to_xml_source())
-            sys.exit(0)
-
-        else:
-            results, stdout, stderr, exit_code = spec.evaluate(config)
-            if args.results is not None:
-                args.results.write(results)
-                args.results.close()
-            if args.stdout is not None:
-                args.stdout.write(stdout)
-                args.stdout.close()
-            if args.stderr is not None:
-                args.stderr.write(stderr)
-                args.stderr.close()
-
-            sys.exit(exit_code)
+        cli_spec(args, config)
 
     elif args.action == "target-cpes":
         cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
