@@ -1,0 +1,42 @@
+.TH OSCAPD-EVALUATE "8" "March 2016" "Red Hat" "System Administration Utilities"
+
+.SH NAME
+oscapd-evaluate \- OpenSCAP-daemon one-off non-daemonized evaluator
+
+.SH SYNOPSIS
+\fBoscapd-evaluate\fR [\fI-h\fR] [\fI-v\fR] [\fI--verbose\fR] {config,xml,spec,target-cpes,scan}
+
+.SS "positional arguments:"
+.IP
+{config,xml,spec,target\-cpes,scan}
+.TP
+config
+Generate default config file for oscapd and oscapd-evaluate.
+.TP
+xml
+Evaluates Evaluation Spec from given XML input.
+.TP
+spec
+Constructs Evaluation Spec from given parameters and evaluates it or outputs its XML.
+.TP
+target\-cpes
+Detects CPEs of given target.
+.TP
+scan
+Performs CVE and/or standard profile compliance evaluation of given targets. Outputs raw XML results and a summary JSON output.
+
+.SS "optional arguments:"
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+show this help message and exit
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+show program's version number and exit
+.TP
+\fB\-\-verbose\fR
+Show debugging logging messages.
+
+.SH AUTHORS
+.nf
+Martin Preisler <mpreisle@redhat.com>
+.fi

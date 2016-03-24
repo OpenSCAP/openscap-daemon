@@ -62,6 +62,6 @@ setup(
         (os.path.join("/", "usr", "share", "doc", "openscap-daemon"),
          ["README.md", "LICENSE"]),
         (os.path.join("/", "usr", "share", "man", "man8"),
-         ["man/oscapd.8", "man/oscapd-cli.8"]),
+         ["man/oscapd.8", "man/oscapd-cli.8", "man/oscapd-evaluate.8"]),
     ],
 )
