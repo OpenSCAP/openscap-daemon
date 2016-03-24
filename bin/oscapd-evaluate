@@ -317,26 +317,32 @@ def main():
     )
     config_parser.add_argument(
         "--path", metavar="PATH", type=argparse.FileType("w"),
-        default=sys.stdout
+        default=sys.stdout,
+        help="Destination where the config file will be writte, defaults to "
+             "stdout."
     )
 
     xml_parser = subparsers.add_parser(
         "xml",
         help="Evaluate an EvaluationSpec passed as an XML, either to stdin or "
-             "as a file"
+             "as a file."
     )
     xml_parser.add_argument(
         "--path", metavar="PATH", type=argparse.FileType("r"),
-        default=sys.stdin
+        default=sys.stdin,
+        help="The input Evaluation Spec XML file. Defaults to stdin."
     )
     xml_parser.add_argument(
-        "--results", metavar="PATH", type=argparse.FileType("w")
+        "--results", metavar="PATH", type=argparse.FileType("w"),
+        help="Write ARF (result datastream) or OVAL results XML to this file."
     )
     xml_parser.add_argument(
-        "--stdout", metavar="PATH", type=argparse.FileType("w")
+        "--stdout", metavar="PATH", type=argparse.FileType("w"),
+        help="Write stdout from oscap tool to this file."
     )
     xml_parser.add_argument(
-        "--stderr", metavar="PATH", type=argparse.FileType("w")
+        "--stderr", metavar="PATH", type=argparse.FileType("w"),
+        help="Write stderr from oscap tool to this file."
     )
 
     spec_parser = subparsers.add_parser(
