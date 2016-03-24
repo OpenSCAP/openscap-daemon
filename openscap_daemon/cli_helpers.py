@@ -19,6 +19,7 @@
 
 import sys
 import os.path
+import logging
 from openscap_daemon import evaluation_spec
 
 
@@ -131,8 +132,8 @@ def cli_create_evaluation_spec(dbus_iface):
             profile = None
 
         online_remediation = False
-        if py2_raw_input("Online remediation (1, y or Y for yes, else no): ") in \
-                ["1", "y", "Y"]:
+        if py2_raw_input("Online remediation (1, y or Y for yes, else no): ") \
+                in ["1", "y", "Y"]:
             online_remediation = True
 
         ret = evaluation_spec.EvaluationSpec()
@@ -147,3 +148,38 @@ def cli_create_evaluation_spec(dbus_iface):
 
     except KeyboardInterrupt:
         return None
+
+
+def preprocess_targets(targets, output_dir_map):
+    """The main goal of this function is to expand chroots-in-dir:// to a list
+    of chroot:// targets. chroots-in-dir is a convenience function that the rest
+    of the OpenSCAP-daemon API doesn't know about.
+
+    The output_dir_map maps the processed targets to directories from
+    chroots-in-dir expansion.
+    """
+
+    ret = []
+
+    for target in targets:
+        if target.startswith("chroots-in-dir://"):
+            logging.debug("Expanding target '%s'...", target)
+
+            dir_ = os.path.abspath(target[len("chroots-in-dir://"):])
+            for chroot in os.listdir(dir_):
+                full_path = os.path.abspath(os.path.join(dir_, chroot))
+
+                if not os.path.isdir(full_path):
+                    continue
+
+                expanded_target = "chroot://" + full_path
+                logging.debug(" ... '%s'", expanded_target)
+                ret.append(expanded_target)
+                output_dir_map[expanded_target] = chroot
+
+            logging.debug("Finished expanding target '%s'.", target)
+
+        else:
+            ret.append(target)
+
+    return ret
