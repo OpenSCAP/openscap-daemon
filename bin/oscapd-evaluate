@@ -363,7 +363,7 @@ def main():
     spec_parser.add_argument(
         "--target", type=str,
         default="localhost",
-        help="Which target should we be evaluation. Possible choices include: "
+        help="Which target should we be evaluating. Possible choices include: "
         "'localhost', 'ssh://user@machine', 'docker-image://IMAGE_ID', "
         "'docker-container://CONTAINER_ID', 'vm-domain://VM_NAME', "
         "'vm-image:///path/to/image.qcow2', 'chroot:///path/to/chroot'."
@@ -419,7 +419,11 @@ def main():
     )
     target_cpes_parser.add_argument(
         "--target", type=str,
-        default="localhost"
+        default="localhost",
+        help="Which target should we be checking. Possible choices include: "
+        "'localhost', 'ssh://user@machine', 'docker-image://IMAGE_ID', "
+        "'docker-container://CONTAINER_ID', 'vm-domain://VM_NAME', "
+        "'vm-image:///path/to/image.qcow2', 'chroot:///path/to/chroot'."
     )
     scan_parser = subparsers.add_parser(
         "scan",
