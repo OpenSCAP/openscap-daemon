@@ -64,3 +64,5 @@ target/
 .idea/
 
 /static-analysis-output
+/tests/data_dir_template/cve_feeds/
+/tests/data_dir_template/results/
