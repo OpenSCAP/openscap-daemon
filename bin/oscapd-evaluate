@@ -41,6 +41,23 @@ else:
     import queue as Queue
 
 
+def cli_xml(args, config):
+    spec = evaluation_spec.EvaluationSpec()
+    spec.load_from_xml_file(args.path)
+    results, stdout, stderr, exit_code = spec.evaluate(config)
+    if args.results is not None:
+        args.results.write(results)
+        args.results.close()
+    if args.stdout is not None:
+        args.stdout.write(stdout)
+        args.stdout.close()
+    if args.stderr is not None:
+        args.stderr.write(stderr)
+        args.stderr.close()
+
+    sys.exit(exit_code)
+
+
 def cli_scan(args, config):
     assert(os.path.isdir(args.output))
 
@@ -399,20 +416,7 @@ def main():
     config.prepare_dirs(cleanup_allowed=False)
 
     if args.action == "xml":
-        spec = evaluation_spec.EvaluationSpec()
-        spec.load_from_xml_file(args.path)
-        results, stdout, stderr, exit_code = spec.evaluate(config)
-        if args.results is not None:
-            args.results.write(results)
-            args.results.close()
-        if args.stdout is not None:
-            args.stdout.write(stdout)
-            args.stdout.close()
-        if args.stderr is not None:
-            args.stderr.write(stderr)
-            args.stderr.close()
-
-        sys.exit(exit_code)
+        cli_xml(args, config)
 
     elif args.action == "spec":
         spec = evaluation_spec.EvaluationSpec()
