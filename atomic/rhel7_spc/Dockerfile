@@ -25,6 +25,8 @@ RUN cd /etc/yum.repos.d/ && \
 
 ADD install.sh /root/
 
+ADD config.ini /etc/oscapd/
+
 LABEL INSTALL="docker run --rm --privileged -v /:/host/ IMAGE sh /root/install.sh"
 
 LABEL RUN="docker run -d --privileged --pid=host -v /etc/oscapd:/etc/oscapd -v /proc/:/hostproc/ -v /sys/fs/cgroup:/sys/fs/cgroup  -v /var/log:/var/log -v /run:/run -v /var/lib/docker/devicemapper/metadata/:/var/lib/docker/devicemapper/metadata/ -v /dev/:/dev/ -v /var/tmp/image-scanner:/var/tmp/image-scanner --net=host --cap-add=SYS_ADMIN --ipc=host --name NAME IMAGE"
