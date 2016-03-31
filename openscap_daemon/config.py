@@ -151,7 +151,7 @@ class Configuration(object):
                                      full_path)
                     return full_path
 
-            logging.error(
+            logging.info(
                 "Failed to autodetect SCAP content in paths %s with filenames "
                 "%s.", ", ".join(possible_paths), ", ".join(possible_filenames)
             )
@@ -172,7 +172,7 @@ class Configuration(object):
                                  path)
                     return path
 
-            logging.error(
+            logging.info(
                 "Failed to autodetect SCAP content in paths %s.",
                 ", ".join(possible_paths)
             )
