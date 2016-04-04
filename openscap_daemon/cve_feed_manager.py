@@ -224,3 +224,9 @@ class CVEFeedManager(object):
         raise RuntimeError(
             "Can't find a supported CPE ID in %s" % (", ".join(cpe_ids))
         )
+
+    def get_cve_feed_last_updated(self, cpe_ids):
+        local_file = self.get_cve_feed(cpe_ids)
+        assert(os.path.exists(local_file))
+        # local timestamp, local timezone datetime
+        return datetime.datetime.fromtimestamp(os.path.getmtime(local_file))
