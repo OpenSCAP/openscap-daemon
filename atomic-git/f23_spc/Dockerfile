@@ -4,11 +4,14 @@ FROM openscap-daemon-f23
 
 RUN dnf -y update && dnf -y groupinstall "Development Tools" && dnf -y install make wget git && dnf clean all
 
-RUN dnf -y install 'dnf-command(builddep)' && dnf builddep -y atomic openscap-daemon openscap && dnf -y install libtool && dnf clean all
+RUN dnf -y install 'dnf-command(builddep)' && dnf builddep -y atomic openscap-daemon openscap scap-security-guide && dnf -y install libtool && dnf clean all
 
 RUN git clone -b maint-1.2 https://github.com/OpenSCAP/openscap.git && \
     pushd /openscap && ./autogen.sh && \
     ./configure --enable-sce --prefix=/usr && make -j 4 install && popd
+
+RUN git clone https://github.com/OpenSCAP/scap-security-guide.git && \
+    pushd /scap-security-guide && make install && popd
 
 RUN git clone https://github.com/OpenSCAP/openscap-daemon && \
     pushd /openscap-daemon && python3 setup.py install && popd
