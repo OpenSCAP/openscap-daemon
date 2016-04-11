@@ -254,3 +254,4 @@ class Scan(object):
         with Scan._mount_lock:
             self.DM.unmount_path(self.dest)
             self.DM._clean_temp_container_by_path(self.dest)
+            os.rmdir(self.dest)
