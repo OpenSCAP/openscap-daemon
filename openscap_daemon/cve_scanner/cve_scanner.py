@@ -23,6 +23,7 @@ from openscap_daemon.cve_scanner.scanner_error import ImageScannerClientError
 import dbus
 
 import os
+import tempfile
 import timeit
 import threading
 import logging
@@ -247,7 +248,7 @@ class Worker(object):
         if self.ac.fetch_cve:
             cve_get.fetch_dist_data()
         threads = []
-
+        mnt_dir = tempfile.mkdtemp()
         for image in image_list:
             if image in self.cs.dead_cids:
                 raise ImageScannerClientError("Scan not completed. Cannot "
@@ -255,7 +256,7 @@ class Worker(object):
                                               "container {0}".format(image))
             cids = self._get_cids_for_image(self.cs, image)
             t = threading.Thread(target=self.search_containers, name=image,
-                                 args=(image, cids, self.output,))
+                                 args=(image, cids, self.output, mnt_dir,))
             threads.append(t)
 
         logging.info("Number of containers to scan: {0}".format(len(threads)))
@@ -272,6 +273,7 @@ class Worker(object):
         while self.cur_scan_threads > 0:
             time.sleep(1)
             pass
+        os.rmdir(mnt_dir)
         if self.failed_scan is not None:
             raise ImageScannerClientError(self.failed_scan)
         self.output.report_summary()
@@ -280,9 +282,9 @@ class Worker(object):
         print("\n\nExiting...")
         sys.exit(0)
 
-    def search_containers(self, image, cids, output):
+    def search_containers(self, image, cids, output, mnt_dir):
         try:
-            f = Scan(image, cids, output, self.ac)
+            f = Scan(image, cids, output, self.ac, mnt_dir)
         except Exception as e:
             # We don't know all types of docker/atomic exception, so we catch
             # all these exceptions to avoid daemon freezing

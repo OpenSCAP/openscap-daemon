@@ -37,7 +37,8 @@ class Scan(object):
     # We don't want to do mount and unmount simultaneously
     _mount_lock = Lock()
 
-    def __init__(self, image_uuid, con_uuids, output, appc):
+    def __init__(self, image_uuid, con_uuids, output, appc, mnt_dir="/tmp"):
+        self.mnt_dir = mnt_dir
         self.image_name = image_uuid
         self.ac = appc
         self.CVEs = collections.namedtuple('CVEs', 'title, severity,'
@@ -52,7 +53,7 @@ class Scan(object):
             os.mkdir(self.report_dir)
         start = time.time()
         from Atomic.mount import DockerMount
-        self.DM = DockerMount("/tmp", mnt_mkdir=True)
+        self.DM = DockerMount(self.mnt_dir, mnt_mkdir=True)
         with Scan._mount_lock:
             self.dm_results = self.DM.mount(image_uuid)
         logging.debug("Created scanning chroot in {0}"
@@ -253,3 +254,4 @@ class Scan(object):
         with Scan._mount_lock:
             self.DM.unmount_path(self.dest)
             self.DM._clean_temp_container_by_path(self.dest)
+            os.rmdir(self.dest)
