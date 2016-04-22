@@ -451,7 +451,7 @@ def main():
         "'localhost', 'ssh://user@machine', 'docker-image://IMAGE_ID', "
         "'docker-container://CONTAINER_ID', 'vm-domain://VM_NAME', "
         "'vm-image:///path/to/image.qcow2', 'chroot:///path/to/chroot', "
-        "'chroots-in-dir:///path/to/chroots'."
+        "'chroots-in-dir:///path/to/chroots'. "
         "Delimited by spaces."
     )
     scan_parser.add_argument(
