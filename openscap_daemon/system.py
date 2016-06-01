@@ -425,7 +425,7 @@ class System(object):
             task = self.tasks[task_id]
 
         with task.update_lock:
-            task.schedule_not_before = schedule_not_before
+            task.schedule.not_before = schedule_not_before
             task.save()
 
         logging.info(
