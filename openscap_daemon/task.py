@@ -169,6 +169,11 @@ class Task(object):
         self.title = None
         self.evaluation_spec = evaluation_spec.EvaluationSpec()
 
+        # How many results should we keep before pruning old results
+        # -1 means use the default from config
+        # -2 means never prune any results
+        self.max_results_to_keep = -1
+
         self.schedule = Schedule()
         # If True, this task will be evaluated once without affecting the
         # schedule. This feature is important for test runs. This variable does
@@ -183,6 +188,9 @@ class Task(object):
         ret += "- ID: \t%i\n" % (self.id_)
         ret += "- title: \t%s\n" % (self.title)
         ret += str(self.evaluation_spec) + "\n"
+        ret += "- max results to keep: \t%s\n" % \
+            ("default" if self.max_results_to_keep == -1
+             else str(self.max_results_to_keep))
         ret += "- schedule:\n"
         ret += "  - not before: \t%s\n" % (self.schedule.not_before)
         ret += "  - repeat after: \t%s\n" % (self.schedule.repeat_after)
@@ -205,6 +213,7 @@ class Task(object):
         return \
             self.evaluation_spec.is_equivalent_to(other.evaluation_spec) and \
             self.title == other.title and \
+            self.max_results_to_keep == other.max_results_to_keep and \
             self.schedule.is_equivalent_to(other.schedule) and \
             self.run_outside_schedule_once == other.run_outside_schedule_once
 
@@ -228,6 +237,9 @@ class Task(object):
         self.evaluation_spec.load_from_xml_element(
             et_helpers.get_element(root, "evaluation_spec")
         )
+
+        self.max_results_to_keep = \
+            int(et_helpers.get_element_text(root, "max-results-to-keep", "-1"))
 
         self.schedule = Schedule()
         self.schedule.load_from_xml_element(
@@ -258,6 +270,11 @@ class Task(object):
 
         evaluation_spec_element = self.evaluation_spec.to_xml_element()
         root.append(evaluation_spec_element)
+
+        if self.max_results_to_keep != -1:
+            max_results_element = ElementTree.Element("max-results-to-keep")
+            max_results_element.text = str(self.max_results_to_keep)
+            root.append(max_results_element)
 
         schedule_element = self.schedule.to_xml_element()
         root.append(schedule_element)
@@ -356,12 +373,14 @@ class Task(object):
         )
 
         logging.debug(
-            "Removing ARF of result '%i' of task '%i', expected path '%s'.",
-            result_id, self.id_, result_path
+            "Removing ARF of result '%s' of task '%i', expected path '%s'.",
+            str(result_id), self.id_, result_path
         )
 
         shutil.rmtree(result_path, False)
-        logging.info("Removed result '%i' of task '%i'.", result_id, self.id_)
+        logging.info(
+            "Removed result '%s' of task '%i'.", str(result_id), self.id_
+        )
 
     def get_next_update_time(self, reference_datetime, log=False):
         if not self.enabled:
@@ -403,6 +422,24 @@ class Task(object):
             return True
 
         return False
+
+    def prune_old_results(self, config):
+        max_results_to_keep = self.max_results_to_keep
+        if max_results_to_keep == -1:
+            max_results_to_keep = config.max_results_to_keep
+
+        if max_results_to_keep < 0:
+            # pruning is disabled
+            return
+
+        result_ids = self.list_result_ids(config.results_dir)
+        result_ids_to_remove = result_ids[max_results_to_keep:]
+
+        if result_ids_to_remove:
+            logging.info("Pruning old results of task '%i'...", self.id_)
+
+            for result_id in reversed(result_ids_to_remove):
+                self.remove_result(result_id, config)
 
     def update(self, reference_datetime, config):
         """Figures out if the task should be run right now, alters the schedule
@@ -446,6 +483,9 @@ class Task(object):
 
                 else:
                     self.run_outside_schedule_once = False
+
+                # we have one extra result, let's prune old results
+                self.prune_old_results(config)
 
     def generate_guide(self, config):
         return self.evaluation_spec.generate_guide(config)

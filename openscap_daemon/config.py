@@ -44,6 +44,8 @@ class Configuration(object):
         self.cve_feeds_dir = \
             os.path.join("/", "var", "lib", "oscapd", "cve_feeds")
         self.jobs = 4
+        # -2 means never prune old results
+        self.max_results_to_keep = -2
 
         # Tools section
         self.oscap_path = ""
@@ -224,6 +226,11 @@ class Configuration(object):
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
+        try:
+            self.max_results_to_keep = config.getint("General", "max-results-to-keep")
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
         # Tools section
         try:
             self.oscap_path = absolutize(config.get("Tools", "oscap"))
@@ -295,6 +302,7 @@ class Configuration(object):
         config.set("General", "work-in-progress-dir", str(self.work_in_progress_dir))
         config.set("General", "cve-feeds-dir", str(self.cve_feeds_dir))
         config.set("General", "jobs", str(self.jobs))
+        config.set("General", "max-results-to-keep", str(self.max_results_to_keep))
 
         config.add_section("Tools")
         config.set("Tools", "oscap", str(self.oscap_path))
