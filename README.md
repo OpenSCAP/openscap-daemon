@@ -164,6 +164,8 @@ Every task has a *target* attribute that can take various forms:
 * localhost -- scan the local machine, the same machine the daemon runs on
 * ssh://auditor@192.168.0.22 -- scan remote machine of given IP with given username
   * make sure you can log onto the same machine non-interactively!
+* ssh+sudo://auditor@192.168.0.22 -- scan remote machine of given IP with given username with sudo privileges
+  * sudo mustn't require tty
 * vm://qemu+kvm://localhost/VM1 -- virtual machine -- work in progress, subject to change
 * docker://container_id -- local container -- work in progress, subject to change
 
