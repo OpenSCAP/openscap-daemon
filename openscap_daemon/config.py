@@ -368,7 +368,16 @@ class Configuration(object):
                     "earlier crash. Deleting...", dir_, full_path
                 )
 
-                shutil.rmtree(full_path)
+                try:
+                    shutil.rmtree(full_path)
+
+                except OSError as e:
+                    if e.errno == 13:  # permission denied
+                        logging.warning(
+                            "Tried to delete '%s' to clean-up but permission "
+                            "was denied. Skipping...", full_path)
+                    else:
+                        raise
 
     def get_cve_feed(self, cpe_ids):
         self.cve_feed_manager.dest = self.cve_feeds_dir
