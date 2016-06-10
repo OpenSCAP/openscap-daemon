@@ -157,9 +157,15 @@ def generate_guide(spec, config):
 
 
 def split_ssh_target(target):
-    assert(target.startswith("ssh://"))
+    if not target.startswith("ssh://") and not target.startswith("ssh+sudo://"):
+        raise RuntimeError(
+            "Can't split ssh target."
+        )
 
-    without_prefix = target[6:]
+    if target.startswith("ssh+sudo://"):
+        without_prefix = target[11:]
+    else:
+        without_prefix = target[6:]
 
     if ":" in without_prefix:
         host, port_str = without_prefix.split(":")
@@ -188,6 +194,15 @@ def get_evaluation_args(spec, config):
             )
         host, port = split_ssh_target(spec.target)
         ret.extend([config.oscap_ssh_path, host, str(port)])
+
+    elif spec.target.startswith("ssh+sudo://"):
+        if config.oscap_ssh_path == "":
+            raise RuntimeError(
+                "Target '%s' requires the oscap-ssh tool which hasn't been "
+                "found" % (spec.target)
+            )
+        host, port = split_ssh_target(spec.target)
+        ret.extend([config.oscap_ssh_path, '--sudo', host, str(port)])
 
     elif spec.target.startswith("docker-image://"):
         if config.oscap_ssh_path == "":
