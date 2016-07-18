@@ -634,7 +634,7 @@ def main():
             help="Create new task."
         )
         task_create_parser.add_argument(
-            "-i", "--interactive", action="store_true", dest="interactive"
+            "-i", "--interactive", action="store_true", dest="interactive", required=True
         )
     add_task_create_parser(subparsers)
 
