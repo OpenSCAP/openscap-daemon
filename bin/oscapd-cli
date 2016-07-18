@@ -754,7 +754,7 @@ def main():
         if (oscapd_version_major, oscapd_version_minor, oscapd_version_patch) \
                 != (version.VERSION_MAJOR, version.VERSION_MINOR, version.VERSION_PATCH):
             sys.stderr.write(
-                "Warning: Version mismatch between oscapd-cli and oscapd.")
+                "Warning: Version mismatch between oscapd-cli and oscapd.\n")
 
     except dbus.exceptions.DBusException as e:
         if e.get_dbus_name() == "org.freedesktop.DBus.Error.UnknownMethod":
