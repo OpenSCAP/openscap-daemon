@@ -762,6 +762,12 @@ def main():
                 "Warning: Can't perform version check, the openscap-daemon dbus"
                 " interface doesn't provide the GetVersion method.\n\n"
             )
+        elif e.get_dbus_name() == "org.freedesktop.DBus.Error.AccessDenied":
+            sys.stderr.write(
+                "Error: Access denied on the DBus interface. "
+                "Do you have required permissions?\n\n"
+            )
+            sys.exit(1)
         else:
             raise
 
