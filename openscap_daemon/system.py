@@ -395,6 +395,9 @@ class System(object):
     def set_task_profile_id(self, task_id, profile_id):
         task = None
 
+        if profile_id == "":
+            profile_id = None
+
         with self.tasks_lock:
             task = self.tasks[task_id]
 
