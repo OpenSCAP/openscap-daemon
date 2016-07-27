@@ -341,9 +341,15 @@ def cli_task_create(dbus_iface, args):
 
         profile_choice = cli_helpers.py2_raw_input(
             "Choose profile by number (empty for (default) profile): ")
-        profile = list(profile_choices.keys())[int(profile_choice) - 1]
+        if profile_choice:
+            profile = list(profile_choices.keys())[int(profile_choice) - 1]
+        else:
+            profile = ""
 
-        online_remediation_raw = cli_helpers.py2_raw_input("Online remediation (1, y or Y for yes, else no): ")
+        online_remediation_raw = \
+            cli_helpers.py2_raw_input(
+                "Online remediation (1, y or Y for yes, else no): "
+            )
         try:
             online_remediation = get_bool(online_remediation_raw, default=False)
         except ValueError:
