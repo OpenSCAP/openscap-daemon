@@ -90,7 +90,23 @@ def get_profile_choices_for_input(input_file, tailoring_file):
 
             dest[id_] = title
 
-    input_tree = ElementTree.parse(input_file)
+    try:
+        input_tree = ElementTree.parse(input_file)
+
+    except IOError:
+        # The file doesn't exist, therefore there are no profile options
+        logging.exception(
+            "IOError encountered while trying to determine profile choices "
+            "for '%s'.", input_file
+        )
+        return ret
+
+    except ElementTree.ParseError:
+        logging.exception(
+            "ParserError encountered while trying to determine profile choices "
+            "for '%s'.", input_file
+        )
+        return ret
 
     scrape_profiles(
         input_tree, "http://checklists.nist.gov/xccdf/1.1", ret
@@ -108,6 +124,8 @@ def get_profile_choices_for_input(input_file, tailoring_file):
         scrape_profiles(
             tailoring_tree, "http://checklists.nist.gov/xccdf/1.2", ret
         )
+
+    ret[""] = "(default)"
 
     logging.info(
         "Found %i profile choices in '%s' with tailoring file '%s'.",
