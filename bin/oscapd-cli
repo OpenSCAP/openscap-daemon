@@ -284,16 +284,19 @@ def cli_task_create(dbus_iface, args):
         if not target:
             target = "localhost"
 
-        print("Found the following SCAP Security Guide content: ")
+        input_ssg_choice = ""
         ssg_choices = dbus_iface.GetSSGChoices()
-        i = 0
-        for ssg_choice in ssg_choices:
-            print("\t%i:  %s" % (i + 1, ssg_choice))
-            i += 1
+        if ssg_choices:
+            print("Found the following SCAP Security Guide content: ")
+            i = 0
+            for ssg_choice in ssg_choices:
+                print("\t%i:  %s" % (i + 1, ssg_choice))
+                i += 1
 
-        input_file = None
-        input_ssg_choice = cli_helpers.py2_raw_input(
-            "Choose SSG content by number (empty for custom content): ")
+            input_file = None
+            input_ssg_choice = cli_helpers.py2_raw_input(
+                "Choose SSG content by number (empty for custom content): ")
+
         if not input_ssg_choice:
             input_file = cli_helpers.py2_raw_input("Input file (absolute path): ")
         else:
