@@ -308,21 +308,27 @@ def cli_task_create(dbus_iface, args):
             )
             sys.exit(1)
 
-        if not os.path.isfile(input_file):
+        if not os.path.isabs(input_file):
             sys.stderr.write(
-                "Provided input file '%s' is not a file or can't be accessed!\n"
-                % (input_file)
+                "'%s' is not an absolute path. Please provide the absolute "
+                "path that can be used to access the SCAP content on the "
+                "machine running openscap-daemon.\n" % (input_file)
             )
             sys.exit(1)
-
-        input_file = os.path.abspath(input_file)
 
         tailoring_file = cli_helpers.py2_raw_input(
             "Tailoring file (absolute path, empty for no tailoring): ")
         if tailoring_file in [None, ""]:
             tailoring_file = ""
+
         else:
-            tailoring_file = os.path.abspath(tailoring_file)
+            if not os.path.isabs(tailoring_file):
+                sys.stderr.write(
+                    "'%s' is not an absolute path. Please provide the absolute "
+                    "path that can be used to access the tailoring file on the "
+                    "machine running openscap-daemon.\n" % (tailoring_file)
+                )
+                sys.exit(1)
 
         print("Found the following possible profiles: ")
         profile_choices = dbus_iface.GetProfileChoicesForInput(
