@@ -104,13 +104,7 @@ class CVEFeedManager(object):
                 )
                 return True
 
-            opener = urllib.OpenerDirector()
-            opener.add_handler(urllib.HTTPHandler())
-            opener.add_handler(urllib.HTTPSHandler())
-            opener.add_handler(urllib.HTTPDefaultErrorHandler())
-            # Extra for handling redirects
-            opener.add_handler(urllib.HTTPErrorProcessor())
-            opener.add_handler(urllib.HTTPRedirectHandler())
+            opener = urllib.build_opener()
             # Add the header
             opener.addheaders = self.hdr2
             # Grab the header
