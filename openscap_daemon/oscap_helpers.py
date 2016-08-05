@@ -79,7 +79,7 @@ def get_profile_choices_for_input(input_file, tailoring_file):
     ret = {}
 
     def scrape_profiles(tree, namespace, dest):
-        for elem in tree.iter("{%s}Profile" % (namespace)):
+        for elem in tree.findall(".//{%s}Profile" % (namespace)):
             id_ = elem.get("id")
             if id_ is None:
                 continue
