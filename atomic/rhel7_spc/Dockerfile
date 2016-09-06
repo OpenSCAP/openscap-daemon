@@ -14,7 +14,7 @@ RUN cd /etc/yum.repos.d/ && \
     yum-config-manager --enable rhel-7-server-rpms \
                        --enable rhel-7-server-extras-rpms && \
     rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
-    curl -O https://copr.fedorainfracloud.org/coprs/isimluk/OpenSCAP/repo/epel-7/isimluk-OpenSCAP-epel-7.repo && \
+    curl -O https://copr.fedorainfracloud.org/coprs/openscapmaint/openscap-latest/repo/epel-7/openscapmaint-openscap-latest-epel-7.repo && \
     yum -y install \
                 atomic \
                 openscap-containers \
