@@ -770,7 +770,7 @@ def main():
 
     except:
         sys.stderr.write(
-            "Error: Failed to connect to the SCAP Client DBus interface. "
+            "Error: Failed to connect to the OpenSCAP-daemon DBus interface. "
             "Is the daemon running?\n\n"
         )
         raise
@@ -793,7 +793,7 @@ def main():
         elif e.get_dbus_name() == "org.freedesktop.DBus.Error.AccessDenied":
             sys.stderr.write(
                 "Error: Access denied on the DBus interface. "
-                "Do you have required permissions?\n\n"
+                "Do you have the necessary permissions?\n\n"
             )
             sys.exit(1)
         else:
