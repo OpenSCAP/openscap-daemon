@@ -60,8 +60,18 @@ def main():
     dbus.mainloop.glib.threads_init()
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-    bus = dbus_utils.get_dbus()
-    name = dbus.service.BusName(dbus_utils.BUS_NAME, bus)
+    try:
+        bus = dbus_utils.get_dbus()
+        name = dbus.service.BusName(dbus_utils.BUS_NAME, bus)
+
+    except dbus.exceptions.DBusException as e:
+        if e.get_dbus_name() == "org.freedesktop.DBus.Error.AccessDenied":
+            sys.stderr.write(
+                "Error: DBus denied access to own '%s'. "
+                "Do you have the necessary permissions?\n\n"
+                % (dbus_utils.BUS_NAME)
+            )
+        raise
 
     config_file = os.path.join("/", "etc", "oscapd", "config.ini")
     if "OSCAPD_CONFIG_FILE" in os.environ:
