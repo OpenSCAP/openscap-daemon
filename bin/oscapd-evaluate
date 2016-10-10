@@ -498,6 +498,11 @@ def main():
     config.autodetect_tool_paths()
     config.autodetect_content_paths()
     config.prepare_dirs(cleanup_allowed=False)
+    try:
+        config.sanity_check()
+    except:
+        logging.exception("Configuration file failed sanity checking!")
+        sys.exit(1)
 
     if args.action == "xml":
         cli_xml(args, config)

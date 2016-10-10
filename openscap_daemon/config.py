@@ -387,6 +387,63 @@ class Configuration(object):
                     else:
                         raise
 
+    def sanity_check(self):
+        def sanity_check_dir(path, config_file_entry, desc, allow_empty=False):
+            if allow_empty and path == "":
+                return
+
+            if not os.path.exists(path):
+                raise RuntimeError(
+                    "Path '%s' given for the %s folder (config file entry: %s) "
+                    "doesn't exist." % (path, desc, config_file_entry)
+                )
+            if not os.path.isdir(path):
+                raise RuntimeError(
+                    "Path '%s' given for the %s folder (config file entry: %s) "
+                    "is not a directory." % (path, desc, config_file_entry)
+                )
+
+        def sanity_check_file(path, config_file_entry, desc, allow_empty=False):
+            if allow_empty and path == "":
+                return
+
+            if not os.path.exists(path):
+                raise RuntimeError(
+                    "Path '%s' given for the %s file (config file entry: %s) "
+                    "doesn't exist." % (path, desc, config_file_entry)
+                )
+            if not os.path.isfile(path):
+                raise RuntimeError(
+                    "Path '%s' given for the %s file (config file entry: %s) "
+                    "is not a file." % (path, desc, config_file_entry)
+                )
+
+        sanity_check_dir(self.tasks_dir,
+                         "Tasks configuration storage", "tasks-dir")
+        sanity_check_dir(self.results_dir, "Results storage", "results-dir")
+        sanity_check_dir(self.work_in_progress_dir,
+                         "Temporary storage / work in progress",
+                         "work-in-progress-dir")
+        sanity_check_dir(self.cve_feeds_dir,
+                         "CVE feeds storage", "cve-feeds-dir")
+
+        # self.jobs
+        # self.max_results_to_keep
+
+        # self.oscap_path = ""
+        # self.oscap_ssh_path = ""
+        # self.oscap_vm_path = ""
+        # self.oscap_docker_path = ""
+        # self.oscap_chroot_path = ""
+        # self.container_support = True
+
+        sanity_check_file(self.cpe_oval_path, "CPE OVAL", "cpe-oval")
+        sanity_check_dir(self.ssg_path, "SCAP Security Guide", "ssg", True)
+
+        # self.fetch_cve = True
+        # self.fetch_cve_url = ""
+        # self.fetch_cve_timeout = 10*60
+
     def get_cve_feed(self, cpe_ids):
         self.cve_feed_manager.dest = self.cve_feeds_dir
 

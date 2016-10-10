@@ -48,6 +48,7 @@ class System(object):
         self.config.autodetect_tool_paths()
         self.config.autodetect_content_paths()
         self.config.prepare_dirs()
+        self.config.sanity_check()
 
         self.async_eval_spec_results = dict()
         self.async_eval_spec_results_lock = threading.Lock()
