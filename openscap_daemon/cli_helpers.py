@@ -42,14 +42,12 @@ def print_table(table, first_row_header=True):
 
     column_max_sizes = {}
     for row in table:
-        i = 0
-        for column_cell in row:
+        for i, column_cell in enumerate(row):
             if i not in column_max_sizes:
                 column_max_sizes[i] = 0
 
             column_max_sizes[i] = \
                 max(column_max_sizes[i], len(str(column_cell)))
-            i += 1
 
     total_width = len(" | ".join(
         [" " * max_size for max_size in column_max_sizes.values()]
@@ -93,10 +91,8 @@ def cli_create_evaluation_spec(dbus_iface):
 
         print("Found the following SCAP Security Guide content: ")
         ssg_choices = dbus_iface.GetSSGChoices()
-        i = 0
-        for ssg_choice in ssg_choices:
+        for i, ssg_choice in enumerate(ssg_choices):
             print("\t%i:  %s" % (i + 1, ssg_choice))
-            i += 1
 
         input_file = None
         input_ssg_choice = py2_raw_input(
@@ -119,10 +115,8 @@ def cli_create_evaluation_spec(dbus_iface):
         profile_choices = dbus_iface.GetProfileChoicesForInput(
             input_file, tailoring_file
         )
-        i = 0
-        for key, value in profile_choices.items():
+        for i, (key, value) in enumerate(profile_choices.items()):
             print("\t%i:  %s (id='%s')" % (i + 1, value, key))
-            i += 1
 
         profile_choice = py2_raw_input(
             "Choose profile by number (empty for (default) profile): ")
