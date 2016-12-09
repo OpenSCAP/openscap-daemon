@@ -425,9 +425,9 @@ def get_status_from_exit_code(exit_code):
     if exit_code == 0:
         status = "Compliant"
     elif exit_code == 1:
-        status = "Non-Compliant"
-    elif exit_code == 2:
         status = "Evaluation Error"
+    elif exit_code == 2:
+        status = "Non-Compliant"
 
     return status
 
