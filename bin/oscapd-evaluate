@@ -331,7 +331,7 @@ def main():
     config_parser.add_argument(
         "--path", metavar="PATH", type=argparse.FileType("w"),
         default=sys.stdout,
-        help="Destination where the config file will be writte, defaults to "
+        help="Destination where the config file will be written, defaults to "
              "stdout."
     )
 
