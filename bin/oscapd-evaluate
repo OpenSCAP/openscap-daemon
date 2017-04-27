@@ -68,7 +68,7 @@ def cli_spec(args, config):
     if args.tailoring is not None:
         spec.tailoring.set_contents(args.tailoring.read())
 
-    spec.profile = args.profile
+    spec.profile_id = args.profile
     spec.online_remediation = args.remediate
 
     if args.print_xml:
