@@ -246,7 +246,7 @@ def summarize_cve_results(oval_source, result_list):
         result_list.append(result_json)
 
 
-def summarize_standard_compliance_results(arf_source, result_list):
+def summarize_standard_compliance_results(arf_source, result_list, profile):
     """Takes given ARF XML source and parses it. Each Rule that doesn't have
     result 'pass', 'fixed', 'informational', 'notselected' or 'notapplicable'
     is added to result_list.
@@ -263,8 +263,8 @@ def summarize_standard_compliance_results(arf_source, result_list):
 
     test_result = arf_root.find(
         ".//cdf:TestResult[@id='%s']" %
-        ("xccdf_org.open-scap_testresult_xccdf_org.ssgproject.content_profile_"
-         "standard"), namespaces
+        # this ID prefix is hardcoded in oscap
+        ("xccdf_org.open-scap_testresult_" + profile), namespaces
     )
 
     benchmark = arf_root.find(".//cdf:Benchmark", namespaces)

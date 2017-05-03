@@ -165,6 +165,7 @@ def cli_scan(args, config):
                     if not args.no_standard_compliance:
                         es = evaluation_spec.EvaluationSpec()
                         es.mode = oscap_helpers.EvaluationMode.STANDARD_SCAN
+                        es.profile_id = args.profile
                         es.target = target
                         es.cpe_hints = cpes
                         try:
@@ -173,16 +174,17 @@ def cli_scan(args, config):
 
                             if exit_code == 1:
                                 logging.warning(
-                                    "Standard compliance scan of target '%s' "
+                                    "Configuration compliance scan of target '%s' "
+                                    "using profile '%s' "
                                     "failed with exit_code %i.\n\nstdout:%s\n\n"
                                     "stderr:%s" %
-                                    (target, exit_code, stdout, stderr)
+                                    (target, es.profile_id, exit_code, stdout, stderr)
                                 )
 
                         except:
                             logging.exception(
                                 "Failed to scan target '%s' for "
-                                "standard profile compliance." % (target)
+                                "configuration compliance." % (target)
                             )
 
                     finished_time = datetime.datetime.now()
@@ -289,11 +291,12 @@ def cli_scan(args, config):
                 f.write(cve_results)
 
         if standard_scan_results is not None:
-            scan_type.append("Standard Compliance")
+            scan_type.append("Configuration Compliance")
 
             cli_helpers.summarize_standard_compliance_results(
-                standard_scan_results, json_data["Vulnerabilities"]
+                standard_scan_results, json_data["Vulnerabilities"], args.profile
             )
+            json_data["Profile"] = args.profile
 
             with io.open(os.path.join(
                     full_output_dir, "std.xml"), "w",
@@ -440,8 +443,8 @@ def main():
     )
     scan_parser = subparsers.add_parser(
         "scan",
-        help="Scan a list of targets for CVEs and compliance with the standard "
-        "profile, return aggregated results. This is an integration shim "
+        help="Scan a list of targets for CVEs and configuration compliance, "
+        "return aggregated results. This is an integration shim "
         "intended for Atomic but can also be useful elsewhere."
     )
     scan_parser.add_argument(
@@ -465,16 +468,23 @@ def main():
         help="Skip the CVE scan."
     )
     scan_parser.add_argument(
-        "--no-standard-compliance", default=False, action="store_true",
+        # keeping the alias for compatibility with Atomic
+        "--no-configuration-compliance", "--no-standard-compliance", default=False, action="store_true",
         dest="no_standard_compliance",
-        help="Skip the standard profile compliance scan."
+        help="Skip the configuration compliance scan."
+    )
+    scan_parser.add_argument(
+        "--profile", type=str,
+        default="xccdf_org.ssgproject.content_profile_standard",
+        help="Specify the profile ID for configuration compliance scan. "
+        "If not specified, the 'standard' profile will be used."
     )
     scan_parser.add_argument(
         "--output", type=str, required=True,
         help="A directory where results will be stored in. There will be a "
         "directory for each target created there with up to 3 files. 'json' "
         "with json summary of the scan, cve.xml with CVE scan raw results and "
-        "std.xml with standard profile scan raw results."
+        "std.xml with configuration compliance scan raw results."
     )
     args = parser.parse_args()
 
