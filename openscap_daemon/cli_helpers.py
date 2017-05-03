@@ -296,8 +296,10 @@ def summarize_standard_compliance_results(arf_source, result_list):
 
         result_json = {}
         result_json["Title"] = title.text if title is not None else "unknown"
-        result_json["Description"] = \
-            description.text if description is not None else "unknown"
+        if description is None:
+            result_json["Description"] = "unknown"
+        else:
+            result_json["Description"] = ElementTree.tostring(description, method="text").decode("utf-8")
         result_json["Severity"] = severity
         result_json["Custom"] = {"XCCDF result": result}
 
