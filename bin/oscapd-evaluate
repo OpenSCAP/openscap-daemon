@@ -450,6 +450,18 @@ def main():
         "'docker-container://CONTAINER_ID', 'vm-domain://VM_NAME', "
         "'vm-image:///path/to/image.qcow2', 'chroot:///path/to/chroot'."
     )
+    target_profiles_parser = subparsers.add_parser(
+        "target-profiles",
+        help="Detect security profiles applicable on given target"
+    )
+    target_profiles_parser.add_argument(
+        "--target", type=str,
+        default="localhost",
+        help="Which target should we be checking. Possible choices include: "
+             "'localhost', 'ssh://user@machine', 'docker-image://IMAGE_ID', "
+             "'docker-container://CONTAINER_ID', 'vm-domain://VM_NAME', "
+             "'vm-image:///path/to/image.qcow2', 'chroot:///path/to/chroot'."
+    )
     scan_parser = subparsers.add_parser(
         "scan",
         help="Scan a list of targets for CVEs and configuration compliance, "
@@ -534,6 +546,20 @@ def main():
             args.target, config
         )
         print("\n".join(cpes))
+        sys.exit(0)
+
+    elif args.action == "target-profiles":
+        cpes = evaluation_spec.EvaluationSpec.detect_CPEs_of_target(
+            args.target, config
+        )
+        ssg_sds = config.get_ssg_sds(cpes)
+        print("Security profiles applicable on target " + args.target + ":")
+        profiles = oscap_helpers.get_profile_choices_for_input(ssg_sds, None)
+        for profile_id, title in profiles.items():
+            if profile_id:
+                print(title + " (id='" + profile_id + "')")
+            else:
+                print("Default Profile")
         sys.exit(0)
 
     elif args.action == "scan":
