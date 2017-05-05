@@ -168,6 +168,15 @@ def cli_scan(args, config):
                         es.profile_id = args.profile
                         es.target = target
                         es.cpe_hints = cpes
+                        ssg_sds = config.get_ssg_sds(cpes)
+                        profiles = oscap_helpers.get_profile_choices_for_input(ssg_sds, None)
+                        if es.profile_id not in profiles:
+                            raise RuntimeError(
+                                "Profile with id='%s' doesn't exist on target '%s'. "
+                                "Get the available profiles using\n"
+                                "$ oscapd-evaluate target-profiles --target %s"
+                                % (es.profile_id, target, target)
+                            )
                         try:
                             standard_scan_results, stdout, stderr, exit_code = \
                                 es.evaluate(config)
