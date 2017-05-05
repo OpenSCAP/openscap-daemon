@@ -4,11 +4,11 @@
 oscapd-evaluate \- OpenSCAP-daemon one-off non-daemonized evaluator
 
 .SH SYNOPSIS
-\fBoscapd-evaluate\fR [\fI-h\fR] [\fI-v\fR] [\fI--verbose\fR] {config,xml,spec,target-cpes,scan}
+\fBoscapd-evaluate\fR [\fI-h\fR] [\fI-v\fR] [\fI--verbose\fR] {config,xml,spec,target-cpes,target-profiles,scan}
 
 .SS "positional arguments:"
 .IP
-{config,xml,spec,target\-cpes,scan}
+{config,xml,spec,target\-cpes,target\-profiles,scan}
 .TP
 config
 Generate default config file for oscapd and oscapd-evaluate.
@@ -21,6 +21,9 @@ Constructs Evaluation Spec from given parameters and evaluates it or outputs its
 .TP
 target\-cpes
 Detects CPEs of given target.
+.TP
+target\-profiles
+Detects configuration compliance profiles applicable on given target.
 .TP
 scan
 Performs CVE scan and/or configuration compliance evaluation of given targets. Outputs raw XML results and a summary JSON output.
