@@ -449,8 +449,11 @@ class EvaluationSpec(object):
             if self.tailoring.file_path is not None:
                 ret.extend(["--tailoring-file", self.tailoring.file_path])
 
-            ret.extend(["--profile",
+            if self.profile_id is None:
+                ret.extend(["--profile",
                         "xccdf_org.ssgproject.content_profile_standard"])
+            else:
+                ret.extend(["--profile", self.profile_id])
 
             if self.online_remediation:
                 ret.append("--remediate")
