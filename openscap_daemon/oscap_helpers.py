@@ -79,7 +79,11 @@ def get_profile_choices_for_input(input_file, tailoring_file):
     ret = {}
 
     def scrape_profiles(tree, namespace, dest):
-        for elem in tree.findall(".//{%s}Profile" % (namespace)):
+        # TODO support multiple benchmarks in one DataStream
+        benchmark = tree.find(".//{%s}Benchmark" % (namespace))
+        if benchmark is None:
+            return
+        for elem in benchmark.findall(".//{%s}Profile" % (namespace)):
             id_ = elem.get("id")
             if id_ is None:
                 continue
