@@ -452,7 +452,7 @@ def main():
     )
     target_profiles_parser = subparsers.add_parser(
         "target-profiles",
-        help="Detect security profiles applicable on given target"
+        help="Detect SCAP Security Guide profiles applicable on given target"
     )
     target_profiles_parser.add_argument(
         "--target", type=str,
