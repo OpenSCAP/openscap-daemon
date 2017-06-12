@@ -103,6 +103,9 @@ def cli_scan(args, config):
     scanned_targets = []
     failed_targets = []
 
+    if not args.profile.startswith("xccdf_org.ssgproject.content_profile_"):
+        args.profile = "xccdf_org.ssgproject.content_profile_" + args.profile
+
     def scan_worker():
         while True:
             try:
