@@ -640,6 +640,17 @@ class System(object):
             self.config
         )
 
+    def generate_fix_for_task_result(self, task_id, result_id, fix_type):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.generate_fix_for_result(
+            result_id,
+            self.config,
+            fix_type
+        )
+
     class AsyncEvaluateCVEScannerWorkerAction(async.AsyncAction):
         def __init__(self, system, worker):
             super(System.AsyncEvaluateCVEScannerWorkerAction, self).__init__()

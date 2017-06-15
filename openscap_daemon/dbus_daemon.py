@@ -382,6 +382,13 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """
         return self.system.generate_report_for_task_result(task_id, result_id)
 
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="xxs", out_signature="s")
+    def GenerateFixForTaskResult(self, task_id, result_id, fix_type):
+        """Generates and returns remediation script for result of given task.
+        """
+        return self.system.generate_fix_for_task_result(task_id, result_id, fix_type)
+
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='s',
                          out_signature='s')
     def inspect_container(self, cid):

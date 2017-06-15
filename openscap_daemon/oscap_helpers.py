@@ -436,10 +436,35 @@ def get_status_from_exit_code(exit_code):
     return status
 
 
+def generate_fix_for_result(config, results_path, fix_type):
+    if not os.path.exists(results_path):
+        raise RuntimeError("Can't generate fix for scan result. Expected "
+                           "results XML at '%s' but the file doesn't exist."
+                           % results_path)
+    tree = ElementTree.parse(results_path)
+    root = tree.getroot()
+    ns = {"xccdf": "http://checklists.nist.gov/xccdf/1.2"}
+    test_result = root.find(".//xccdf:TestResult", ns)
+    if test_result is None:
+        raise RuntimeError("Results XML '%s' doesn't contain any results."
+                           % results_path)
+    result_id = test_result.attrib["id"]
+    fix_templates = {"bash": "urn:xccdf:fix:script:sh",
+                     "ansible": "urn:xccdf:fix:script:ansible",
+                     "puppet": "urn:xccdf:fix:script:puppet"}
+    template = fix_templates[fix_type]
+    args = [config.oscap_path, "xccdf", "generate", "fix",
+            "--result-id", result_id,
+            "--template", template,
+            results_path]
+    fix_text = subprocess_check_output(args).decode("utf-8")
+    return fix_text
+
 __all__ = [
     "get_profile_choices_for_input",
     "generate_guide",
     "evaluate",
     "generate_report_for_result",
-    "get_status_from_exit_code"
+    "get_status_from_exit_code",
+    "generate_fix_for_result"
 ]

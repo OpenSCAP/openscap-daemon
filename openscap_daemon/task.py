@@ -580,3 +580,12 @@ class Task(object):
             result_id,
             config
         )
+
+    def generate_fix_for_result(self, result_id, config, fix_type):
+        results_dir = self._get_task_results_dir(config.results_dir)
+        results_path = os.path.join(results_dir, str(result_id), "results.xml")
+        return oscap_helpers.generate_fix_for_result(
+            config,
+            results_path,
+            fix_type
+        )
