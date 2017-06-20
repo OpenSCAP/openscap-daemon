@@ -577,6 +577,13 @@ class System(object):
 
         return task.evaluation_spec.generate_guide(self.config)
 
+    def generate_fix_for_task(self, task_id, fix_type):
+        task = None
+        with self.tasks_lock:
+            task = self.tasks[task_id]
+
+        return task.evaluation_spec.generate_fix(self.config, fix_type)
+
     def run_task_outside_schedule(self, task_id):
         task = None
         with self.tasks_lock:

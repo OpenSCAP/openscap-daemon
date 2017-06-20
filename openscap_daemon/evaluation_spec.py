@@ -366,6 +366,12 @@ class EvaluationSpec(object):
 
         raise RuntimeError("Unknown EvaluationMode %i" % (self.mode))
 
+    def generate_fix(self, config, fix_type):
+        if self.mode in [oscap_helpers.EvaluationMode.SOURCE_DATASTREAM,
+                         oscap_helpers.EvaluationMode.STANDARD_SCAN]:
+            return oscap_helpers.generate_fix(self, config, fix_type)
+        raise RuntimeError("Unsupported EvaluationMode %i" % (self.mode))
+
     def get_oscap_guide_arguments(self, config):
         ret = []
 
