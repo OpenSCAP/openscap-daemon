@@ -307,10 +307,16 @@ def cli_scan(args, config):
             )
             json_data["Profile"] = args.profile
 
-            with io.open(os.path.join(
-                    full_output_dir, "std.xml"), "w",
-                    encoding="utf-8") as f:
+            arf_filepath = os.path.join(full_output_dir, "arf.xml")
+            with io.open(arf_filepath, "w", encoding="utf-8") as f:
                 f.write(standard_scan_results)
+            if args.fix_type is not None:
+                fix_script = oscap_helpers.generate_fix_for_result(config, arf_filepath, args.fix_type)
+                suffixes = {"bash": "sh", "ansible": "yml", "puppet": "pp"}
+                fix_name = "fix." + suffixes[args.fix_type]
+                fix_filepath = os.path.join(full_output_dir, fix_name)
+                with io.open(fix_filepath, "w", encoding="utf-8") as f:
+                    f.write(fix_script)
 
         json_data["Scan Type"] = ", ".join(scan_type)
 
@@ -503,9 +509,15 @@ def main():
     scan_parser.add_argument(
         "--output", type=str, required=True,
         help="A directory where results will be stored in. There will be a "
-        "directory for each target created there with up to 3 files. 'json' "
-        "with json summary of the scan, cve.xml with CVE scan raw results and "
-        "std.xml with configuration compliance scan raw results."
+        "directory for each target created there with up to 4 files. 'json' "
+        "with json summary of the scan, cve.xml with CVE scan raw results, "
+        "arf.xml with configuration compliance scan raw results, and "
+        "fix.[sh|yml|pp] with a compliance remediation script."
+    )
+    scan_parser.add_argument(
+        "--fix_type", type=str,
+        choices=["bash", "ansible", "puppet"], default=None,
+        help="Specify the language of remediation script to be used."
     )
     args = parser.parse_args()
 

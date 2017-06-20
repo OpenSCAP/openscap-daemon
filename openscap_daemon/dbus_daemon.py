@@ -151,6 +151,13 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         return self.system.generate_guide_for_task(task_id)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="xs", out_signature="s")
+    def GenerateFixForTask(self, task_id, fix_type):
+        """Generates and returns fix script for a task with given ID.
+        """
+        return self.system.generate_fix_for_task(task_id, fix_type)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="x", out_signature="")
     def RunTaskOutsideSchedule(self, task_id):
         """Given task will be run as soon as possible without affecting its
@@ -381,6 +388,13 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """Generates and returns HTML report for report of given task.
         """
         return self.system.generate_report_for_task_result(task_id, result_id)
+
+    @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
+                         in_signature="xxs", out_signature="s")
+    def GenerateFixForTaskResult(self, task_id, result_id, fix_type):
+        """Generates and returns remediation script for result of given task.
+        """
+        return self.system.generate_fix_for_task_result(task_id, result_id, fix_type)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE, in_signature='s',
                          out_signature='s')

@@ -436,10 +436,74 @@ def get_status_from_exit_code(exit_code):
     return status
 
 
+def _fix_type_to_template(fix_type):
+    fix_templates = {"bash": "urn:xccdf:fix:script:sh",
+                     "ansible": "urn:xccdf:fix:script:ansible",
+                     "puppet": "urn:xccdf:fix:script:puppet"}
+    template = fix_templates[fix_type]
+    return template
+
+
+def generate_fix_for_result(config, results_path, fix_type):
+    if not os.path.exists(results_path):
+        raise RuntimeError("Can't generate fix for scan result. Expected "
+                           "results XML at '%s' but the file doesn't exist."
+                           % results_path)
+    tree = ElementTree.parse(results_path)
+    root = tree.getroot()
+    ns = {"xccdf": "http://checklists.nist.gov/xccdf/1.2"}
+    test_result = root.find(".//xccdf:TestResult", ns)
+    if test_result is None:
+        raise RuntimeError("Results XML '%s' doesn't contain any results."
+                           % results_path)
+    result_id = test_result.attrib["id"]
+    template = _fix_type_to_template(fix_type)
+    args = [config.oscap_path, "xccdf", "generate", "fix",
+            "--result-id", result_id,
+            "--template", template,
+            results_path]
+    fix_text = subprocess_check_output(args).decode("utf-8")
+    return fix_text
+
+
+def generate_fix(spec, config, fix_type):
+    if spec.mode not in [EvaluationMode.SOURCE_DATASTREAM,
+                         EvaluationMode.STANDARD_SCAN]:
+        raise RuntimeError(
+            "Can't generate fix for an EvaluationSpec with mode '%s'. "
+            "Generating a fix script only works for 'sds' and 'standard_scan' "
+            "modes."
+            % (EvaluationMode.to_string(spec.mode))
+        )
+
+    if not spec.is_valid():
+        raise RuntimeError(
+            "Can't generate fix for an invalid EvaluationSpec."
+        )
+
+    template = _fix_type_to_template(fix_type)
+    args = [config.oscap_path, "xccdf", "generate", "fix",
+            "--profile", spec.profile_id,
+            "--template", template,
+            spec.input_.file_path]
+
+    logging.debug(
+        "Generating fix script for evaluation spec with command '%s'.",
+        " ".join(args)
+    )
+
+    ret = subprocess_check_output(args).decode("utf-8")
+
+    logging.info("Generated fix script for evaluation spec.")
+
+    return ret
+
 __all__ = [
     "get_profile_choices_for_input",
     "generate_guide",
+    "generate_fix",
     "evaluate",
     "generate_report_for_result",
-    "get_status_from_exit_code"
+    "get_status_from_exit_code",
+    "generate_fix_for_result"
 ]

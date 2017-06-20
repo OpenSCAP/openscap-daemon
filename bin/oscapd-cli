@@ -248,6 +248,18 @@ def cli_task(dbus_iface, task_accessor, args):
             guide = dbus_iface.GenerateGuideForTask(args.task_id)
             print(guide)
 
+        elif args.task_action == "bash_fix":
+            fix = dbus_iface.GenerateFixForTask(args.task_id, "bash")
+            print(fix)
+
+        elif args.task_action == "ansible_fix":
+            fix = dbus_iface.GenerateFixForTask(args.task_id, "ansible")
+            print(fix)
+
+        elif args.task_action == "puppet_fix":
+            fix = dbus_iface.GenerateFixForTask(args.task_id, "puppet")
+            print(fix)
+
         elif args.task_action == "run":
             dbus_iface.RunTaskOutsideSchedule(args.task_id)
 
@@ -452,6 +464,21 @@ def cli_result(dbus_iface, args):
                 args.task_id, args.result_id
             )
             print(report)
+        elif args.result_action == "bash_fix":
+            fix = dbus_iface.GenerateFixForTaskResult(
+                args.task_id, args.result_id, "bash"
+            )
+            print(fix)
+        elif args.result_action == "ansible_fix":
+            fix = dbus_iface.GenerateFixForTaskResult(
+                args.task_id, args.result_id, "ansible"
+            )
+            print(fix)
+        elif args.result_action == "puppet_fix":
+            fix = dbus_iface.GenerateFixForTaskResult(
+                args.task_id, args.result_id, "puppet"
+            )
+            print(fix)
         elif args.result_action == "remove":
             if args.force or confirm("Do you really want to remove result %d from task %d"
                                      % (args.result_id, args.task_id)):
@@ -624,7 +651,8 @@ def main():
             "provided a summary of all tasks is displayed."
         )
 
-        task_actions = ["info", "guide", "run", "enable", "disable", "remove"]
+        task_actions = ["info", "guide", "run", "enable", "disable", "remove",
+                        "bash_fix", "ansible_fix", "puppet_fix"]
         task_actions += task_accessor.get_allowed()
 
         task_parser.add_argument(
@@ -697,7 +725,8 @@ def main():
         )
 
         result_actions = [
-            "arf", "stdout", "stderr", "exit_code", "report", "remove"
+            "arf", "stdout", "stderr", "exit_code", "report", "remove",
+            "bash_fix", "ansible_fix", "puppet_fix"
         ]
         result_parser.add_argument(
             "result_action", metavar="ACTION", type=str,
