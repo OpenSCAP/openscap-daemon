@@ -135,6 +135,9 @@ def main():
     if build_from_source:
         packages.append(builddep_package)
 
+    if args.base != "fedora":
+        f.write("RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm\n\n")
+
     # add a command to install packages
     f.write("RUN " + install_command + " -y install " + " ".join(set(packages)) + "\n\n")
 
