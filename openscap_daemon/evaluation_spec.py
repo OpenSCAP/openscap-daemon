@@ -349,6 +349,16 @@ class EvaluationSpec(object):
 
         return cpe_ids
 
+    def select_profile_by_suffix(self, ssg_sds, profile_suffix):
+        profiles = oscap_helpers.get_profile_choices_for_input(ssg_sds, None)
+        for p in profiles:
+            if p.endswith(profile_suffix):
+                self.profile_id = p
+                break
+        else:
+            raise RuntimeError("No profile with suffix %s" % profile_suffix)
+        return self.profile_id
+
     def generate_guide(self, config):
         if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
             return oscap_helpers.generate_guide(self, config)
