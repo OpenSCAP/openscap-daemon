@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 echo ""
 if [ ! -e /host/etc/atomic.d/openscap ]; then

@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 ETC='/etc/oscapd'
 ETC_FILE='config.ini'
