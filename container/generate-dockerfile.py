@@ -83,6 +83,9 @@ def main():
 
     f = open("Dockerfile", "w")
 
+    # Fallback commands are set to RHEL if the configuration
+    # for user-defined base is not specified in respective dictionaries.
+    # That's because RHEL uses YUM that is older and most wider used.
     install_command = install_commands.get(args.base, install_commands["rhel"])
     builddep_package = builddep_packages.get(args.base, builddep_packages["rhel"])
     builddep_command = builddep_commands.get(args.base, builddep_commands["rhel"])
