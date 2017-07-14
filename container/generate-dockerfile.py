@@ -91,16 +91,16 @@ def main():
     builddep_command = builddep_commands.get(args.base, builddep_commands["rhel"])
 
     # write out the Dockerfile
-    f.write("FROM " + args.base + "\n\n")
+    f.write("FROM {0}\n\n".format(args.base))
 
     # add labels
     for name, value in labels:
-        f.write("LABEL " + name + '="' + value + '"\n')
+        f.write("LABEL {0}=\"{1}\"\n".format(name, value))
     f.write("\n")
 
     # add environment variables
     for var, val in env_variables:
-        f.write("ENV " + var + " " + val + "\n")
+        f.write("ENV {0} {1}\n".format(var, val))
     f.write("\n")
 
     build_from_source = []
@@ -131,8 +131,8 @@ def main():
         packages.append("openscap-daemon")
 
     # inject files
-    for file, path in files:
-        f.write("ADD " + file + " " + path + "\n")
+    for filename, path in files:
+        f.write("ADD {0} {1}\n".format(filename, path))
     f.write("\n")
 
     if build_from_source:
@@ -142,22 +142,22 @@ def main():
         f.write("RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm\n\n")
 
     # add a command to install packages
-    f.write("RUN " + install_command + " -y install " + " ".join(set(packages)) + "\n\n")
+    f.write("RUN {0} -y install {1}\n\n".format(install_command, " ".join(set(packages))))
 
     if build_from_source:
         # install build dependencies
-        f.write("RUN " + builddep_command + " " + " ".join(build_from_source) + "\n\n")
+        f.write("RUN {0} {1}\n\n".format(builddep_command, " ".join(build_from_source)))
 
     # clean package manager cache
-    f.write("RUN " + install_command + " clean all\n\n")
+    f.write("RUN {0} clean all\n\n".format(install_command))
 
     if build_from_source:
         # add commands for building from custom sources
         for cmd in build_commands:
-            f.write("RUN " + delim.join(cmd) + "\n\n")
+            f.write("RUN {0}\n\n".format(delim.join(cmd)))
 
     # add RUN instruction that will download CVE feeds
-    f.write("RUN " + delim.join(download_cve_feeds_command) + "\n\n")
+    f.write("RUN {0}\n\n".format(delim.join(download_cve_feeds_command)))
 
     # add CMD instruction to the Dockerfile, including a comment
     f.write("# It doesn't matter what is in the line below, atomic will change the CMD\n")
