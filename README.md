@@ -232,6 +232,8 @@ and SCAP Security Guide as they are available in Fedora packages.
 If you need the latest code from upstream git of these components
 instead, you can pass `--openscap-from-git`, `--ssg-from-git` and/or
 `--daemon-from-git` to the `./generate-dockerfile.py`.
+To install your local working tree of OpenSCAP Daemon instead, add
+`--daemon-from-local` to the `./generate-dockerfile.py`.
 
 
 ## API Consumers

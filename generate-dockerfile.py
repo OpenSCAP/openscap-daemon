@@ -61,12 +61,14 @@ ssg_build_command = [
     "make -j 4 install",
     "popd"
 ]
-daemon_build_command = [
-    "git clone https://github.com/OpenSCAP/openscap-daemon.git",
+daemon_local_build_command = [
     "pushd /openscap-daemon",
     "python setup.py install",
     "popd"
 ]
+daemon_build_command = [
+    "git clone https://github.com/OpenSCAP/openscap-daemon.git"
+] + daemon_local_build_command
 delim = " && \\\n    "
 
 
@@ -77,8 +79,11 @@ def main():
                         help="Use OpenSCAP from upstream instead of package")
     parser.add_argument("--ssg-from-git", action="store_true", default=False,
                         help="Use SCAP Security Guide from upstream instead of package")
-    parser.add_argument("--daemon-from-git", action="store_true", default=False,
+    daemon_group = parser.add_mutually_exclusive_group()
+    daemon_group.add_argument("--daemon-from-git", action="store_true", default=False,
                         help="Use OpenSCAP Daemon from upstream instead of package")
+    daemon_group.add_argument("--daemon-from-local", action="store_true", default=False,
+                        help="Use OpenSCAP Daemon from local working tree instead of package")
     args = parser.parse_args()
 
     f = open("Dockerfile", "w")
@@ -127,6 +132,10 @@ def main():
         packages.append("git")
         build_from_source.append("openscap-daemon")
         build_commands.append(daemon_build_command)
+    elif args.daemon_from_local:
+        build_from_source.append("openscap-daemon")
+        build_commands.append(daemon_local_build_command)
+        files.append((".","/openscap-daemon"))
     else:
         packages.append("openscap-daemon")
 
