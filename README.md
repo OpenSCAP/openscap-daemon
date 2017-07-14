@@ -219,7 +219,6 @@ for vulnerabilities and configuration compliance.
 You can build and install the container image using these commands:
 
 ```bash
-cd container
 ./generate-dockerfile.py
 docker build -t openscap .
 atomic install openscap

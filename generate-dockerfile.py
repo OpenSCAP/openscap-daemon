@@ -20,10 +20,10 @@ packages = [
     "wget"
 ]
 files = [
-    ("install.sh", "/root"),
-    ("run.sh", "/root"),
-    ("openscap", "/root"),
-    ("config.ini", "/root")
+    ("container/install.sh", "/root"),
+    ("container/run.sh", "/root"),
+    ("container/openscap", "/root"),
+    ("container/config.ini", "/root")
 ]
 env_variables = [
     ("container", "docker")
