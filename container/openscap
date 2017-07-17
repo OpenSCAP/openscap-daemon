@@ -12,7 +12,7 @@ scans: [
         description: "!DEPRECATED! Performs scan with Standard Profile, as present in SCAP Security Guide shipped in Red Hat Enterprise Linux"
       },
       { name: configuration_compliance,
-        args: ['oscapd-evaluate', 'scan', '--targets', 'chroots-in-dir:///scanin', '--output', '/scanout', '--no-cve-scan', '-j1'],
+        args: ['oscapd-evaluate', 'scan', '--targets', 'chroots-in-dir:///scanin', '--output', '/scanout', '--no-cve-scan', '--fix_type', 'bash', '-j1'],
         description: "Performs a configuration compliance scan according to selected profile from SCAP Security Guide shipped in Red Hat Enterprise Linux."
       }
 ]
