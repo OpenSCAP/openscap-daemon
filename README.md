@@ -229,11 +229,11 @@ The image is not meant to be run outside of the atomic command.
 
 The image is based on Fedora and contains OpenSCAP, OpenSCAP Daemon
 and SCAP Security Guide as they are available in Fedora packages.
-If you need the latest code from upstream git of these components
-instead, you can pass `--openscap-from-git`, `--ssg-from-git` and/or
-`--daemon-from-git` to the `./generate-dockerfile.py`.
 To install your local working tree of OpenSCAP Daemon instead, add
 `--daemon-from-local` to the `./generate-dockerfile.py`.
+If you need the latest code from upstream git of OpenSCAP and/or
+SCAP Security Guide instead, pass `--openscap-from-git` and/or
+`--ssg-from-git` to the `./generate-dockerfile.py`.
 
 
 ## API Consumers

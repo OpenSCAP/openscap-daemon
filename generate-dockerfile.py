@@ -66,9 +66,6 @@ daemon_local_build_command = [
     "python setup.py install",
     "popd"
 ]
-daemon_build_command = [
-    "git clone https://github.com/OpenSCAP/openscap-daemon.git"
-] + daemon_local_build_command
 delim = " && \\\n    "
 
 
@@ -79,10 +76,7 @@ def main():
                         help="Use OpenSCAP from upstream instead of package")
     parser.add_argument("--ssg-from-git", action="store_true", default=False,
                         help="Use SCAP Security Guide from upstream instead of package")
-    daemon_group = parser.add_mutually_exclusive_group()
-    daemon_group.add_argument("--daemon-from-git", action="store_true", default=False,
-                        help="Use OpenSCAP Daemon from upstream instead of package")
-    daemon_group.add_argument("--daemon-from-local", action="store_true", default=False,
+    parser.add_argument("--daemon-from-local", action="store_true", default=False,
                         help="Use OpenSCAP Daemon from local working tree instead of package")
     args = parser.parse_args()
 
@@ -128,11 +122,7 @@ def main():
         packages.append("scap-security-guide")
 
     # OpenSCAP Daemon
-    if args.daemon_from_git:
-        packages.append("git")
-        build_from_source.append("openscap-daemon")
-        build_commands.append(daemon_build_command)
-    elif args.daemon_from_local:
+    if args.daemon_from_local:
         build_from_source.append("openscap-daemon")
         build_commands.append(daemon_local_build_command)
         files.append((".","/openscap-daemon"))
