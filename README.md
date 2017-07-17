@@ -210,9 +210,31 @@ sudo python2 setup.py install
 sudo python3 setup.py install
 ```
 
-## Installation on Linux (super privileged container)
-OpenSCAP-daemon can be used as a containerized application.
-See the [*atomic directory*](atomic) for more information.
+## Building a container with OpenSCAP Daemon
+
+Containerized version of OpenSCAP Daemon is used as a backend for the
+'atomic scan' command. Atomic scan can scan containers and images
+for vulnerabilities and configuration compliance.
+
+You can build and install the container image using these commands:
+
+```bash
+./generate-dockerfile.py
+docker build -t openscap .
+atomic install openscap
+```
+
+At this point you can run 'atomic scan' on the host.
+The image is not meant to be run outside of the atomic command.
+
+The image is based on Fedora and contains OpenSCAP, OpenSCAP Daemon
+and SCAP Security Guide as they are available in Fedora packages.
+To install your local working tree of OpenSCAP Daemon instead, add
+`--daemon-from-local` to the `./generate-dockerfile.py`.
+If you need the latest code from upstream git of OpenSCAP and/or
+SCAP Security Guide instead, pass `--openscap-from-git` and/or
+`--ssg-from-git` to the `./generate-dockerfile.py`.
+
 
 ## API Consumers
 > Please do not rely on the API just yet, we reserve the right to make breaking
