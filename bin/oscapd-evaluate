@@ -24,6 +24,7 @@ from openscap_daemon import evaluation_spec
 from openscap_daemon import oscap_helpers
 from openscap_daemon import cli_helpers
 from openscap_daemon import version
+from openscap_daemon.evaluation_spec import ProfileSuffixMatchError
 
 import os
 import os.path
@@ -171,11 +172,11 @@ def cli_scan(args, config):
                         es.input_.set_file_path(ssg_sds)
                         try:
                             args.profile = es.select_profile_by_suffix(args.profile)
-                        except RuntimeError:
+                        except ProfileSuffixMatchError as e:
                             logging.error(
                                 "Failed to find profile matching suffix '%s' "
-                                "in profiles applicable to target '%s'."
-                                % (args.profile, target)
+                                "in profiles applicable to target '%s': %s"
+                                % (args.profile, target, e.message)
                             )
                         try:
                             standard_scan_results, stdout, stderr, exit_code = \
