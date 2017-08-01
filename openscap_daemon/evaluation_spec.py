@@ -349,6 +349,30 @@ class EvaluationSpec(object):
 
         return cpe_ids
 
+    def select_profile_by_suffix(self, profile_suffix):
+        input_file = self.input_.file_path
+        if input_file is None:
+            raise RuntimeError("No SCAP content file was set in the EvaluationSpec")
+        profiles = oscap_helpers.get_profile_choices_for_input(input_file, None)
+        profile_id_match = False
+        for p in profiles:
+            if p.endswith(profile_suffix):
+                if profile_id_match:
+                    raise ProfileSuffixMatchError(
+                        "Found multiple profiles with suffix %s." %
+                        profile_suffix
+                    )
+                else:
+                    self.profile_id = p
+                    profile_id_match = True
+        if profile_id_match:
+            return self.profile_id
+        else:
+            raise ProfileSuffixMatchError(
+                "No profile with suffix %s" %
+                profile_suffix
+            )
+
     def generate_guide(self, config):
         if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
             return oscap_helpers.generate_guide(self, config)
@@ -571,3 +595,7 @@ class EvaluationSpec(object):
                 cpe_ids.append(ref_id)
 
         return cpe_ids
+
+
+class ProfileSuffixMatchError(Exception):
+    pass

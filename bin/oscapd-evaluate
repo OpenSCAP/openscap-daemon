@@ -24,6 +24,7 @@ from openscap_daemon import evaluation_spec
 from openscap_daemon import oscap_helpers
 from openscap_daemon import cli_helpers
 from openscap_daemon import version
+from openscap_daemon.evaluation_spec import ProfileSuffixMatchError
 
 import os
 import os.path
@@ -165,17 +166,17 @@ def cli_scan(args, config):
                     if not args.no_standard_compliance:
                         es = evaluation_spec.EvaluationSpec()
                         es.mode = oscap_helpers.EvaluationMode.STANDARD_SCAN
-                        es.profile_id = args.profile
                         es.target = target
                         es.cpe_hints = cpes
                         ssg_sds = config.get_ssg_sds(cpes)
-                        profiles = oscap_helpers.get_profile_choices_for_input(ssg_sds, None)
-                        if es.profile_id not in profiles:
-                            raise RuntimeError(
-                                "Profile with id='%s' doesn't exist on target '%s'. "
-                                "Get the available profiles using\n"
-                                "$ oscapd-evaluate target-profiles --target %s"
-                                % (es.profile_id, target, target)
+                        es.input_.set_file_path(ssg_sds)
+                        try:
+                            args.profile = es.select_profile_by_suffix(args.profile)
+                        except ProfileSuffixMatchError as e:
+                            logging.error(
+                                "Failed to find profile matching suffix '%s' "
+                                "in profiles applicable to target '%s': %s"
+                                % (args.profile, target, e.message)
                             )
                         try:
                             standard_scan_results, stdout, stderr, exit_code = \
