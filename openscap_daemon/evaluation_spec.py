@@ -351,13 +351,18 @@ class EvaluationSpec(object):
 
     def select_profile_by_suffix(self, ssg_sds, profile_suffix):
         profiles = oscap_helpers.get_profile_choices_for_input(ssg_sds, None)
+        profile_id_match = False
         for p in profiles:
             if p.endswith(profile_suffix):
-                self.profile_id = p
-                break
+                if profile_id_match:
+                    raise RuntimeError("Found multiple profiles with suffix %s." % profile_suffix)
+                else:
+                    self.profile_id = p
+                    profile_id_match = True
+        if profile_id_match:
+            return self.profile_id
         else:
             raise RuntimeError("No profile with suffix %s" % profile_suffix)
-        return self.profile_id
 
     def generate_guide(self, config):
         if self.mode == oscap_helpers.EvaluationMode.SOURCE_DATASTREAM:
