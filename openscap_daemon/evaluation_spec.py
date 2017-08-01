@@ -349,8 +349,11 @@ class EvaluationSpec(object):
 
         return cpe_ids
 
-    def select_profile_by_suffix(self, ssg_sds, profile_suffix):
-        profiles = oscap_helpers.get_profile_choices_for_input(ssg_sds, None)
+    def select_profile_by_suffix(self, profile_suffix):
+        input_file = self.input_.file_path
+        if input_file is None:
+            raise RuntimeError("No SCAP content file was set in the EvaluationSpec")
+        profiles = oscap_helpers.get_profile_choices_for_input(input_file, None)
         profile_id_match = False
         for p in profiles:
             if p.endswith(profile_suffix):

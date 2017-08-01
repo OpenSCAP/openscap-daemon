@@ -168,8 +168,9 @@ def cli_scan(args, config):
                         es.target = target
                         es.cpe_hints = cpes
                         ssg_sds = config.get_ssg_sds(cpes)
+                        es.input_.set_file_path(ssg_sds)
                         try:
-                            args.profile = es.select_profile_by_suffix(ssg_sds, args.profile)
+                            args.profile = es.select_profile_by_suffix(args.profile)
                         except RuntimeError:
                             logging.error(
                                 "Failed to find profile matching suffix '%s' "
