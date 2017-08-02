@@ -178,6 +178,7 @@ def cli_scan(args, config):
                                 "in profiles applicable to target '%s': %s"
                                 % (args.profile, target, e.message)
                             )
+                            raise RuntimeError
                         try:
                             standard_scan_results, stdout, stderr, exit_code = \
                                 es.evaluate(config)
