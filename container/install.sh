@@ -10,6 +10,15 @@ echo "Installing the configuration file 'openscap' into /etc/atomic.d/.  You can
 echo ""
 cp /root/openscap /host/etc/atomic.d/
 
+SCRIPTS="/etc/atomic.d/scripts/"
+echo ""
+echo "Copying the remediation script 'remediate.py' into $SCRIPTS. You can now remediate images with atomic scan using --remediate command-line option."
+echo ""
+if [[ ! -d $HOST/$SCRIPTS ]]; then
+	mkdir -p $HOST/$SCRIPTS
+fi
+cp /root/remediate.py $HOST/$SCRIPTS
+
 
 # Check if /etc/oscapd exists on the host
 if [[ ! -d ${HOST}/${ETC} ]]; then

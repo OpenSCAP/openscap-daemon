@@ -23,7 +23,8 @@ files = [
     ("container/install.sh", "/root"),
     ("container/run.sh", "/root"),
     ("container/openscap", "/root"),
-    ("container/config.ini", "/root")
+    ("container/config.ini", "/root"),
+    ("container/remediate.py", "/root")
 ]
 env_variables = [
     ("container", "docker")
