@@ -68,6 +68,8 @@ def harden(target_id, results_dir):
         try:
             build_output_generator = client.build(
                 path=temp_dir,
+                # don't use image cache to ensure that original image
+                # is always hardened
                 nocache=True
             )
         except docker.errors.APIError as e:
