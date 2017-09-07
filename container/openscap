@@ -3,6 +3,7 @@ scanner_name: openscap
 image_name: openscap
 default_scan: cve
 custom_args: ['-v', '/etc/oscapd:/etc/oscapd:ro']
+remediation_script: '/etc/atomic.d/scripts/remediate.py'
 scans: [ 
       { name: cve,
         args: ['oscapd-evaluate', 'scan',  '--no-standard-compliance', '--targets', 'chroots-in-dir:///scanin',  '--output', '/scanout', '-j1'],
