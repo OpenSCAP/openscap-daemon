@@ -29,7 +29,7 @@ import json
 import requests
 
 
-def harden(target_id, results_dir):
+def remediate(target_id, results_dir):
     # Class docker.Client was renamed to docker.APIClient in
     # python-docker-py 2.0.0.
     try:
@@ -45,7 +45,7 @@ def harden(target_id, results_dir):
             .format(e)
         )
 
-    print("Hardening target {}.".format(target_id))
+    print("Remediating target {}.".format(target_id))
 
     temp_dir = tempfile.mkdtemp()
     fix_script = os.path.join(results_dir, target_id, "fix.sh")
@@ -69,7 +69,7 @@ def harden(target_id, results_dir):
             build_output_generator = client.build(
                 path=temp_dir,
                 # don't use image cache to ensure that original image
-                # is always hardened
+                # is always remediated
                 nocache=True
             )
         except docker.errors.APIError as e:
@@ -87,12 +87,12 @@ def harden(target_id, results_dir):
         image_id = build_output[-1].split()[-1]
 
         print(
-            "Successfully built hardened image {} from {}.\n"
+            "Successfully built remediated image {} from {}.\n"
             .format(image_id, target_id)
         )
     except RuntimeError as e:
         raise RuntimeError(
-            "Cannot build hardened image from {}: {}\n"
+            "Cannot build remediated image from {}: {}\n"
             .format(target_id, e)
         )
     finally:
@@ -100,14 +100,14 @@ def harden(target_id, results_dir):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Hardens container images.')
+    parser = argparse.ArgumentParser(description='Remediates container images.')
     parser.add_argument("--id", required=True,
                         help="Image ID")
     parser.add_argument("--results_dir", required=True,
                         help="Directory containing the fix.")
     args = parser.parse_args()
     try:
-        harden(args.id, args.results_dir)
+        remediate(args.id, args.results_dir)
     except RuntimeError as e:
         sys.stderr.write(str(e))
         sys.exit(1)
