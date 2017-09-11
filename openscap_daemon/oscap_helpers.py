@@ -444,11 +444,8 @@ def _fix_type_to_template(fix_type):
     return template
 
 
-def generate_fix_for_result(config, results_path, fix_type):
-    if not os.path.exists(results_path):
-        raise RuntimeError("Can't generate fix for scan result. Expected "
-                           "results XML at '%s' but the file doesn't exist."
-                           % results_path)
+def _get_result_id(results_path):
+
     tree = ElementTree.parse(results_path)
     root = tree.getroot()
     ns = {"xccdf": "http://checklists.nist.gov/xccdf/1.2"}
@@ -457,6 +454,15 @@ def generate_fix_for_result(config, results_path, fix_type):
         raise RuntimeError("Results XML '%s' doesn't contain any results."
                            % results_path)
     result_id = test_result.attrib["id"]
+    return result_id
+
+
+def generate_fix_for_result(config, results_path, fix_type):
+    if not os.path.exists(results_path):
+        raise RuntimeError("Can't generate fix for scan result. Expected "
+                           "results XML at '%s' but the file doesn't exist."
+                           % results_path)
+    result_id = _get_result_id(results_path)
     template = _fix_type_to_template(fix_type)
     args = [config.oscap_path, "xccdf", "generate", "fix",
             "--result-id", result_id,
