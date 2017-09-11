@@ -472,6 +472,18 @@ def generate_fix_for_result(config, results_path, fix_type):
     return fix_text
 
 
+def generate_html_report_for_result(config, results_path):
+    if not os.path.exists(results_path):
+        raise RuntimeError("Can't generate report for scan result. Expected "
+                           "results XML at '%s' but the file doesn't exist."
+                           % results_path)
+    result_id = _get_result_id(results_path)
+    args = [config.oscap_path, "xccdf", "generate", "report",
+            "--result-id", result_id, results_path]
+    report_text = subprocess_check_output(args).decode("utf-8")
+    return report_text
+
+
 def generate_fix(spec, config, fix_type):
     if spec.mode not in [EvaluationMode.SOURCE_DATASTREAM,
                          EvaluationMode.STANDARD_SCAN]:

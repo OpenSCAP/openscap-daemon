@@ -319,6 +319,11 @@ def cli_scan(args, config):
                 fix_filepath = os.path.join(full_output_dir, fix_name)
                 with io.open(fix_filepath, "w", encoding="utf-8") as f:
                     f.write(fix_script)
+            if args.report:
+                report = oscap_helpers.generate_html_report_for_result(config, arf_filepath)
+                report_filepath = os.path.join(full_output_dir, "report.html")
+                with io.open(report_filepath, "w", encoding="utf-8") as f:
+                    f.write(report)
 
         json_data["Scan Type"] = ", ".join(scan_type)
 
@@ -520,6 +525,10 @@ def main():
         "--fix_type", type=str,
         choices=["bash", "ansible", "puppet"], default=None,
         help="Specify the language of remediation script to be used."
+    )
+    scan_parser.add_argument(
+        "--report", action="store_true", default=False,
+        help="Create HTML report in the output directory."
     )
     args = parser.parse_args()
 
