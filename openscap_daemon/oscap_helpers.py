@@ -453,8 +453,7 @@ def _get_result_id(results_path):
     if test_result is None:
         raise RuntimeError("Results XML '%s' doesn't contain any results."
                            % results_path)
-    result_id = test_result.attrib["id"]
-    return result_id
+    return test_result.attrib["id"]
 
 
 def generate_fix_for_result(config, results_path, fix_type):
