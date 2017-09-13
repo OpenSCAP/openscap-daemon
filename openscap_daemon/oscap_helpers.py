@@ -444,11 +444,7 @@ def _fix_type_to_template(fix_type):
     return template
 
 
-def generate_fix_for_result(config, results_path, fix_type):
-    if not os.path.exists(results_path):
-        raise RuntimeError("Can't generate fix for scan result. Expected "
-                           "results XML at '%s' but the file doesn't exist."
-                           % results_path)
+def _get_result_id(results_path):
     tree = ElementTree.parse(results_path)
     root = tree.getroot()
     ns = {"xccdf": "http://checklists.nist.gov/xccdf/1.2"}
@@ -456,7 +452,15 @@ def generate_fix_for_result(config, results_path, fix_type):
     if test_result is None:
         raise RuntimeError("Results XML '%s' doesn't contain any results."
                            % results_path)
-    result_id = test_result.attrib["id"]
+    return test_result.attrib["id"]
+
+
+def generate_fix_for_result(config, results_path, fix_type):
+    if not os.path.exists(results_path):
+        raise RuntimeError("Can't generate fix for scan result. Expected "
+                           "results XML at '%s' but the file doesn't exist."
+                           % results_path)
+    result_id = _get_result_id(results_path)
     template = _fix_type_to_template(fix_type)
     args = [config.oscap_path, "xccdf", "generate", "fix",
             "--result-id", result_id,
@@ -464,6 +468,18 @@ def generate_fix_for_result(config, results_path, fix_type):
             results_path]
     fix_text = subprocess_check_output(args).decode("utf-8")
     return fix_text
+
+
+def generate_html_report_for_result(config, results_path):
+    if not os.path.exists(results_path):
+        raise RuntimeError("Can't generate report for scan result. Expected "
+                           "results XML at '%s' but the file doesn't exist."
+                           % results_path)
+    result_id = _get_result_id(results_path)
+    args = [config.oscap_path, "xccdf", "generate", "report",
+            "--result-id", result_id, results_path]
+    report_text = subprocess_check_output(args).decode("utf-8")
+    return report_text
 
 
 def generate_fix(spec, config, fix_type):
