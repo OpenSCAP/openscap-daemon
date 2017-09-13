@@ -445,7 +445,6 @@ def _fix_type_to_template(fix_type):
 
 
 def _get_result_id(results_path):
-
     tree = ElementTree.parse(results_path)
     root = tree.getroot()
     ns = {"xccdf": "http://checklists.nist.gov/xccdf/1.2"}
