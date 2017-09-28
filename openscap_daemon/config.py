@@ -124,8 +124,8 @@ class Configuration(object):
                             "\"Atomic.mount.DockerMount\" has been successfully"
                             " imported but it doesn't support the mnt_mkdir "
                             "argument. Please upgrade your Atomic installation "
-                            "to 1.4 or higher. Container scanning functionality"
-                            " will be disabled."
+                            "to 1.4 or higher. Direct container scanning via "
+                            "oscap-docker will be disabled."
                         )
 
                     logging.info("Successfully imported 'docker' and "
@@ -134,11 +134,12 @@ class Configuration(object):
 
                 except ImportError:
                     logging.warning("Can't import the 'Atomic.mount' package. "
-                                    "Container scanning functionality will be "
-                                    "disabled.")
+                                    "Direct container scanning via "
+                                    "oscap-docker will be disabled.")
             except ImportError:
-                logging.warning("Can't import the 'docker' package. Container "
-                                "scanning functionality will be disabled.")
+                logging.warning("Can't import the 'docker' package. Direct "
+                                "container scanning via oscap-docker will be "
+                                "disabled.")
 
     def autodetect_content_paths(self):
         def autodetect_content_path(possible_paths, possible_filenames):
