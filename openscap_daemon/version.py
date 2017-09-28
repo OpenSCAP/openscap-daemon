@@ -1,4 +1,4 @@
-# Copyright 2015 Red Hat Inc., Durham, North Carolina.
+# Copyright 2017 Red Hat Inc., Durham, North Carolina.
 # All Rights Reserved.
 #
 # openscap-daemon is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 1
-VERSION_PATCH = 8
+VERSION_PATCH = 9
 
 VERSION_STRING = "%i.%i.%i" % (VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH)
 
