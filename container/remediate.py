@@ -70,7 +70,9 @@ def remediate(target_id, results_dir):
                 path=temp_dir,
                 # don't use image cache to ensure that original image
                 # is always remediated
-                nocache=True
+                nocache=True,
+                # remove intermediate containers spawned during build
+                rm=True
             )
         except docker.errors.APIError as e:
             raise RuntimeError("Docker exception: {}\n".format(e))
