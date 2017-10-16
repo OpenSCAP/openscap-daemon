@@ -18,6 +18,7 @@
 #
 # Authors:
 #   Jan Cerny <jcerny@redhat.com>
+#   Matus Marhefka <mmarhefk@redhat.com>
 
 import argparse
 import docker
@@ -27,6 +28,8 @@ import sys
 import tempfile
 import json
 import requests
+import re
+import xml.etree.ElementTree as ET
 
 
 def remediate(target_id, results_dir):
@@ -58,12 +61,51 @@ def remediate(target_id, results_dir):
             .format(e)
         )
 
+    # Finds a platform CPE in the ARF results file and based on it selects
+    # proper package manager and its cleanup command. Applying cleanup command
+    # after fix script will produce smaller images after remediation. In case
+    # a platform CPE is not found in the ARF results file cleanup command is
+    # left empty.
+    pkg_clean_cmd = ""
+    arf_results = os.path.join(results_dir, target_id, "arf.xml")
+    try:
+        tree = ET.parse(arf_results)
+        root = tree.getroot()
+    except FileNotFoundError as e:
+        raise RuntimeError(e)
+    try:
+        ns = "http://checklists.nist.gov/xccdf/1.2"
+        platform_cpe = root.find(
+            ".//{%s}TestResult/{%s}platform" %(ns, ns)
+        ).attrib['idref']
+    except AttributeError:
+        pass
+    if "fedora" in platform_cpe:
+        pkg_clean_cmd = "; dnf clean all"
+    elif "redhat" in platform_cpe:
+        try:
+            distro_version = int(re.search("\d+", platform_cpe).group(0))
+        except AttributeError:
+            # In case it is not possible to extract rhel version, use yum.
+            distro_version = 7
+        if distro_version >= 8:
+            pkg_clean_cmd = "; dnf clean all"
+        else:
+            pkg_clean_cmd = "; yum clean all"
+    elif "debian" in platform_cpe:
+        pkg_clean_cmd = "; apt-get clean; rm -rf /var/lib/apt/lists/*"
+    elif "ubuntu" in platform_cpe:
+        pkg_clean_cmd = "; apt-get clean; rm -rf /var/lib/apt/lists/*"
+
     try:
         dockerfile_path = os.path.join(temp_dir, "Dockerfile")
         with open(dockerfile_path, "w") as f:
             f.write("FROM " + target_id + "\n")
             f.write("COPY fix.sh /\n")
-            f.write("RUN chmod +x /fix.sh; /fix.sh\n")
+            f.write(
+                "RUN chmod +x /fix.sh; /fix.sh {}\n"
+                .format(pkg_clean_cmd)
+            )
 
         try:
             build_output_generator = client.build(
