@@ -171,7 +171,9 @@ def cli_scan(args, config):
                         ssg_sds = config.get_ssg_sds(cpes)
                         es.input_.set_file_path(ssg_sds)
                         try:
-                            args.profile = es.select_profile_by_suffix(args.profile)
+                            args.profile = es.select_profile_by_suffix(
+                                None, args.profile
+                        )
                         except ProfileSuffixMatchError as e:
                             logging.error(
                                 "Failed to find profile matching suffix '%s' "
@@ -577,7 +579,9 @@ def main():
         )
         ssg_sds = config.get_ssg_sds(cpes)
         print("Security profiles applicable on target " + args.target + ":")
-        profiles = oscap_helpers.get_profile_choices_for_input(ssg_sds, None)
+        profiles = oscap_helpers.get_profile_choices_for_input(
+            ssg_sds, None, None
+        )
         for profile_id, title in profiles.items():
             if profile_id:
                 print(title + " (id='" + profile_id + "')")

@@ -87,7 +87,7 @@ class System(object):
 
     def get_profile_choices_for_input(self, input_file, tailoring_file):
         return oscap_helpers.get_profile_choices_for_input(
-            input_file, tailoring_file
+            input_file, tailoring_file, None
         )
 
     class AsyncEvaluateSpecAction(async.AsyncAction):
