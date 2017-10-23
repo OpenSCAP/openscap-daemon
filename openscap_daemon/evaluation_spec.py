@@ -481,6 +481,9 @@ class EvaluationSpec(object):
             if self.tailoring.file_path is not None:
                 ret.extend(["--tailoring-file", self.tailoring.file_path])
 
+            if self.input_.xccdf_id is not None:
+                ret.extend(["--xccdf-id", self.input_.xccdf_id])
+
             if self.profile_id is None:
                 ret.extend(["--profile",
                         "xccdf_org.ssgproject.content_profile_standard"])

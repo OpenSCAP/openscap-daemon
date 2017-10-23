@@ -474,7 +474,7 @@ def _get_result_id(results_path):
     return test_result.attrib["id"]
 
 
-def generate_fix_for_result(config, results_path, fix_type):
+def generate_fix_for_result(config, results_path, fix_type, xccdf_id):
     if not os.path.exists(results_path):
         raise RuntimeError("Can't generate fix for scan result. Expected "
                            "results XML at '%s' but the file doesn't exist."
@@ -483,8 +483,10 @@ def generate_fix_for_result(config, results_path, fix_type):
     template = _fix_type_to_template(fix_type)
     args = [config.oscap_path, "xccdf", "generate", "fix",
             "--result-id", result_id,
-            "--template", template,
-            results_path]
+            "--template", template]
+    if xccdf_id is not None:
+        args.extend(["--xccdf-id", xccdf_id])
+    args.append(results_path)
     fix_text = subprocess_check_output(args).decode("utf-8")
     return fix_text
 
