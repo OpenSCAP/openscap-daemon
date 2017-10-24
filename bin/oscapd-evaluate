@@ -170,8 +170,11 @@ def cli_scan(args, config):
                         es.cpe_hints = cpes
                         ssg_sds = config.get_ssg_sds(cpes)
                         es.input_.set_file_path(ssg_sds)
+                        es.input_.xccdf_id = args.xccdf_id
                         try:
-                            args.profile = es.select_profile_by_suffix(args.profile)
+                            args.profile = es.select_profile_by_suffix(
+                                args.xccdf_id, args.profile
+                            )
                         except ProfileSuffixMatchError as e:
                             logging.error(
                                 "Failed to find profile matching suffix '%s' "
@@ -313,7 +316,9 @@ def cli_scan(args, config):
             with io.open(arf_filepath, "w", encoding="utf-8") as f:
                 f.write(standard_scan_results)
             if args.fix_type is not None:
-                fix_script = oscap_helpers.generate_fix_for_result(config, arf_filepath, args.fix_type)
+                fix_script = oscap_helpers.generate_fix_for_result(
+                    config, arf_filepath, args.fix_type, args.xccdf_id
+                )
                 suffixes = {"bash": "sh", "ansible": "yml", "puppet": "pp"}
                 fix_name = "fix." + suffixes[args.fix_type]
                 fix_filepath = os.path.join(full_output_dir, fix_name)
@@ -508,6 +513,13 @@ def main():
         help="Skip the configuration compliance scan."
     )
     scan_parser.add_argument(
+        "--xccdf-id", type=str,
+        default=None,
+        help="ID of the XCCDF component in a datastream. Empty string is the "
+        "default and means that the first XCCDF component found in a "
+        "datastream will be used when looking for an XCCDF profile ID."
+    )
+    scan_parser.add_argument(
         "--profile", type=str,
         default="xccdf_org.ssgproject.content_profile_standard",
         help="Specify the profile ID for configuration compliance scan. "
@@ -577,7 +589,9 @@ def main():
         )
         ssg_sds = config.get_ssg_sds(cpes)
         print("Security profiles applicable on target " + args.target + ":")
-        profiles = oscap_helpers.get_profile_choices_for_input(ssg_sds, None)
+        profiles = oscap_helpers.get_profile_choices_for_input(
+            ssg_sds, None, args.xccdf_id
+        )
         for profile_id, title in profiles.items():
             if profile_id:
                 print(title + " (id='" + profile_id + "')")

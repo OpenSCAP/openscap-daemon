@@ -66,7 +66,7 @@ class EvaluationMode(object):
             return EvaluationMode.UNKNOWN
 
 
-def get_profile_choices_for_input(input_file, tailoring_file):
+def get_profile_choices_for_input(input_file, tailoring_file, xccdf_id):
     # Ideally oscap would have a command line to do this, but as of now it
     # doesn't so we have to implement it ourselves. Importing openscap Python
     # bindings is nasty and overkill for this.
@@ -78,21 +78,32 @@ def get_profile_choices_for_input(input_file, tailoring_file):
 
     ret = {}
 
-    def scrape_profiles(tree, namespace, dest):
-        # TODO support multiple benchmarks in one DataStream
-        benchmark = tree.find(".//{%s}Benchmark" % (namespace))
-        if benchmark is None:
-            return
-        for elem in benchmark.findall(".//{%s}Profile" % (namespace)):
-            id_ = elem.get("id")
-            if id_ is None:
-                continue
+    def scrape_profiles(tree, xccdf_id, xccdf_ns, profile_ns, dest):
+        xlink_href = "{http://www.w3.org/1999/xlink}href"
+        xccdfs = []
 
-            title = et_helpers.get_element_text(
-                elem, "{%s}title" % (namespace), ""
+        if xccdf_id is None:
+            # If xccdf_id is not specified look for profiles only in the first
+            # xccdf component found in the datastream.
+            xccdfs = tree.findall(
+                ".//{%s}checklists/{%s}component-ref[1]" % (xccdf_ns, xccdf_ns)
+            )
+        else:
+            xccdfs = tree.findall(
+                ".//{%s}checklists/{%s}component-ref/[@id='%s']"
+                % (xccdf_ns, xccdf_ns, xccdf_id)
             )
 
-            dest[id_] = title
+        for x in xccdfs:
+            c = x.attrib[xlink_href]
+            c = c[1:]  # Removes starting '#' character.
+            for elem in tree.findall(".//{%s}component/[@id='%s']//{%s}Profile"
+                    % (xccdf_ns, c, profile_ns)):
+                id_ = elem.get("id")
+                title = et_helpers.get_element_text(
+                    elem, "{%s}title" % (profile_ns), ""
+                )
+                dest[id_] = title
 
     try:
         input_tree = ElementTree.parse(input_file)
@@ -113,10 +124,18 @@ def get_profile_choices_for_input(input_file, tailoring_file):
         return ret
 
     scrape_profiles(
-        input_tree, "http://checklists.nist.gov/xccdf/1.1", ret
+        input_tree,
+        xccdf_id,
+        "http://scap.nist.gov/schema/scap/source/1.1",
+        "http://checklists.nist.gov/xccdf/1.1",
+        ret
     )
     scrape_profiles(
-        input_tree, "http://checklists.nist.gov/xccdf/1.2", ret
+        input_tree,
+        xccdf_id,
+        "http://scap.nist.gov/schema/scap/source/1.2",
+        "http://checklists.nist.gov/xccdf/1.2",
+        ret
     )
 
     if tailoring_file:
@@ -455,7 +474,7 @@ def _get_result_id(results_path):
     return test_result.attrib["id"]
 
 
-def generate_fix_for_result(config, results_path, fix_type):
+def generate_fix_for_result(config, results_path, fix_type, xccdf_id):
     if not os.path.exists(results_path):
         raise RuntimeError("Can't generate fix for scan result. Expected "
                            "results XML at '%s' but the file doesn't exist."
@@ -464,8 +483,10 @@ def generate_fix_for_result(config, results_path, fix_type):
     template = _fix_type_to_template(fix_type)
     args = [config.oscap_path, "xccdf", "generate", "fix",
             "--result-id", result_id,
-            "--template", template,
-            results_path]
+            "--template", template]
+    if xccdf_id is not None:
+        args.extend(["--xccdf-id", xccdf_id])
+    args.append(results_path)
     fix_text = subprocess_check_output(args).decode("utf-8")
     return fix_text
 

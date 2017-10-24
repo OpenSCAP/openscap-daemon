@@ -587,5 +587,6 @@ class Task(object):
         return oscap_helpers.generate_fix_for_result(
             config,
             results_path,
-            fix_type
+            fix_type,
+            None
         )
