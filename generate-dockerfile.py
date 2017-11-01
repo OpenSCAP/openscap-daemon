@@ -12,7 +12,7 @@ labels = [
     ("io.k8s.display-name", "OpenSCAP"),
     ("io.k8s.description", "OpenSCAP is an auditing tool that utilizes the Extensible Configuration Checklist Description Format (XCCDF). XCCDF is a standard way of expressing checklist content and defines security checklists."),
     ("io.openshift.tags", "security openscap scan"),
-    ("install", "docker run --rm --privileged -v /:/host/ IMAGE sh /root/install.sh"),
+    ("install", "docker run --rm --privileged -v /:/host/ IMAGE sh /root/install.sh IMAGE"),
     ("run", "docker run -it --rm -v /:/host/ IMAGE sh /root/run.sh")
 ]
 packages = [

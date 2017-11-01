@@ -1,6 +1,6 @@
 type: scanner
 scanner_name: openscap
-image_name: openscap
+image_name: $IMAGE_NAME
 default_scan: cve
 custom_args: ['-v', '/etc/oscapd:/etc/oscapd:ro']
 remediation_script: '/etc/atomic.d/scripts/remediate.py'
