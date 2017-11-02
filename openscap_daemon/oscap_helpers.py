@@ -474,7 +474,7 @@ def _get_result_id(results_path):
     return test_result.attrib["id"]
 
 
-def generate_fix_for_result(config, results_path, fix_type, xccdf_id):
+def generate_fix_for_result(config, results_path, fix_type, xccdf_id=None):
     if not os.path.exists(results_path):
         raise RuntimeError("Can't generate fix for scan result. Expected "
                            "results XML at '%s' but the file doesn't exist."
