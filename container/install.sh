@@ -3,12 +3,14 @@
 ETC='/etc/oscapd'
 ETC_FILE='config.ini'
 HOST='/host'
+SELF=$1
 
 echo ""
 echo "Installing the configuration file 'openscap' into /etc/atomic.d/.  You can now use this scanner with atomic scan with the --scanner openscap command-line option.  You can also set 'openscap' as the default scanner in /etc/atomic.conf.  To list the scanners you have configured for your system, use 'atomic scan --list'."
 
 echo ""
 cp /root/openscap /host/etc/atomic.d/
+sed -i "s|\$IMAGE_NAME|${SELF}|" /host/etc/atomic.d/openscap
 
 SCRIPTS="/etc/atomic.d/scripts/"
 echo ""
