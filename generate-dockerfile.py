@@ -13,7 +13,8 @@ labels = [
     ("io.k8s.description", "OpenSCAP is an auditing tool that utilizes the Extensible Configuration Checklist Description Format (XCCDF). XCCDF is a standard way of expressing checklist content and defines security checklists."),
     ("io.openshift.tags", "security openscap scan"),
     ("install", "docker run --rm --privileged -v /:/host/ IMAGE sh /root/install.sh IMAGE"),
-    ("run", "docker run -it --rm -v /:/host/ IMAGE sh /root/run.sh")
+    ("run", "docker run -it --rm -v /:/host/ IMAGE sh /root/run.sh"),
+    ("help", "docker run --rm --privileged -v /usr/bin:/usr/bin -v /var/run:/var/run -v /lib:/lib -v /lib64:/lib64 -v /etc/sysconfig:/etc/sysconfig IMAGE sh /root/help.sh IMAGE")
 ]
 packages = [
     "bzip2",
@@ -24,7 +25,8 @@ files = [
     ("container/run.sh", "/root"),
     ("container/openscap", "/root"),
     ("container/config.ini", "/root"),
-    ("container/remediate.py", "/root")
+    ("container/remediate.py", "/root"),
+    ("container/help.sh", "/root")
 ]
 env_variables = [
     ("container", "docker")
