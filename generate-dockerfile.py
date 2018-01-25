@@ -23,18 +23,20 @@ labels = [
     ("help", "docker run --rm --privileged -v /usr/bin:/usr/bin -v /var/run:/var/run -v /lib:/lib -v /lib64:/lib64 -v /etc/sysconfig:/etc/sysconfig IMAGE sh /root/help.sh IMAGE"),
 ]
 packages_for_cve_feed = {
-    "bzip2",
     "wget",
 }
-packages = set()
+
+packages = {
+    "openssh-clients,"
+}
 
 files = [
-    ("container/install.sh", "/root"),
-    ("container/run.sh", "/root"),
-    ("container/openscap", "/root"),
-    ("container/config.ini", "/root"),
-    ("container/remediate.py", "/root"),
-    ("container/help.sh", "/root"),
+    ("container/install.sh", "/root/"),
+    ("container/run.sh", "/root/"),
+    ("container/openscap", "/root/"),
+    ("container/config.ini", "/root/"),
+    ("container/remediate.py", "/root/"),
+    ("container/help.sh", "/root/"),
 ]
 env_variables = [
     ("container", "docker")
@@ -304,7 +306,7 @@ def decide_about_getting_openscap_daemon(args, pkg_env):
     tasks = TasksRecorder(pkg_env.builddep_package)
     if args.daemon_from_local:
         tasks.build_from_source("openscap-daemon", daemon_local_build_command)
-        files.append((".", "/openscap-daemon"))
+        files.append((".", "/openscap-daemon/"))
     elif args.daemon_from_koji is not None:
         packages.add("koji")
         daemon_koji_command = [
