@@ -176,12 +176,11 @@ def cli_scan(args, config):
                                 args.xccdf_id, args.profile
                             )
                         except ProfileSuffixMatchError as e:
-                            logging.error(
-                                "Failed to find profile matching suffix '%s' "
-                                "in profiles applicable to target '%s': %s"
-                                % (args.profile, target, str(e))
+                            msg = (
+                                "Failed to pick a profile for scanning '{}': {}"
+                                .format(target, str(e))
                             )
-                            raise RuntimeError
+                            raise RuntimeError(msg)
                         try:
                             standard_scan_results, stdout, stderr, exit_code = \
                                 es.evaluate(config)
@@ -204,7 +203,7 @@ def cli_scan(args, config):
                     finished_time = datetime.datetime.now()
 
                 except Exception as e:
-                    logging.exception(e)
+                    logging.error(e)
                     failed_targets.append(target)
 
                 queue.task_done()
@@ -245,7 +244,9 @@ def cli_scan(args, config):
         sys.stderr.write("Evaluation interrupted by user!\n")
 
     if len(failed_targets) > 0:
-        sys.stderr.write(
+        # It is difficuly to determine the real count of failed targets right,
+        # hence the decrementation and usage of "at least".
+        logging.info(
             "Fatal error encountered while evaluating! Failed to evaluate "
             "at least %i targets!\n" % (len(failed_targets) - 1)
         )
