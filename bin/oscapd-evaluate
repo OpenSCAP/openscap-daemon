@@ -179,7 +179,7 @@ def cli_scan(args, config):
                             logging.error(
                                 "Failed to find profile matching suffix '%s' "
                                 "in profiles applicable to target '%s': %s"
-                                % (args.profile, target, e.message)
+                                % (args.profile, target, str(e))
                             )
                             raise RuntimeError
                         try:
