@@ -22,12 +22,11 @@ labels = [
     ("run", "docker run -it --rm -v /:/host/ IMAGE sh /root/run.sh"),
     ("help", "docker run --rm --privileged -v /usr/bin:/usr/bin -v /var/run:/var/run -v /lib:/lib -v /lib64:/lib64 -v /etc/sysconfig:/etc/sysconfig IMAGE sh /root/help.sh IMAGE"),
 ]
-packages_for_cve_feed = {
-    "wget",
-}
 
 packages = {
-    "openssh-clients,"
+    "openssh-clients",
+    "wget",
+    "bzip2",
 }
 
 files = [
@@ -378,10 +377,7 @@ def main():
         run_commands.extend(commands)
         f.write(output_run_directive(run_commands))
 
-        packages_string = " ".join(packages_for_cve_feed)
-        with pkg_env.install_then_remove(packages_string, clear_cache_afterwards=True) as commands:
-            commands.extend(download_cve_feeds_command)
-        f.write(output_run_directive(commands))
+        f.write(output_run_directive(download_cve_feeds_command))
 
         # add CMD instruction to the Dockerfile, including a comment
         f.write("# It doesn't matter what is in the line below, atomic will change the CMD\n")
