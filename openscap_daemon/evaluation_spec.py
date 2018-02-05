@@ -602,5 +602,5 @@ class EvaluationSpec(object):
         return cpe_ids
 
 
-class ProfileSuffixMatchError(Exception):
+class ProfileSuffixMatchError(RuntimeError):
     pass
