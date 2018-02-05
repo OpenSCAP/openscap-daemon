@@ -19,6 +19,8 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
+from __future__ import print_function
+
 from openscap_daemon import config as config_
 from openscap_daemon import evaluation_spec
 from openscap_daemon import oscap_helpers
@@ -566,8 +568,10 @@ def main():
     config.prepare_dirs(cleanup_allowed=False)
     try:
         config.sanity_check()
-    except:
-        logging.exception("Configuration file failed sanity checking!")
+    except Exception as exc:
+        logging.error(
+            "Configuration file '{}' failed sanity checking: {}"
+            .format(config.config_file, str(exc)))
         sys.exit(1)
 
     if args.action == "xml":
