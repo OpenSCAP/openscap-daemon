@@ -158,6 +158,7 @@ class PackageEnv(object):
         self.clear_cache = None
         self.builddep_package = None
         self.builddep_command_beginning = None
+        self.additional_repositories_were_enabled = False
 
     def _assert_class_is_complete(self):
         assert (
@@ -174,17 +175,31 @@ class PackageEnv(object):
     def remove_command_element(self, packages_string):
         return "{} {}".format(self.remove_command_beginning, packages_string)
 
+    def _enable_additional_repositories_command_element(self):
+        return []
+
+    def get_enable_additional_repositories_command_element(self):
+        if not self.additional_repositories_were_enabled:
+            return self._enable_additional_repositories_command_element()
+        else:
+            return []
+        self.additional_repositories_were_enabled = True
+
+    def _get_install_commands(self, packages_string):
+        self._assert_class_is_complete()
+        commands = self.get_enable_additional_repositories_command_element()
+        commands.append(self.install_command_element(packages_string))
+        return commands
+
     @contextlib.contextmanager
     def install_then_clean_all(self, packages_string):
-        self._assert_class_is_complete()
-        commands = [self.install_command_element(packages_string)]
+        commands = self._get_install_commands(packages_string)
         yield commands
         commands.append(self.clear_cache)
 
     @contextlib.contextmanager
     def install_then_remove(self, packages_string, clear_cache_afterwards=False):
-        self._assert_class_is_complete()
-        commands = [self.install_command_element(packages_string)]
+        commands = self._get_install_commands(packages_string)
         yield commands
         commands.append(self.remove_command_element(packages_string))
         if clear_cache_afterwards:
@@ -200,6 +215,12 @@ class RhelEnv(PackageEnv):
         self.builddep_command_beginning = "yum-builddep -y"
         self.builddep_package = "yum-utils"
 
+    def _enable_additional_repositories_command_element(self):
+        commands = super(RhelEnv, self)._enable_additional_repositories_command_element()
+        commands.append(
+            "rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm")
+        return commands
+
 
 class FedoraEnv(PackageEnv):
     def __init__(self):
@@ -212,7 +233,7 @@ class FedoraEnv(PackageEnv):
 
 
 def choose_pkg_env_class(baseimage):
-    if baseimage == "fedora":
+    if baseimage.startswith("fedora"):
         return FedoraEnv
     else:
         return RhelEnv
@@ -359,9 +380,6 @@ def main():
         f.write("\n\n")
 
         run_commands = []
-        if args.base != "fedora":
-            run_commands.append(
-                "rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm")
 
         packages_string = " ".join(packages)
         with pkg_env.install_then_clean_all(packages_string) as commands:
