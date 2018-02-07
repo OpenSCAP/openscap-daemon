@@ -206,6 +206,7 @@ class EvaluationSpec(object):
         self.target = "localhost"
         self.input_ = SCAPInput()
         self.tailoring = SCAPTailoring()
+        self.result_format = "standard"
         self.profile_id = None
         self.online_remediation = False
         self.cpe_hints = []
@@ -215,6 +216,7 @@ class EvaluationSpec(object):
         ret += "- mode: \t%s\n" % \
             (oscap_helpers.EvaluationMode.to_string(self.mode))
         ret += "- target: \t%s\n" % (self.target)
+        ret += "- result format: \t%s\n" % (self.result_format)
         ret += "- input:\n"
         ret += "  - file: \t%s\n" % (self.input_.file_path)
         if self.input_.temp_file is not None:
@@ -457,6 +459,10 @@ class EvaluationSpec(object):
             # generated from that.
             ret.extend(["--results-arf", "results.xml"])
 
+            if self.result_format == "stig":
+                # STIG output can't be deduced from ARF output
+                ret.extend(["--stig-viewer", "results-stig.xml"])
+
             ret.append(self.input_.file_path)
 
         elif self.mode == oscap_helpers.EvaluationMode.OVAL:
@@ -497,6 +503,10 @@ class EvaluationSpec(object):
             # generated from that.
             ret.extend(["--results-arf", "results.xml"])
 
+            if self.result_format == "stig":
+                # STIG output can't be deduced from ARF output
+                ret.extend(["--stig-viewer", "results-stig.xml"])
+
             ret.append(config.get_ssg_sds(self.get_cpe_ids(config)))
 
         else:
@@ -525,17 +535,25 @@ class EvaluationSpec(object):
                          encoding="utf-8") as f:
                 stderr = f.read()
 
-            results = ""
+            results = dict()
             try:
+                results["arf"] = ""
                 with io.open(os.path.join(wip_result, "results.xml"), "r",
                              encoding="utf-8") as f:
-                    results = f.read()
+                    results["arf"] = f.read()
             except Exception as e:
                 raise RuntimeError(
                     "Failed to read results.xml of EvaluationSpec evaluation.\n"
                     "stdout:\n%s\n\nstderr:\n%s\n\nexception: %s" %
                     (stdout, stderr, e)
                 )
+            try:
+                with io.open(os.path.join(wip_result, "results-stig.xml"), "r",
+                             encoding="utf-8") as f:
+                    results["stig"] = f.read()
+            except Exception as e:
+                # Results for the STIG viewer may not have been requested at all.
+                pass
 
             return (results, stdout, stderr, exit_code)
 
@@ -564,7 +582,8 @@ class EvaluationSpec(object):
         es.target = target
         es.input_.set_file_path(config.cpe_oval_path)
 
-        results, stdout, stderr, exit_code = es.evaluate(config)
+        all_results, stdout, stderr, exit_code = es.evaluate(config)
+        results = all_results["arf"]
         if exit_code != 0:
             raise RuntimeError("Failed to detect CPEs of target '%s'.\n\n"
                                "stdout:\n%s\n\nstderr:\n%s"

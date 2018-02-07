@@ -49,7 +49,7 @@ def cli_xml(args, config):
     spec.load_from_xml_file(args.path)
     results, stdout, stderr, exit_code = spec.evaluate(config)
     if args.results is not None:
-        args.results.write(results)
+        args.results.write(results["arf"])
         args.results.close()
     if args.stdout is not None:
         args.stdout.write(stdout)
@@ -81,7 +81,7 @@ def cli_spec(args, config):
     else:
         results, stdout, stderr, exit_code = spec.evaluate(config)
         if args.results is not None:
-            args.results.write(results)
+            args.results.write(results["arf"])
             args.results.close()
         if args.stdout is not None:
             args.stdout.write(stdout)
@@ -116,9 +116,9 @@ def cli_scan(args, config):
                     queue.task_done()
                     continue
 
-                cve_results = None
+                all_cve_results = None
                 cve_last_updated = None
-                standard_scan_results = None
+                all_standard_scan_results = None
 
                 logging.debug("Started scanning target '%s'", target)
                 started_time = None
@@ -142,7 +142,7 @@ def cli_scan(args, config):
                         es.target = target
                         es.cpe_hints = cpes
                         try:
-                            cve_results, stdout, stderr, exit_code = \
+                            all_cve_results, stdout, stderr, exit_code = \
                                 es.evaluate(config)
 
                             if exit_code == 1:
@@ -170,6 +170,10 @@ def cli_scan(args, config):
                         es.mode = oscap_helpers.EvaluationMode.STANDARD_SCAN
                         es.target = target
                         es.cpe_hints = cpes
+                        es.result_format = "standard"
+                        if args.stig_viewer:
+                            es.result_format = "stig"
+
                         ssg_sds = config.get_ssg_sds(cpes)
                         es.input_.set_file_path(ssg_sds)
                         es.input_.xccdf_id = args.xccdf_id
@@ -184,7 +188,7 @@ def cli_scan(args, config):
                             )
                             raise RuntimeError(msg)
                         try:
-                            standard_scan_results, stdout, stderr, exit_code = \
+                            all_standard_scan_results, stdout, stderr, exit_code = \
                                 es.evaluate(config)
 
                             if exit_code == 1:
@@ -210,8 +214,8 @@ def cli_scan(args, config):
 
                 queue.task_done()
                 scanned_targets.append(
-                    (target, cve_results, cve_last_updated,
-                     standard_scan_results, started_time, finished_time)
+                    (target, all_cve_results, cve_last_updated,
+                     all_standard_scan_results, started_time, finished_time)
                 )
 
                 percent = "{0:6.2f}%".format(
@@ -253,8 +257,11 @@ def cli_scan(args, config):
             "at least %i targets!\n" % (len(failed_targets) - 1)
         )
 
-    for target, cve_results, cve_last_updated, standard_scan_results, \
+    for target, all_cve_results, cve_last_updated, all_standard_scan_results, \
             started_time, finished_time in scanned_targets:
+        cve_results = None
+        if all_cve_results is not None:
+            cve_results = all_cve_results["arf"]
         output_dir = ""
         if target in output_dir_map:
             output_dir = output_dir_map[target]
@@ -282,7 +289,7 @@ def cli_scan(args, config):
                 if cve_last_updated is not None else "unknown"
         json_data["Vulnerabilities"] = []
         if (args.no_cve_scan or cve_results) and \
-                (args.no_standard_compliance or standard_scan_results):
+                (args.no_standard_compliance or all_standard_scan_results):
             json_data["Successful"] = "true"
         else:
             json_data["Successful"] = "false"
@@ -307,17 +314,21 @@ def cli_scan(args, config):
                     encoding="utf-8") as f:
                 f.write(cve_results)
 
-        if standard_scan_results is not None:
+        if all_standard_scan_results is None:
+            all_standard_scan_results = dict()
+
+        arf_scan_results = all_standard_scan_results.get("arf", None)
+        if arf_scan_results is not None:
             scan_type.append("Configuration Compliance")
 
             cli_helpers.summarize_standard_compliance_results(
-                standard_scan_results, json_data["Vulnerabilities"], args.profile
+                arf_scan_results, json_data["Vulnerabilities"], args.profile
             )
             json_data["Profile"] = args.profile
 
             arf_filepath = os.path.join(full_output_dir, "arf.xml")
             with io.open(arf_filepath, "w", encoding="utf-8") as f:
-                f.write(standard_scan_results)
+                f.write(arf_scan_results)
             if args.fix_type is not None:
                 fix_script = oscap_helpers.generate_fix_for_result(
                     config, arf_filepath, args.fix_type, args.xccdf_id
@@ -332,6 +343,11 @@ def cli_scan(args, config):
                 report_filepath = os.path.join(full_output_dir, "report.html")
                 with io.open(report_filepath, "w", encoding="utf-8") as f:
                     f.write(report)
+
+        if "stig" in all_standard_scan_results:
+            stig_filepath = os.path.join(full_output_dir, "stig.xml")
+            with io.open(stig_filepath, "w", encoding="utf-8") as f:
+                f.write(all_standard_scan_results["stig"])
 
         json_data["Scan Type"] = ", ".join(scan_type)
 
@@ -527,6 +543,11 @@ def main():
         default="xccdf_org.ssgproject.content_profile_standard",
         help="Specify the profile ID for configuration compliance scan. "
         "If not specified, the 'standard' profile will be used."
+    )
+    scan_parser.add_argument(
+        "--stig-viewer", action="store_true",
+        help="Whether to produce output that is consumable "
+        "by the STIG viewer app."
     )
     scan_parser.add_argument(
         "--output", type=str, required=True,

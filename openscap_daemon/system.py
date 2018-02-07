@@ -98,8 +98,12 @@ class System(object):
             self.spec = spec
 
         def run(self):
-            arf, stdout, stderr, exit_code = \
+            all_results, stdout, stderr, exit_code = \
                 self.spec.evaluate(self.system.config)
+
+            arf = None
+            if all_results is not None:
+                arf = all_results["arf"]
 
             with self.system.async_eval_spec_results_lock:
                 self.system.async_eval_spec_results[self.token] = \
