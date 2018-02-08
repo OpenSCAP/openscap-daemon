@@ -40,10 +40,6 @@ files = [
 env_variables = [
     ("container", "docker")
 ]
-builddep_commands = {
-    "fedora": "dnf -y builddep",
-    "rhel": "yum-builddep -y",
-}
 download_cve_feeds_command = [
     "wget --no-verbose -P /var/lib/oscapd/cve_feeds/ "
     "https://www.redhat.com/security/data/oval/com.redhat.rhsa-RHEL{5,6,7}.xml.bz2",
@@ -349,17 +345,13 @@ def output_run_directive(commands):
 def main():
     parser = make_parser()
     args = parser.parse_args()
-    if (args.base != "fedora") and (
+    pkg_env = choose_pkg_env_class(args.base)()
+
+    if (not isinstance(pkg_env, FedoraEnv)) and (
             args.openscap_from_koji is not None
             or args.ssg_from_koji is not None
             or args.daemon_from_koji is not None):
         parser.error("Koji builds can be used only with fedora base image")
-
-    pkg_env = choose_pkg_env_class(args.base)()
-    # Fallback commands are set to RHEL if the configuration
-    # for user-defined base is not specified in respective dictionaries.
-    # That's because RHEL uses YUM that is older and most wider used.
-    builddep_command = builddep_commands.get(args.base, builddep_commands["rhel"])
 
     with open("Dockerfile", "w") as f:
         # write out the Dockerfile
@@ -384,7 +376,7 @@ def main():
         packages_string = " ".join(packages)
         with pkg_env.install_then_clean_all(packages_string) as commands:
             commands.extend(
-                install_steps.install_build_deps(builddep_command))
+                install_steps.install_build_deps(pkg_env.builddep_command_beginning))
 
             commands.extend(
                 install_steps.add_commands_for_building_from_custom_sources())
