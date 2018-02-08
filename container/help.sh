@@ -15,5 +15,5 @@ DESCRIPTION=$(grep ' description=' $DOCKERFILE \
 echo -e "Description:\n${DESCRIPTION}\n"
 
 echo "OpenSCAP packages bundled in the image:"
-rpm -qa | grep openscap
-rpm -qa | grep scap-security-guide
+rpm -qa | grep openscap || true
+rpm -qa | grep scap-security-guide || true
