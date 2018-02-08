@@ -20,7 +20,7 @@ labels = [
     ("io.openshift.tags", "security openscap scan"),
     ("install", "docker run --rm --privileged -v /:/host/ IMAGE sh /root/install.sh IMAGE"),
     ("run", "docker run -it --rm -v /:/host/ IMAGE sh /root/run.sh"),
-    ("help", "docker run --rm --privileged -v /usr/bin:/usr/bin -v /var/run:/var/run -v /lib:/lib -v /lib64:/lib64 -v /etc/sysconfig:/etc/sysconfig IMAGE sh /root/help.sh IMAGE"),
+    ("help", "docker run -it --rm IMAGE sh /root/help.sh"),
 ]
 
 packages = {
@@ -36,6 +36,7 @@ files = [
     ("container/config.ini", "/root/"),
     ("container/remediate.py", "/root/"),
     ("container/help.sh", "/root/"),
+    ("Dockerfile", "/root/"),
 ]
 env_variables = [
     ("container", "docker")

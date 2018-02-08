@@ -1,19 +1,19 @@
 #!/bin/bash
 
-DOCKER="/usr/bin/docker"
-SELF=$1
+DOCKERFILE="/root/Dockerfile"
 
-VERSION=$(${DOCKER} inspect -f '{{ index .Config.Labels "version" }}' ${SELF})
-RELEASE=$(${DOCKER} inspect -f '{{ index .Config.Labels "release" }}' ${SELF})
+VERSION=$(grep ' version=' $DOCKERFILE | sed 's|.*version="\(.*\)".*|\1|')
+RELEASE=$(grep ' release=' $DOCKERFILE | sed 's|.*release="\(.*\)".*|\1|')
 if [ -z ${RELEASE} ]; then
-	echo -e "${SELF} image version: ${VERSION}\n"
+	echo -e "Image version: ${VERSION}\n"
 else
-	echo -e "${SELF} image version: ${VERSION}-${RELEASE}\n"
+	echo -e "Image version: ${VERSION}-${RELEASE}\n"
 fi
 
-DESCRIPTION=$(${DOCKER} inspect -f '{{ index .Config.Labels "description" }}' ${SELF})
+DESCRIPTION=$(grep ' description=' $DOCKERFILE \
+	| sed 's|.*description="\(.*\)".*|\1|')
 echo -e "Description:\n${DESCRIPTION}\n"
 
-echo "OpenSCAP packages bundled in ${SELF} image:"
+echo "OpenSCAP packages bundled in the image:"
 rpm -qa | grep openscap
 rpm -qa | grep scap-security-guide
