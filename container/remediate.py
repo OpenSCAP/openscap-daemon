@@ -126,8 +126,12 @@ def remediate(target_id, results_dir):
                 raise RuntimeError(
                     "Error during Docker build {}\n".format(item_dict["error"])
                 )
-            sys.stdout.write(item_dict["stream"])
-            build_output.append(item_dict["stream"])
+            try:
+                sys.stdout.write(item_dict["stream"])
+                build_output.append(item_dict["stream"])
+            except KeyError:
+                # Skip empty items of build_output_generator.
+                pass
         image_id = build_output[-1].split()[-1]
 
         print(
