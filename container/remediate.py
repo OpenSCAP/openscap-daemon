@@ -103,7 +103,7 @@ def remediate(target_id, results_dir):
             f.write("FROM " + target_id + "\n")
             f.write("COPY fix.sh /\n")
             f.write(
-                "RUN chmod +x /fix.sh; /fix.sh {}\n"
+                "RUN chmod +x /fix.sh; /fix.sh {}; true\n"
                 .format(pkg_clean_cmd)
             )
 
