@@ -102,6 +102,9 @@ def remediate(target_id, results_dir):
         with open(dockerfile_path, "w") as f:
             f.write("FROM " + target_id + "\n")
             f.write("COPY fix.sh /\n")
+            # Let's ignore any errors from package cleanup
+            # It may fail if the system has no connectivity
+            # or doesn't have a subscription.
             f.write(
                 "RUN chmod +x /fix.sh; /fix.sh {}; true\n"
                 .format(pkg_clean_cmd)
