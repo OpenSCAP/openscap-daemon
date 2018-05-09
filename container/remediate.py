@@ -84,7 +84,7 @@ def remediate(target_id, results_dir):
         pkg_clean_cmd = "; dnf clean all"
     elif "redhat" in platform_cpe:
         try:
-            distro_version = int(re.search("\d+", platform_cpe).group(0))
+            distro_version = int(re.search(r"\d+", platform_cpe).group(0))
         except AttributeError:
             # In case it is not possible to extract rhel version, use yum.
             distro_version = 7
