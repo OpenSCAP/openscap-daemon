@@ -48,7 +48,13 @@ class ApplicationConfiguration(object):
             error = "Can't import 'docker' package. Has docker been installed?"
             raise ImageScannerClientError(error)
 
-        client = docker.Client(base_url=host, timeout=11)
+        # Class docker.Client was renamed to docker.APIClient in
+        # python-docker-py 2.0.0.
+        try:
+            client = docker.APIClient(base_url=host, timeout=11)
+        except AttributeError:
+            client = docker.Client(base_url=host, timeout=11)
+
         if not client.ping():
             error = "Cannot connect to the Docker daemon. Is it running " \
                 "on this host?"
