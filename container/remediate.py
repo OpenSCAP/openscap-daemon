@@ -76,7 +76,7 @@ def remediate(target_id, results_dir):
     try:
         ns = "http://checklists.nist.gov/xccdf/1.2"
         platform_cpe = root.find(
-            ".//{%s}TestResult/{%s}platform" %(ns, ns)
+            ".//{%s}TestResult/{%s}platform" % (ns, ns)
         ).attrib['idref']
     except AttributeError:
         pass
@@ -84,7 +84,7 @@ def remediate(target_id, results_dir):
         pkg_clean_cmd = "; dnf clean all"
     elif "redhat" in platform_cpe:
         try:
-            distro_version = int(re.search("\d+", platform_cpe).group(0))
+            distro_version = int(re.search(r"\d+", platform_cpe).group(0))
         except AttributeError:
             # In case it is not possible to extract rhel version, use yum.
             distro_version = 7

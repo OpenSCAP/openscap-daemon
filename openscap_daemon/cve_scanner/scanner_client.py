@@ -66,7 +66,12 @@ class Client(object):
 
     @staticmethod
     def _docker_ping():
-        d_conn = docker.Client()
+        # Class docker.Client was renamed to docker.APIClient in
+        # python-docker-py 2.0.0.
+        try:
+            d_conn = docker.APIClient()
+        except AttributeError:
+            d_conn = docker.Client()
         try:
             d_conn.ping()
         except Exception:

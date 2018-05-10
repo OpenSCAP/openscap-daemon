@@ -546,7 +546,7 @@ def cli_scan(dbus_iface, args):
 
         else:
             if args.scan_targets:
-                raise NotImplemented(
+                raise NotImplementedError(
                     "This type of output is not implemented"
                     "for specified targets.\n"
                 )

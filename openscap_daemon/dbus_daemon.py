@@ -404,7 +404,12 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         Used by `atomic scan`. Do not break this interface!
         """
         import docker
-        docker_conn = docker.Client()
+        # Class docker.Client was renamed to docker.APIClient in
+        # python-docker-py 2.0.0.
+        try:
+            docker_conn = docker.APIClient()
+        except AttributeError:
+            docker_conn = docker.Client()
         inspect_data = docker_conn.inspect_container(cid)
         return json.dumps(inspect_data)
 
@@ -416,7 +421,12 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         Used by `atomic scan`. Do not break this interface!
         """
         import docker
-        docker_conn = docker.Client()
+        # Class docker.Client was renamed to docker.APIClient in
+        # python-docker-py 2.0.0.
+        try:
+            docker_conn = docker.APIClient()
+        except AttributeError:
+            docker_conn = docker.Client()
         inspect_data = docker_conn.inspect_image(iid)
         return json.dumps(inspect_data)
 
@@ -425,7 +435,12 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """Used by `atomic scan`. Do not break this interface!
         """
         import docker
-        docker_conn = docker.Client()
+        # Class docker.Client was renamed to docker.APIClient in
+        # python-docker-py 2.0.0.
+        try:
+            docker_conn = docker.APIClient()
+        except AttributeError:
+            docker_conn = docker.Client()
         images = docker_conn.images(all=True)
         return json.dumps(images)
 
@@ -434,7 +449,12 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
         """Used by `atomic scan`. Do not break this interface!
         """
         import docker
-        docker_conn = docker.Client()
+        # Class docker.Client was renamed to docker.APIClient in
+        # python-docker-py 2.0.0.
+        try:
+            docker_conn = docker.APIClient()
+        except AttributeError:
+            docker_conn = docker.Client()
         cons = docker_conn.containers(all=True)
         return json.dumps(cons)
 
