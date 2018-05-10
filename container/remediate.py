@@ -76,7 +76,7 @@ def remediate(target_id, results_dir):
     try:
         ns = "http://checklists.nist.gov/xccdf/1.2"
         platform_cpe = root.find(
-            ".//{%s}TestResult/{%s}platform" %(ns, ns)
+            ".//{%s}TestResult/{%s}platform" % (ns, ns)
         ).attrib['idref']
     except AttributeError:
         pass
