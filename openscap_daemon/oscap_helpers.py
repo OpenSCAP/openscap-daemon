@@ -142,10 +142,18 @@ def get_profile_choices_for_input(input_file, tailoring_file, xccdf_id):
         tailoring_tree = ElementTree.parse(tailoring_file)
 
         scrape_profiles(
-            tailoring_tree, "http://checklists.nist.gov/xccdf/1.1", ret
+            tailoring_tree,
+            None,
+            "http://scap.nist.gov/schema/scap/source/1.1",
+            "http://checklists.nist.gov/xccdf/1.1",
+            ret
         )
         scrape_profiles(
-            tailoring_tree, "http://checklists.nist.gov/xccdf/1.2", ret
+            tailoring_tree,
+            None,
+            "http://scap.nist.gov/schema/scap/source/1.2",
+            "http://checklists.nist.gov/xccdf/1.2",
+            ret
         )
 
     ret[""] = "(default)"
