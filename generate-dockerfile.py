@@ -9,14 +9,15 @@ INDENTATION = "    "
 COMMAND_DELIMITER = " \\\n{}&& ".format(INDENTATION)
 
 labels = [
-    ("com.redhat.component", "openscap-docker"),
+    ("com.redhat.component", "openscap-container"),
     ("name", "openscap"),
     ("version", "testing"),
+    ("usage", "The OpenSCAP container image is used by the Atomic Management Tool. See 'atomic scan --help' for usage summary."),
     ("architecture", "x86_64"),
     ("summary", "OpenSCAP container image that provides security/compliance scanning capabilities for 'atomic scan'"),
-    ("description", "OpenSCAP is an auditing tool that utilizes the Extensible Configuration Checklist Description Format (XCCDF). XCCDF is a standard way of expressing checklist content and defines security checklists."),
+    ("description", "This image can be used by 'atomic scan' to perform two types of scans: Scanning for vulnerabilities using RHEL CVE feeds, which are already part of the image, informs you about installed applications that have known security issues. Scanning for configuration compliance can confirm that the scanned system complies to a given security profile. In cases that it does not comply, you can try to fix the failing rules by passing '--remediate' as an atomic scan argument."),
     ("io.k8s.display-name", "OpenSCAP"),
-    ("io.k8s.description", "OpenSCAP is an auditing tool that utilizes the Extensible Configuration Checklist Description Format (XCCDF). XCCDF is a standard way of expressing checklist content and defines security checklists."),
+    ("io.k8s.description", "This image can be used by 'atomic scan' to perform two types of scans: Scanning for vulnerabilities using RHEL CVE feeds, which are already part of the image, informs you about installed applications that have known security issues. Scanning for configuration compliance can confirm that the scanned system complies to a given security profile. In cases that it does not comply, you can try to fix the failing rules by passing '--remediate' as an atomic scan argument."),
     ("io.openshift.tags", "security openscap scan"),
     ("install", "docker run --rm --privileged -v /:/host/ IMAGE sh /root/install.sh IMAGE"),
     ("run", "docker run -it --rm -v /:/host/ IMAGE sh /root/run.sh"),
@@ -39,7 +40,7 @@ files = [
     ("Dockerfile", "/root/"),
 ]
 env_variables = [
-    ("container", "docker")
+    ("container", "oci")
 ]
 download_cve_feeds_command = [
     "wget --no-verbose -P /var/lib/oscapd/cve_feeds/ "
