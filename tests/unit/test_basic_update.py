@@ -37,8 +37,9 @@ class BasicUpdateTest(unit_test_harness.APITest):
         print(self.system.tasks)
         self.system.schedule_tasks()
 
-        while len(self.system.async.actions) > 0:
+        while len(self.system.async_manager.actions) > 0:
             time.sleep(1)
+
 
 if __name__ == "__main__":
     BasicUpdateTest.run()

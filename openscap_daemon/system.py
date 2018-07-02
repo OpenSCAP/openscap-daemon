@@ -26,7 +26,7 @@ import logging
 from openscap_daemon.task import Task
 from openscap_daemon.config import Configuration
 from openscap_daemon import oscap_helpers
-from openscap_daemon import async
+from openscap_daemon import async_tools
 
 
 class ResultsNotAvailable(Exception):
@@ -40,7 +40,7 @@ TASK_ACTION_PRIORITY = 10
 
 class System(object):
     def __init__(self, config_file):
-        self.async = async.AsyncManager()
+        self.async_manager = async_tools.AsyncManager()
 
         logging.info("Loading configuration from '%s'.", config_file)
         self.config = Configuration()
@@ -90,7 +90,7 @@ class System(object):
             input_file, tailoring_file, None
         )
 
-    class AsyncEvaluateSpecAction(async.AsyncAction):
+    class AsyncEvaluateSpecAction(async_tools.AsyncAction):
         def __init__(self, system, spec):
             super(System.AsyncEvaluateSpecAction, self).__init__()
 
@@ -113,7 +113,7 @@ class System(object):
             return "Evaluate Spec '%s'" % (self.spec)
 
     def evaluate_spec_async(self, spec):
-        return self.async.enqueue(
+        return self.async_manager.enqueue(
             System.AsyncEvaluateSpecAction(
                 self,
                 spec
@@ -488,7 +488,7 @@ class System(object):
 
         return ret
 
-    class AsyncUpdateTaskAction(async.AsyncAction):
+    class AsyncUpdateTaskAction(async_tools.AsyncAction):
         def __init__(self, system, task_id, reference_datetime):
             super(System.AsyncUpdateTaskAction, self).__init__()
 
@@ -536,7 +536,7 @@ class System(object):
 
                 if task.should_be_updated(reference_datetime):
                     self.tasks_scheduled.add(task.id_)
-                    self.async.enqueue(
+                    self.async_manager.enqueue(
                         System.AsyncUpdateTaskAction(
                             self,
                             task.id_,
@@ -662,7 +662,7 @@ class System(object):
             fix_type
         )
 
-    class AsyncEvaluateCVEScannerWorkerAction(async.AsyncAction):
+    class AsyncEvaluateCVEScannerWorkerAction(async_tools.AsyncAction):
         def __init__(self, system, worker):
             super(System.AsyncEvaluateCVEScannerWorkerAction, self).__init__()
 
@@ -680,7 +680,7 @@ class System(object):
             return "Evaluate CVE Scanner Worker '%s'" % (self.worker)
 
     def evaluate_cve_scanner_worker_async(self, worker):
-        return self.async.enqueue(
+        return self.async_manager.enqueue(
             System.AsyncEvaluateCVEScannerWorkerAction(
                 self,
                 worker
