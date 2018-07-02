@@ -81,7 +81,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="", out_signature="a(xsi)")
     def GetAsyncActionsStatus(self):
-        return self.system.async.get_status()
+        return self.system.async_manager.get_status()
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
                          in_signature="s", out_signature="(sssn)")
