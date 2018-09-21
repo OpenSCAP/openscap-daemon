@@ -479,7 +479,8 @@ class EvaluationSpec(object):
 
             # Again, we are only interested in OVAL results, everything else can
             # be generated.
-            ret.append(config.get_cve_feed(self.get_cpe_ids(config)))
+            cve_feed = config.get_cve_feed(self.get_cpe_ids(config))
+            ret.append(cve_feed)
 
         elif self.mode == oscap_helpers.EvaluationMode.STANDARD_SCAN:
             ret = ["xccdf", "eval"]

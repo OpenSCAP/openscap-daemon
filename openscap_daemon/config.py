@@ -457,7 +457,13 @@ class Configuration(object):
         self.cve_feed_manager.fetch_enabled = self.fetch_cve
         self.cve_feed_manager.fetch_timeout = self.fetch_cve_timeout
 
-        return self.cve_feed_manager.get_cve_feed(cpe_ids)
+        try:
+            return self.cve_feed_manager.get_cve_feed(cpe_ids)
+        except Exception as exc:
+            msg = (
+                "Unable to fetch CVE feed from {url}: {error}"
+                .format(url=self.cve_feed_manager.url, error=str(exc)))
+            raise RuntimeError(msg)
 
     def get_ssg_sds(self, cpe_ids):
         def get_ssg_sds_path(cpe_ids):
