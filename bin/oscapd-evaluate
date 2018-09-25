@@ -151,11 +151,10 @@ def cli_scan(args, config):
                                     "exit_code %i.\n\nstdout:%s\n\nstderr:%s" %
                                     (target, exit_code, stdout, stderr)
                                 )
-                        except:
+                        except Exception as exc:
                             logging.exception(
-                                "Failed to scan target '%s' for "
-                                "vulnerabilities." % (target)
-                            )
+                                "Failed to scan target '{target}' for vulnerabilities: {error}"
+                                .format(target=target, error=str(exc)))
 
                         try:
                             cve_last_updated = config.cve_feed_manager.\
