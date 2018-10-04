@@ -328,7 +328,7 @@ class OpenSCAPRestApi(object):
             self.system.set_task_online_remediation(task_id, task_online_remediation)
             self.system.set_task_schedule_not_before(task_id, task_schedule_not_before)
             self.system.set_task_schedule_repeat_after(task_id, task_schedule_repeat_after)
-            task = [{'id' : task_id, 'enabled' : '0'}]
+            task = [{'id': task_id, 'enabled': '0'}]
             create_json = '{"tasks":' + json.dumps(task, indent=4) + '}'
             return create_json, 201
 

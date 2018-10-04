@@ -65,7 +65,7 @@ class Configuration(object):
         self.fetch_cve_url = ""
         self.fetch_cve_timeout = 10*60
         self.cve_feed_manager = cve_feed_manager.CVEFeedManager()
- 
+
         # REST API Section
         self.api_enabled = False
         self.api_port = 5000
@@ -352,7 +352,6 @@ class Configuration(object):
         config.set("CVEScanner", "fetch-cve-url", str(self.fetch_cve_url))
         config.set("CVEScanner", "fetch-cve-timeout",
                    str(self.fetch_cve_timeout))
-
 
         config.add_section("REST")
         config.set("REST", "enabled", "yes" if self.api_enabled else "no")
