@@ -1,4 +1,4 @@
-# Copyright 2015 Red Hat Inc., Durham, North Carolina.
+# Copyright 2018 Red Hat Inc., Durham, North Carolina.
 # All Rights Reserved.
 #
 # openscap-daemon is free software: you can redistribute it and/or modify
@@ -21,6 +21,7 @@ import threading
 import json
 import os
 
+from openscap_daemon import oscap_helpers
 from datetime import datetime
 from flask import Flask, request
 
@@ -33,14 +34,13 @@ class OpenSCAPRestApi(object):
         self.app = Flask(__name__)
         self.system = system_instance
 
-        if self.system.config.api_enabled:
-            self.system.load_tasks()
+        self.system.load_tasks()
 
-            self.api_worker_thread = threading.Thread(
-                target=lambda: self.run()
-            )
-            self.api_worker_thread.daemon = True
-            self.api_worker_thread.start()
+        self.api_worker_thread = threading.Thread(
+            target=lambda: self.run()
+        )
+        self.api_worker_thread.daemon = True
+        self.api_worker_thread.start()
 
     def run(self):
         """Configures API Endpoints and runs the flask app"""
@@ -83,12 +83,12 @@ class OpenSCAPRestApi(object):
         self.app.add_url_rule("/ssgs",
                               "get_ssg", self.get_ssg,
                               methods=['GET', 'POST'])
-        if self.system.config.api_debug:
+        if self.system.config.rest_debug:
             self.app.debug = True
 
         self.app.run(
-            host=str(self.system.config.api_host),
-            port=int(self.system.config.api_port),
+            host=str(self.system.config.rest_host),
+            port=int(self.system.config.rest_port),
             use_reloader=False
         )
 
@@ -254,15 +254,8 @@ class OpenSCAPRestApi(object):
                                                                      "%Y-%m-%d %H:%M")
                     self.system.set_task_schedule_not_before(task_id, task_schedule_not_before)
                 if task_schedule_repeat_after != "":
-                    if task_schedule_repeat_after == "@daily":
-                        task_schedule_repeat_after = 1 * 24
-                    elif task_schedule_repeat_after == "@weekly":
-                        task_schedule_repeat_after = 7 * 24
-                    elif task_schedule_repeat_after == "@monthly":
-                        task_schedule_repeat_after = 30 * 24
-                    else:
-                        task_schedule_repeat_after = 0
-                    self.system.set_task_schedule_repeat_after(task_id, task_schedule_repeat_after)
+                    schedule_repeat_after = oscap_helpers.schedule_repeat_after(task_schedule_repeat_after)
+                    self.system.set_task_schedule_repeat_after(task_id, schedule_repeat_after)
                 task.append({'id': str(task_id), 'enabled': enabled, 'updated': 'true'})
             except KeyError:
                 return '{"Error" : "Task not found"}'
@@ -309,15 +302,9 @@ class OpenSCAPRestApi(object):
                     return '{"Error" : "Invalid taskScheduleNotBefore format. Please use %Y-%m-%d %H:%M format"}'
 
             if task_schedule_repeat_after == "":
-                task_schedule_repeat_after = 0
-            elif task_schedule_repeat_after == "@daily":
-                task_schedule_repeat_after = 1 * 24
-            elif task_schedule_repeat_after == "@weekly":
-                task_schedule_repeat_after = 7 * 24
-            elif task_schedule_repeat_after == "@monthly":
-                task_schedule_repeat_after = 30 * 24
+                schedule_repeat_after = 0
             else:
-                task_schedule_repeat_after = 0
+                schedule_repeat_after = oscap_helpers.schedule_repeat_after(task_schedule_repeat_after)
 
             task_id = self.system.create_task()
             self.system.set_task_title(task_id, str(task_title))
@@ -327,7 +314,7 @@ class OpenSCAPRestApi(object):
             self.system.set_task_profile_id(task_id, task_profile_id)
             self.system.set_task_online_remediation(task_id, task_online_remediation)
             self.system.set_task_schedule_not_before(task_id, task_schedule_not_before)
-            self.system.set_task_schedule_repeat_after(task_id, task_schedule_repeat_after)
+            self.system.set_task_schedule_repeat_after(task_id, schedule_repeat_after)
             task = [{'id': task_id, 'enabled': '0'}]
             create_json = '{"tasks":' + json.dumps(task, indent=4) + '}'
             return create_json, 201

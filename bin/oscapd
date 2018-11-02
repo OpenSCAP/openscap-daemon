@@ -20,7 +20,6 @@
 #   Martin Preisler <mpreisle@redhat.com>
 
 from openscap_daemon import dbus_daemon
-from openscap_daemon import rest_api
 from openscap_daemon import dbus_utils
 from openscap_daemon import version
 from openscap_daemon import system
@@ -81,7 +80,18 @@ def main():
 
     system_instance = system.System(config_file)
     obj = dbus_daemon.OpenSCAPDaemonDbus(bus, system_instance)
-    obj2 = rest_api.OpenSCAPRestApi(system_instance)
+    
+    if system_instance.config.rest_enabled:
+        try:
+            lib = __import__("flask")
+            from openscap_daemon import rest_api
+            obj2 = rest_api.OpenSCAPRestApi(system_instance)
+        except ImportError:
+            sys.stderr.write(
+                "Error: Rest API enabled in config file, but required libraries not found\n"
+                "Make sure python-flask is installed on your system.\n\n"
+            )
+            raise
 
     loop = gobject_MainLoop()
     loop.run()

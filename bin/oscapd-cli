@@ -386,14 +386,8 @@ def cli_task_create(dbus_iface, args):
         schedule_repeat_after = 0
         if not schedule_repeat_after_str:
             pass  # empty means no repeat
-        elif schedule_repeat_after_str == "@daily":
-            schedule_repeat_after = 1 * 24
-        elif schedule_repeat_after_str == "@weekly":
-            schedule_repeat_after = 7 * 24
-        elif schedule_repeat_after_str == "@monthly":
-            schedule_repeat_after = 30 * 24
         else:
-            schedule_repeat_after = int(schedule_repeat_after_str)
+            schedule_repeat_after = oscap_helpers.schedule_repeat_after(schedule_repeat_after_str)
 
         # most users need just drop_missed_aligned, we will not offer the
         # other options here

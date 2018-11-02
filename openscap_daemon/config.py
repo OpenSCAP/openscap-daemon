@@ -67,10 +67,10 @@ class Configuration(object):
         self.cve_feed_manager = cve_feed_manager.CVEFeedManager()
 
         # REST API Section
-        self.api_enabled = False
-        self.api_port = 5000
-        self.api_host = "127.0.0.1"
-        self.api_debug = False
+        self.rest_enabled = False
+        self.rest_port = 5000
+        self.rest_host = "127.0.0.1"
+        self.rest_debug = False
 
     def autodetect_tool_paths(self):
         """This will try a few well-known public paths and change the paths
@@ -300,23 +300,23 @@ class Configuration(object):
 
         # REST API section
         try:
-            self.api_enabled = config.get("REST", "enabled") not in \
+            self.rest_enabled = config.get("REST", "enabled") not in \
                 ["no", "0", "false", "False"]
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
         try:
-            self.api_port = config.getint("REST", "port")
+            self.rest_port = config.getint("REST", "port")
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
         try:
-            self.api_host = config.get("REST", "host")
+            self.rest_host = config.get("REST", "host")
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
         try:
-            self.api_debug = config.get("REST", "debug") not in \
+            self.rest_debug = config.get("REST", "debug") not in \
                 ["no", "0", "false", "False"]
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
@@ -354,10 +354,10 @@ class Configuration(object):
                    str(self.fetch_cve_timeout))
 
         config.add_section("REST")
-        config.set("REST", "enabled", "yes" if self.api_enabled else "no")
-        config.set("REST", "port", str(self.api_port))
-        config.set("REST", "host", str(self.api_host))
-        config.set("REST", "debug", "yes" if self.api_debug else "no")
+        config.set("REST", "enabled", "yes" if self.rest_enabled else "no")
+        config.set("REST", "port", str(self.rest_port))
+        config.set("REST", "host", str(self.rest_host))
+        config.set("REST", "debug", "yes" if self.rest_debug else "no")
 
         if hasattr(config_file, "write"):
             # config_file is an already opened file, let's use it like one
