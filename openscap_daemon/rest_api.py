@@ -20,7 +20,6 @@
 import threading
 import json
 import os
-import q
 
 from openscap_daemon import oscap_helpers
 from datetime import datetime
