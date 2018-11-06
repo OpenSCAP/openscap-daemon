@@ -543,6 +543,19 @@ def generate_fix(spec, config, fix_type):
 
     return ret
 
+
+def schedule_repeat_after(schedule_str):
+    schedule = None
+    if schedule_str == "@daily":
+        schedule = 1 * 24
+    elif schedule_str == "@weekly":
+        schedule = 7 * 24
+    elif schedule_str == "@monthly":
+        schedule = 30 * 24
+    else:
+        schedule = int(schedule_str)
+    return schedule
+
 __all__ = [
     "get_profile_choices_for_input",
     "generate_guide",
@@ -550,5 +563,6 @@ __all__ = [
     "evaluate",
     "generate_report_for_result",
     "get_status_from_exit_code",
-    "generate_fix_for_result"
+    "generate_fix_for_result",
+    "schedule_repeat_after"
 ]

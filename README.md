@@ -189,6 +189,7 @@ This is a future use-case that hasn't been fully implemented yet.
   * full source compatibility with *python2* and *python3*
 * [*OpenSCAP*](http://open-scap.org) >= 1.2.6
 * [*dbus-python*](http://www.freedesktop.org/wiki/Software/DBusBindings/)
+* [*flask*](http://flask.pocoo.org/) >= 1.0.2
 * (optional) [*Atomic*](http://www.projectatomic.io) >= 1.4
 * (optional) [*docker*](http://www.docker.com)
 
@@ -235,6 +236,120 @@ If you need the latest code from upstream git of OpenSCAP and/or
 SCAP Security Guide instead, pass `--openscap-from-git` and/or
 `--ssg-from-git` to the `./generate-dockerfile.py`.
 
+## REST API
+
+
+### REST API Endpoints
+
+| Endpoint                                  | VERB   | CLI Equivalent                               | Description                                               |
+|-------------------------------------------|--------|----------------------------------------------|-----------------------------------------------------------|
+| /tasks/                                    | GET    | oscapd-cli task                              | Gets all tasks with its information                       |
+| /tasks/                                    | POST   | oscapd-cli task-create -i                    | Creates new tasks                                         |
+| /tasks/<int:taskId>/                       | PUT    | oscapd-cli task <taskId> set-XXX             | Modify tasks                                              |
+| /tasks/<int:taskId>/                       | GET    | oscapd-cli task <taskId>                     | Gets information about <taskId>                           |
+| /tasks/<int:taskId>/                       | DELETE | oscapd-cli task <taskId> remove              | Remove task <taskId>                      |
+| /tasks/<int:taskId>/results/                      | DELETE | oscapd-cli task <taskId> remove              | Remove task <taskId> and its results                      |
+| /tasks/<int:taskId>/guide/                 | GET    | oscapd-cli task <taskId> guide               | Gets <taskId> guide info. Note: HTML Output               |
+| /tasks/<int:taskId>result/<int:resultId>/  | GET    | oscapd-cli result <taskId> <resultId> report | Gets <resultId> report for <taskId>. Note: HTML Output    |
+| /tasks/<int:taskId>/result/                | DELETE | oscapd-cli result <taskId> remove            | Removes all results for <taskId>                          |
+| /tasks/<int:taskId>/result/<int:resultId>/ | DELETE | oscapd-cli result <taskId> <resultId> remove | Removes <resultId> in <taskId>                            |
+| /tasks/<int:taskId>/run/                   | GET    | oscapd-cli task <taskId> run                 | Launch task with id <taskId>                              |
+| /tasks/<int:taskId>/<string:schedule>/     | PUT    | oscapd-cli task <taskId> enable/disable      | Enables/Disables <taskId>                                 |
+| /ssgs/                                     | GET    |                                              | Returns all SSGs installed on the system and its profiles |
+| /ssgs/                                     | POST   |                                              | Shows SSG's profiles within a json request                |
+
+### REST API Examples
+
+Get all tasks: 
+```
+curl -i http://127.0.0.1:5000/tasks/ -X GET
+```
+
+Create a new task:
+```
+newtask.json 
+{
+    "taskTitle":"New Task test",
+    "taskTarget":"localhost",
+    "taskSSG":"/usr/share/xml/scap/ssg/content/ssg-jre-ds.xml",
+    "taskTailoring":"",
+    "taskProfileId":"xccdf_org.ssgproject.content_profile_stig-java-upstream",
+    "taskOnlineRemediation":"1",
+    "taskScheduleNotBefore":"",
+    "taskScheduleRepeatAfter":""
+}
+  
+curl -i http://127.0.0.1:5000/tasks/ -X POST -H "Content-Type: application/json" -d '@newtask.json'
+```
+
+Update an existing task:   
+```
+updatetask.json
+{
+    "taskTitle":"New Task test modified",
+    "taskTarget":"localhost",
+    "taskSSG":"",
+    "taskTailoring":"",
+    "taskProfileId":"",
+    "taskOnlineRemediation":"yes",
+    "taskScheduleNotBefore":"",
+    "taskScheduleRepeatAfter":""
+}
+    
+curl -i http://127.0.0.1:5000/tasks/1/ -X PUT -H "Content-Type: application/json" -d '@updatetask.json'
+```
+
+Get info from existing task:
+```
+curl -i http://127.0.0.1:5000/tasks/1/ -X GET
+``` 
+
+Get guide info from existing task:
+```
+curl -i http://127.0.0.1:5000/tasks/1/guide/ -X GET
+```
+
+Get result from existing task:
+```
+curl -i http://127.0.0.1:5000/tasks/1/result/1/ -X GET
+```
+
+Delete all results from existing task:
+```
+curl -i http://127.0.0.1:5000/tasks/1/result/ -X DELETE
+```
+
+Delete result from existing task:
+```
+curl -i http://127.0.0.1:5000/tasks/1/result/1/ -X DELETE
+```
+
+Launch existing task:
+```
+curl -i http://127.0.0.1:5000/tasks/1/run/ -X GET
+```
+
+Enable/Disable existig task:
+```
+curl -i http://127.0.0.1:5000/tasks/1/enable/ -X PUT
+curl -i http://127.0.0.1:5000/tasks/1/disable/ -X PUT
+```
+
+Get all SSGs installed on the system:
+```
+curl -i http://127.0.0.1:5000/ssgs/ -X GET
+```
+
+Get SSG's profiles within json's request:
+```
+ssg.json
+{
+    "ssgFile": "/usr/share/xml/scap/ssg/content/ssg-centos7-ds.xml",
+    "tailoringFile": ""
+}
+    
+curl -i http://127.0.0.1:5000/ssgs/ -X POST -H "Content-Type: application/json" -d '@ssg.json'
+```
 
 ## API Consumers
 > Please do not rely on the API just yet, we reserve the right to make breaking

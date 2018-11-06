@@ -17,7 +17,6 @@
 # Authors:
 #   Martin Preisler <mpreisle@redhat.com>
 
-from openscap_daemon import system
 from openscap_daemon import EvaluationSpec
 from openscap_daemon import dbus_utils
 from openscap_daemon.cve_scanner.cve_scanner import Worker
@@ -36,10 +35,10 @@ import json
 
 
 class OpenSCAPDaemonDbus(dbus.service.Object):
-    def __init__(self, bus, config_file):
+    def __init__(self, bus, system_instance):
         super(OpenSCAPDaemonDbus, self).__init__(bus, dbus_utils.OBJECT_PATH)
 
-        self.system = system.System(config_file)
+        self.system = system_instance
         self.system.load_tasks()
 
         self.system_worker_thread = threading.Thread(

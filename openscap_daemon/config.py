@@ -66,6 +66,12 @@ class Configuration(object):
         self.fetch_cve_timeout = 10*60
         self.cve_feed_manager = cve_feed_manager.CVEFeedManager()
 
+        # REST API Section
+        self.rest_enabled = False
+        self.rest_port = 5000
+        self.rest_host = "127.0.0.1"
+        self.rest_debug = False
+
     def autodetect_tool_paths(self):
         """This will try a few well-known public paths and change the paths
         accordingly. This method will only try to autodetect paths that are
@@ -292,6 +298,29 @@ class Configuration(object):
         except (configparser.NoOptionError, configparser.NoSectionError):
             pass
 
+        # REST API section
+        try:
+            self.rest_enabled = config.get("REST", "enabled") not in \
+                ["no", "0", "false", "False"]
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
+            self.rest_port = config.getint("REST", "port")
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
+            self.rest_host = config.get("REST", "host")
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+        try:
+            self.rest_debug = config.get("REST", "debug") not in \
+                ["no", "0", "false", "False"]
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
         self.config_file = config_file
 
     def save_as(self, config_file):
@@ -323,6 +352,12 @@ class Configuration(object):
         config.set("CVEScanner", "fetch-cve-url", str(self.fetch_cve_url))
         config.set("CVEScanner", "fetch-cve-timeout",
                    str(self.fetch_cve_timeout))
+
+        config.add_section("REST")
+        config.set("REST", "enabled", "yes" if self.rest_enabled else "no")
+        config.set("REST", "port", str(self.rest_port))
+        config.set("REST", "host", str(self.rest_host))
+        config.set("REST", "debug", "yes" if self.rest_debug else "no")
 
         if hasattr(config_file, "write"):
             # config_file is an already opened file, let's use it like one
