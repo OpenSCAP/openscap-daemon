@@ -20,6 +20,7 @@
 import threading
 import json
 import os
+import q
 
 from openscap_daemon import oscap_helpers
 from datetime import datetime
@@ -80,7 +81,7 @@ class OpenSCAPRestApi(object):
         self.app.add_url_rule("/tasks/<int:task_id>/<string:schedule>/",
                               "task_schedule", self.task_schedule,
                               methods=['PUT'])
-        self.app.add_url_rule("/ssgs",
+        self.app.add_url_rule("/ssgs/",
                               "get_ssg", self.get_ssg,
                               methods=['GET', 'POST'])
         if self.system.config.rest_debug:
@@ -114,7 +115,7 @@ class OpenSCAPRestApi(object):
         ssgs = []
         for ssg_choice in ssg_choices:
             ssg_file = os.path.abspath(ssg_choice)
-            if tailoring_file is None:
+            if tailoring_file in [None, ""]:
                 tailoring_file = ""
             else:
                 tailoring_file = os.path.abspath(tailoring_file)
