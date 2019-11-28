@@ -53,7 +53,7 @@ class CVEFeedManager(object):
         self.url = CVEFeedManager.default_url
         self.remote_dist_cve_name = "com.redhat.rhsa-RHEL{0}.xml.bz2"
         self.local_dist_cve_name = "com.redhat.rhsa-RHEL{0}.xml"
-        self.dists = [5, 6, 7]
+        self.dists = [5, 6, 7, 8]
         self.remote_pattern = '%a, %d %b %Y %H:%M:%S %Z'
 
         self.fetch_enabled = True
@@ -208,6 +208,8 @@ class CVEFeedManager(object):
         return cve_files
 
     def get_cve_feed(self, cpe_ids):
+        if "cpe:/o:redhat:enterprise_linux:8" in cpe_ids:
+            return self.get_rhel_cve_feed(8)
         if "cpe:/o:redhat:enterprise_linux:7" in cpe_ids:
             return self.get_rhel_cve_feed(7)
         elif "cpe:/o:redhat:enterprise_linux:6" in cpe_ids:
