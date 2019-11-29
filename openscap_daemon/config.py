@@ -502,6 +502,9 @@ class Configuration(object):
 
     def get_ssg_sds(self, cpe_ids):
         def get_ssg_sds_path(cpe_ids):
+            if "cpe:/o:redhat:enterprise_linux:8" in cpe_ids:
+                return os.path.join(self.ssg_path, "ssg-rhel8-ds.xml")
+
             if "cpe:/o:redhat:enterprise_linux:7" in cpe_ids:
                 return os.path.join(self.ssg_path, "ssg-rhel7-ds.xml")
 
