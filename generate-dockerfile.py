@@ -44,8 +44,8 @@ env_variables = [
 ]
 download_cve_feeds_command = [
     "wget --no-verbose -P /var/lib/oscapd/cve_feeds/ "
-    "https://www.redhat.com/security/data/oval/com.redhat.rhsa-RHEL{5,6,7}.xml.bz2",
-    "bzip2 -dk /var/lib/oscapd/cve_feeds/com.redhat.rhsa-RHEL{5,6,7}.xml.bz2",
+    "https://www.redhat.com/security/data/oval/com.redhat.rhsa-RHEL{5,6,7,8}.xml.bz2",
+    "bzip2 -dk /var/lib/oscapd/cve_feeds/com.redhat.rhsa-RHEL{5,6,7,8}.xml.bz2",
     "ln -s /var/lib/oscapd/cve_feeds/ /var/tmp/image-scanner",
 ]
 openscap_build_command = [
