@@ -24,7 +24,10 @@ import os.path
 import logging
 import io
 
-from xml.etree import cElementTree as ElementTree
+try:
+    import xml.etree.cElementTree as ElementTree
+except ImportError:
+    import xml.etree.ElementTree as ElementTree
 from openscap_daemon import et_helpers
 from openscap_daemon.compat import subprocess_check_output
 

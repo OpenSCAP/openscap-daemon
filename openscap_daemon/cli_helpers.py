@@ -21,7 +21,10 @@ import sys
 import os.path
 import logging
 from openscap_daemon import evaluation_spec
-from xml.etree import cElementTree as ElementTree
+try:
+    import xml.etree.cElementTree as ElementTree
+except ImportError:
+    import xml.etree.ElementTree as ElementTree
 
 if sys.version_info < (3,):
     py2_raw_input = raw_input
