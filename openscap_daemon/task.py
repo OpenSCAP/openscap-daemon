@@ -22,7 +22,10 @@ from openscap_daemon import et_helpers
 from openscap_daemon import oscap_helpers
 from openscap_daemon import evaluation_spec
 
-from xml.etree import cElementTree as ElementTree
+try:
+    import xml.etree.cElementTree as ElementTree
+except ImportError:
+    import xml.etree.ElementTree as ElementTree
 from datetime import datetime, timedelta
 import os.path
 import shutil

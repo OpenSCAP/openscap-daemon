@@ -21,7 +21,10 @@
 from openscap_daemon import et_helpers
 from openscap_daemon import oscap_helpers
 
-from xml.etree import cElementTree as ElementTree
+try:
+    import xml.etree.cElementTree as ElementTree
+except ImportError:
+    import xml.etree.ElementTree as ElementTree
 import os.path
 import tempfile
 import shutil
