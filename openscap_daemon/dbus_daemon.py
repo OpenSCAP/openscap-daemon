@@ -21,6 +21,7 @@ from openscap_daemon import EvaluationSpec
 from openscap_daemon import dbus_utils
 from openscap_daemon.cve_scanner.cve_scanner import Worker
 from openscap_daemon import version
+from openscap_daemon.system import ResultsNotAvailable
 
 import dbus
 import dbus.service
@@ -109,7 +110,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
                 self.system.get_evaluate_spec_async_results(token)
             return (True, arf, stdout, stderr, exit_code)
 
-        except system.ResultsNotAvailable:
+        except ResultsNotAvailable:
             return (False, "", "", "", 1)
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
@@ -535,7 +536,7 @@ class OpenSCAPDaemonDbus(dbus.service.Object):
                 self.system.get_evaluate_cve_scanner_worker_async_results(token)
             return (True, json.dumps(json_results))
 
-        except system.ResultsNotAvailable:
+        except ResultsNotAvailable:
             return (False, "")
 
     @dbus.service.method(dbus_interface=dbus_utils.DBUS_INTERFACE,
