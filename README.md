@@ -70,7 +70,7 @@ To use this functionality, install atomic. Then install openscap-daemon either
 in standalone mode or as a SPC container image. When the daemon is running
 the `atomic scan` functionality is available.
 
-### Scan all containers or all contaner images on Atomic Host
+### Scan all containers or all container images on Atomic Host
 The `atomic scan` command has command-line arguments --images, --containers and
 --all that scan all images, all container and everything respectively.
 
@@ -243,7 +243,7 @@ SCAP Security Guide instead, pass `--openscap-from-git` and/or
 
 | Endpoint                                  | VERB   | CLI Equivalent                               | Description                                               |
 |-------------------------------------------|--------|----------------------------------------------|-----------------------------------------------------------|
-| /tasks/                                    | GET    | oscapd-cli task                              | Gets all tasks with its information                       |
+| /tasks/                                    | GET    | oscapd-cli task                              | Gets all tasks with their information                       |
 | /tasks/                                    | POST   | oscapd-cli task-create -i                    | Creates new tasks                                         |
 | /tasks/<int:taskId>/                       | PUT    | oscapd-cli task <taskId> set-XXX             | Modify tasks                                              |
 | /tasks/<int:taskId>/                       | GET    | oscapd-cli task <taskId>                     | Gets information about <taskId>                           |
@@ -329,7 +329,7 @@ Launch existing task:
 curl -i http://127.0.0.1:5000/tasks/1/run/ -X GET
 ```
 
-Enable/Disable existig task:
+Enable/Disable existing task:
 ```
 curl -i http://127.0.0.1:5000/tasks/1/enable/ -X PUT
 curl -i http://127.0.0.1:5000/tasks/1/disable/ -X PUT
@@ -340,7 +340,7 @@ Get all SSGs installed on the system:
 curl -i http://127.0.0.1:5000/ssgs/ -X GET
 ```
 
-Get SSG's profiles within json's request:
+Get SSG's profiles using data from a JSON request:
 ```
 ssg.json
 {
