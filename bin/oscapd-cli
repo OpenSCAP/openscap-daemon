@@ -213,7 +213,7 @@ def cli_task(dbus_iface, task_accessor, args):
         print("Found %i tasks, %i of them enabled." %
               (len(task_ids), enabled_count))
 
-    else:
+    elif args.task_id in dbus_iface.ListTaskIDs():
         if args.task_action == "info":
             title = dbus_iface.GetTaskTitle(args.task_id)
             target = dbus_iface.GetTaskTarget(args.task_id)
@@ -285,6 +285,9 @@ def cli_task(dbus_iface, task_accessor, args):
             # throwing exception here, this code should never be executed if
             # argparse does its job
             raise RuntimeError("Unknown action '%s'." % (args.task_action))
+    else:
+        sys.stderr.write("Task number '%d' does not exists.\n" % (args.task_id))
+        sys.exit(1)
 
 
 def cli_task_create(dbus_iface, args):
