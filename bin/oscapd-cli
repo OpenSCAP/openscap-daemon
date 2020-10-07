@@ -413,7 +413,53 @@ def cli_task_create(dbus_iface, args):
         # TODO: Setting Schedule SlipMode
 
     else:
-        raise NotImplementedError("Not yet!")
+        if not os.path.isabs(args.input_file):
+            sys.stderr.write(
+                "'%s' is not an absolute path. Please provide the absolute "
+                "path that can be used to access the SCAP content on the "
+                "machine running openscap-daemon.\n" % (args.input_file)
+            )
+            sys.exit(1)
+
+        if args.tailoring_file:
+            if not os.path.isabs(args.tailoring_file):
+                sys.stderr.write(
+                    "'%s' is not an absolute path. Please provide the absolute "
+                    "path that can be used to access the tailoring file on the "
+                    "machine running openscap-daemon.\n" % (args.tailoring_file)
+                )
+                sys.exit(1)
+
+        if args.schedule_not_before_str == "":
+            schedule_not_before = datetime.now()
+        else:
+            schedule_not_before = datetime.strptime(
+                args.schedule_not_before_str, "%Y-%m-%d %H:%M"
+            )
+
+        schedule_repeat_after = 0
+        if not args.schedule_repeat_after_str:
+            pass  # empty means no repeat
+        else:
+            schedule_repeat_after = oscap_helpers.schedule_repeat_after(args.schedule_repeat_after_str)
+
+        task_id = dbus_iface.CreateTask()
+        dbus_iface.SetTaskTitle(task_id, args.title)
+        dbus_iface.SetTaskTarget(task_id, args.target)
+        dbus_iface.SetTaskInput(task_id, args.input_file)
+        dbus_iface.SetTaskTailoring(task_id, args.tailoring_file)
+        dbus_iface.SetTaskProfileID(task_id, args.profile)
+        dbus_iface.SetTaskOnlineRemediation(task_id, args.online_remediation)
+        dbus_iface.SetTaskScheduleNotBefore(
+            task_id, schedule_not_before.strftime("%Y-%m-%dT%H:%M")
+        )
+        dbus_iface.SetTaskScheduleRepeatAfter(task_id, schedule_repeat_after)
+
+        print(
+            "Task created with ID '%i'. It is currently set as disabled. "
+            "You can enable it with `oscapd-cli task %i enable`." %
+            (task_id, task_id)
+        )
 
 
 def cli_result(dbus_iface, args):
@@ -680,7 +726,37 @@ def main():
             help="Create new task."
         )
         task_create_parser.add_argument(
-            "-i", "--interactive", action="store_true", dest="interactive", required=True
+            "-i", "--interactive", action="store_true", dest="interactive"
+        )
+        task_create_parser.add_argument(
+            "--title", default="", dest="title",
+            # This parameter became required only on non-interactive mode
+            required='-i' not in sys.argv and '--interactive' not in sys.argv
+        )
+        task_create_parser.add_argument(
+            "--target", default="localhost", dest="target"
+        )
+        task_create_parser.add_argument(
+            "--input", default="", dest="input_file",
+            # This parameter became required only on non-interactive mode
+            required='-i' not in sys.argv and '--interactive' not in sys.argv
+        )
+        task_create_parser.add_argument(
+            "--tailoring", default="", dest="tailoring_file"
+        )
+        task_create_parser.add_argument(
+            "--profile", default="", dest="profile",
+            # This parameter became required only on non-interactive mode
+            required='-i' not in sys.argv and '--interactive' not in sys.argv
+        )
+        task_create_parser.add_argument(
+            "--schedule", default="", dest="schedule_not_before_str"
+        )
+        task_create_parser.add_argument(
+            "--repeat", default=None, dest="schedule_repeat_after_str"
+        )
+        task_create_parser.add_argument(
+            "--remediation", action="store_true", dest="online_remediation"
         )
     add_task_create_parser(subparsers)
 
