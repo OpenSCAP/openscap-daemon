@@ -510,6 +510,9 @@ class System(object):
             return "Update Task '%i' with reference_datetime='%s'" \
                    % (self.task_id, self.reference_datetime)
 
+        def __lt__(a, b):
+            return a.reference_datetime < b.reference_datetime
+
     def schedule_tasks(self, reference_datetime=None):
         """Evaluates all currently outstanding tasks and returns.
         Outstanding task means it's not_before is lower than reference_datetime,
