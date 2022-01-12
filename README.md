@@ -370,7 +370,6 @@ Features:
 * show past results of tasks
 * get ARFs, HTML reports for past results
 * set tasks to automatically push results to external result stores
-  * most importantly to [*scaptimony*](http://github.com/OpenSCAP/scaptimony)
 
 ### Foreman Integration
 Provide a way to reliably do one-off tasks. Unify various `oscap` runners into
